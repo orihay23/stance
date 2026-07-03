@@ -19,3 +19,6 @@ export type { RadioProps } from "./components/Radio.vue";
 
 export { default as Switch } from "./components/Switch.vue";
 export type { SwitchProps } from "./components/Switch.vue";
+
+export { default as Select } from "./components/Select.vue";
+export type { SelectProps } from "./components/Select.vue";
