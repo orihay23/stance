@@ -16,3 +16,6 @@ export type { RadioGroupProps } from "./components/RadioGroup.vue";
 
 export { default as Radio } from "./components/Radio.vue";
 export type { RadioProps } from "./components/Radio.vue";
+
+export { default as Switch } from "./components/Switch.vue";
+export type { SwitchProps } from "./components/Switch.vue";
