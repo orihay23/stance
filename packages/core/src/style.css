@@ -1,11 +1,14 @@
 /*
- * Tailwind v4: import the theme + utilities layers only, deliberately
- * skipping the preflight layer. As a component library we don't want
- * to impose a CSS reset on the consumer's whole page — only our own
- * components' markup, which is styled explicitly.
+ * Components are styled with plain CSS (:where()-wrapped, keyed to
+ * --stance-* custom properties) rather than internal Tailwind utility
+ * classes — see the Definition of Done in CLAUDE.md. So we only pull in
+ * Tailwind's theme layer (small, fixed set of CSS variables) and
+ * deliberately skip both preflight (no opinionated reset imposed on a
+ * consumer's page) and utilities (nothing in this package's own source
+ * uses a Tailwind utility class — importing it here would only pick up
+ * false positives, since Tailwind's content scanner matches any
+ * class-shaped text anywhere in a file, including plain CSS keywords
+ * like `inline-flex` or custom property names like `--stance-color-ring`
+ * that happen to contain a utility name as a substring).
  */
 @import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
-
-/* Only scan component source for utility classes; keep tests/fixtures out of the shipped CSS. */
-@source not "../tests";
