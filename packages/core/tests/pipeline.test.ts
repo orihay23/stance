@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { axe } from "vitest-axe";
+import { runAxe } from "./axe-matcher";
 import PipelineCheck from "./fixtures/PipelineCheck.vue";
 
 describe("test pipeline smoke check", () => {
@@ -11,7 +11,7 @@ describe("test pipeline smoke check", () => {
 
   it("has no axe accessibility violations", async () => {
     const { container } = render(PipelineCheck, { props: { label: "Click me" } });
-    const results = await axe(container);
+    const results = await runAxe(container);
     expect(results).toHaveNoViolations();
   });
 });

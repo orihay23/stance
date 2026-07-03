@@ -8,3 +8,6 @@ export type {
   ThemeSpacingTokens,
   ThemeTypographyTokens,
 } from "./types";
+
+export { compileTheme, compileThemes } from "./compile";
+export { neutral } from "./themes/neutral";

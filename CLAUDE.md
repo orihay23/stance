@@ -59,5 +59,17 @@ right (theming, a11y, tests, responsive) before batch-producing the rest.
 - [ ] Works correctly in all 4 themes × light/dark (8 combinations)
 
 ## Conventions
-- File naming, prop naming, event naming standards: [fill in once decided]
+- File naming: PascalCase for component/story files (`Button.vue`, `Button.test.ts`,
+  `Button.story.vue`), camelCase for composables/utilities (`useButton.ts`, `cn.ts`).
+- CSS custom properties: prefixed `--stance-{category}-{token}`, e.g.
+  `--stance-color-primary`, `--stance-radius-md`, `--stance-shadow-lg`,
+  `--stance-text-sm`. Colors with interaction states follow
+  `--stance-color-{role}[-foreground|-hover|-active]`.
+- Theme tokens: authored as plain resolved CSS values (hex/oklch/etc.), not live
+  references to a consumer's Tailwind config. Pulling from `tailwindcss/colors` at
+  authoring time is fine — the compiler bakes the resolved value into the token.
+- pnpm is pinned via `packageManager` in the root `package.json`; run `pnpm install`
+  after pulling to pick up version bumps.
+- Docs/dev playground: Histoire (`apps/playground`), stories live at
+  `src/**/*.story.vue`.
 - Commit messages: [fill in]
