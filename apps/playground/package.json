@@ -1,0 +1,25 @@
+{
+  "name": "@stance/playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
+    "story:preview": "histoire preview"
+  },
+  "dependencies": {
+    "@stance/core": "workspace:*",
+    "@stance/themes": "workspace:*",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@histoire/plugin-vue": "1.0.0-beta.1",
+    "@tailwindcss/vite": "^4.3.2",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "histoire": "1.0.0-beta.1",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^5.7.2",
+    "vite": "^7.3.0"
+  }
+}

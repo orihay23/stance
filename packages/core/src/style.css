@@ -1,0 +1,11 @@
+/*
+ * Tailwind v4: import the theme + utilities layers only, deliberately
+ * skipping the preflight layer. As a component library we don't want
+ * to impose a CSS reset on the consumer's whole page — only our own
+ * components' markup, which is styled explicitly.
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Only scan component source for utility classes; keep tests/fixtures out of the shipped CSS. */
+@source not "../tests";
