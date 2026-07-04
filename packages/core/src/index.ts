@@ -25,3 +25,9 @@ export type { SelectProps } from "./components/Select.vue";
 
 export { default as Textarea } from "./components/Textarea.vue";
 export type { TextareaProps } from "./components/Textarea.vue";
+
+export { default as ToggleGroup } from "./components/ToggleGroup.vue";
+export type { ToggleGroupProps } from "./components/ToggleGroup.vue";
+
+export { default as ToggleGroupItem } from "./components/ToggleGroupItem.vue";
+export type { ToggleGroupItemProps } from "./components/ToggleGroupItem.vue";
