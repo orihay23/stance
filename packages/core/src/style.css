@@ -12,3 +12,18 @@
  * that happen to contain a utility name as a substring).
  */
 @import "tailwindcss/theme.css" layer(theme);
+
+/*
+ * Shared portal target for every overlay (Dialog, Popover, Tooltip,
+ * Dropdown Menu) — see utils/dom.ts getOverlayRoot(). One fixed z-index for
+ * the whole overlay layer; stacking between simultaneously-open overlays is
+ * DOM append order, not per-component z-index tiers. pointer-events:none so
+ * empty space doesn't block the page — each overlay's own rendered root
+ * re-enables pointer-events on itself.
+ */
+:where([data-stance-overlay-root]) {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
