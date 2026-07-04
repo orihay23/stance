@@ -31,3 +31,12 @@ export type { ToggleGroupProps } from "./components/ToggleGroup.vue";
 
 export { default as ToggleGroupItem } from "./components/ToggleGroupItem.vue";
 export type { ToggleGroupItemProps } from "./components/ToggleGroupItem.vue";
+
+export { default as Dialog } from "./components/Dialog.vue";
+export type { DialogProps } from "./components/Dialog.vue";
+
+export { useFocusTrap } from "./composables/useFocusTrap";
+export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
+
+export { useDismissable } from "./composables/useDismissable";
+export type { UseDismissableOptions } from "./composables/useDismissable";
