@@ -35,8 +35,20 @@ export type { ToggleGroupItemProps } from "./components/ToggleGroupItem.vue";
 export { default as Dialog } from "./components/Dialog.vue";
 export type { DialogProps } from "./components/Dialog.vue";
 
+export { default as Popover } from "./components/Popover.vue";
+export type { PopoverProps } from "./components/Popover.vue";
+
+export { default as PopoverTrigger } from "./components/PopoverTrigger.vue";
+export type { PopoverTriggerProps } from "./components/PopoverTrigger.vue";
+
+export { default as PopoverContent } from "./components/PopoverContent.vue";
+export type { PopoverContentProps } from "./components/PopoverContent.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
 export { useDismissable } from "./composables/useDismissable";
 export type { UseDismissableOptions } from "./composables/useDismissable";
+
+export { usePopoverContext } from "./composables/usePopover";
+export type { PopoverContext } from "./composables/usePopover";

@@ -9,12 +9,21 @@ export interface UseFocusTrapOptions {
   active: Ref<boolean> | ComputedRef<boolean>;
   /** Element to focus when the trap activates. Defaults to the first focusable descendant, or the container itself if there isn't one. */
   initialFocus?: Ref<HTMLElement | null | undefined>;
+  /**
+   * Whether Tab/Shift+Tab is actually cycled within `container`. When false,
+   * initial-focus-in and restore-on-deactivate still happen, but Tab is left
+   * alone so focus can leave `container` — for non-modal Popover content that
+   * shouldn't block the rest of the page. @default true
+   */
+  trapTab?: Ref<boolean> | ComputedRef<boolean>;
 }
 
 /**
- * Traps Tab/Shift+Tab within `container` while `active`, and restores focus
- * to whatever had it beforehand once deactivated. Used by Dialog, and any
- * Dropdown Menu opened via keyboard — not by Tooltip, which isn't
+ * Manages focus for an overlay while `active`: moves focus into `container`
+ * on activation, restores it to whatever had it beforehand on deactivation,
+ * and — unless `trapTab` is false — cycles Tab/Shift+Tab within `container`.
+ * Used by Dialog (always trapping), Popover (trapping only when `modal`),
+ * and any Dropdown Menu opened via keyboard — not by Tooltip, which isn't
  * interactive by itself and has nothing to trap focus in.
  */
 export function useFocusTrap(options: UseFocusTrapOptions): void {
@@ -22,6 +31,7 @@ export function useFocusTrap(options: UseFocusTrapOptions): void {
   let previouslyFocused: HTMLElement | null = null;
 
   function onKeydown(event: KeyboardEvent) {
+    if (!(options.trapTab?.value ?? true)) return;
     if (event.key !== "Tab" || !container.value) return;
 
     const focusable = getFocusableElements(container.value);
