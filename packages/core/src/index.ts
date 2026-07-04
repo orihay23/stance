@@ -22,3 +22,6 @@ export type { SwitchProps } from "./components/Switch.vue";
 
 export { default as Select } from "./components/Select.vue";
 export type { SelectProps } from "./components/Select.vue";
+
+export { default as Textarea } from "./components/Textarea.vue";
+export type { TextareaProps } from "./components/Textarea.vue";
