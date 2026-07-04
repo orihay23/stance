@@ -44,6 +44,9 @@ export type { PopoverTriggerProps } from "./components/PopoverTrigger.vue";
 export { default as PopoverContent } from "./components/PopoverContent.vue";
 export type { PopoverContentProps } from "./components/PopoverContent.vue";
 
+export { default as Tooltip } from "./components/Tooltip.vue";
+export type { TooltipProps } from "./components/Tooltip.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
