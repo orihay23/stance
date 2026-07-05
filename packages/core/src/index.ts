@@ -89,6 +89,12 @@ export type { AccordionHeaderProps } from "./components/AccordionHeader.vue";
 export { default as AccordionContent } from "./components/AccordionContent.vue";
 export type { AccordionContentProps } from "./components/AccordionContent.vue";
 
+export { default as Toast } from "./components/Toast.vue";
+export type { ToastProps } from "./components/Toast.vue";
+
+export { default as ToastRegion } from "./components/ToastRegion.vue";
+export type { ToastRegionProps } from "./components/ToastRegion.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -103,6 +109,9 @@ export type { TabsContext } from "./composables/useTabs";
 
 export { useAccordionContext, useAccordionItemContext } from "./composables/useAccordion";
 export type { AccordionContext, AccordionItemContext } from "./composables/useAccordion";
+
+export { useToast } from "./composables/useToast";
+export type { ToastInstance, ToastOptions } from "./composables/useToast";
 
 export { useDropdownMenuContext } from "./composables/useDropdownMenu";
 export type { DropdownMenuContext } from "./composables/useDropdownMenu";
