@@ -77,6 +77,18 @@ export type { TabProps } from "./components/Tab.vue";
 export { default as TabPanel } from "./components/TabPanel.vue";
 export type { TabPanelProps } from "./components/TabPanel.vue";
 
+export { default as Accordion } from "./components/Accordion.vue";
+export type { AccordionProps } from "./components/Accordion.vue";
+
+export { default as AccordionItem } from "./components/AccordionItem.vue";
+export type { AccordionItemProps } from "./components/AccordionItem.vue";
+
+export { default as AccordionHeader } from "./components/AccordionHeader.vue";
+export type { AccordionHeaderProps } from "./components/AccordionHeader.vue";
+
+export { default as AccordionContent } from "./components/AccordionContent.vue";
+export type { AccordionContentProps } from "./components/AccordionContent.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -88,6 +100,9 @@ export type { PopoverContext } from "./composables/usePopover";
 
 export { useTabsContext } from "./composables/useTabs";
 export type { TabsContext } from "./composables/useTabs";
+
+export { useAccordionContext, useAccordionItemContext } from "./composables/useAccordion";
+export type { AccordionContext, AccordionItemContext } from "./composables/useAccordion";
 
 export { useDropdownMenuContext } from "./composables/useDropdownMenu";
 export type { DropdownMenuContext } from "./composables/useDropdownMenu";
