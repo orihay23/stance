@@ -63,7 +63,14 @@ export { default as DropdownMenuSeparator } from "./components/DropdownMenuSepar
 export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSeparator.vue";
 
 export { default as DataTable } from "./components/DataTable.vue";
-export type { DataTableColumn, DataTableProps, DataTableSortState } from "./components/DataTable.vue";
+export type {
+  DataTableColumn,
+  DataTableFilterType,
+  DataTablePaginationMode,
+  DataTableProps,
+  DataTableSelectionMode,
+  DataTableSortState,
+} from "./components/DataTable.vue";
 
 export { default as Tabs } from "./components/Tabs.vue";
 export type { TabsProps } from "./components/Tabs.vue";
@@ -112,6 +119,8 @@ export type { AccordionContext, AccordionItemContext } from "./composables/useAc
 
 export { useToast } from "./composables/useToast";
 export type { ToastInstance, ToastOptions } from "./composables/useToast";
+
+export { useLiveAnnouncer } from "./composables/useLiveAnnouncer";
 
 export { useDropdownMenuContext } from "./composables/useDropdownMenu";
 export type { DropdownMenuContext } from "./composables/useDropdownMenu";
