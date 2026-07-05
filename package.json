@@ -9,6 +9,7 @@
   "scripts": {
     "build": "pnpm -r --filter=./packages/* run build",
     "test": "pnpm -r --filter=./packages/* run test",
-    "playground": "pnpm --filter @stance/playground run story:dev"
+    "playground": "pnpm --filter @stance/playground run story:dev",
+    "docs": "pnpm --filter @stance/docs run docs:dev"
   }
 }

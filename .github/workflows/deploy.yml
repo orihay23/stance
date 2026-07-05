@@ -1,0 +1,86 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; never cancel one that's already
+# rolling out mid-deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Histoire imports @stance/core through its published entry point
+      # (dist/), not straight from source, so it has to be built first.
+      - name: Build @stance/core
+        run: pnpm --filter @stance/core build
+
+      - name: Build Histoire stories
+        run: pnpm --filter @stance/playground story:build
+
+      # Histoire is a client-side-routed SPA (story URLs like /story/<id>
+      # aren't real files) — deep-linking straight to one, as the
+      # Components doc page does, 404s on plain static hosting with no
+      # server-side rewrite. This is the standard workaround: GitHub Pages
+      # serves 404.html (if present) for any unmatched path, and since it's
+      # a copy of index.html, Histoire's own router then reads the
+      # (unchanged) URL and renders the right story.
+      - name: Add SPA-fallback 404 for Histoire deep links
+        run: cp apps/playground/.histoire/dist/index.html apps/playground/.histoire/dist/404.html
+
+      - name: Build VitePress site
+        run: pnpm --filter @stance/docs docs:build
+
+      # VitePress at the root, Histoire stories under /components — kept in
+      # sync with the base paths computed in apps/docs/.vitepress/config.ts.
+      - name: Assemble Pages output
+        run: |
+          mkdir -p _site/components
+          cp -r apps/docs/.vitepress/dist/. _site/
+          cp -r apps/playground/.histoire/dist/. _site/components/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
