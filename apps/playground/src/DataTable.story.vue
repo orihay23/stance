@@ -67,6 +67,8 @@ const serverRows = computed(() => {
 });
 
 const narrowPage = ref(1);
+const topAlignPage = ref(1);
+const endAlignPage = ref(1);
 </script>
 
 <template>
@@ -213,6 +215,37 @@ const narrowPage = ref(1);
             row-key="email"
             pagination-mode="client"
             :page-size="5"
+          />
+        </div>
+      </div>
+    </Variant>
+
+    <Variant title="Pagination position and alignment">
+      <div class="space-y-8 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <div>
+          <h3 class="mb-2 text-sm font-medium opacity-70">position="top", align="center"</h3>
+          <DataTable
+            v-model:page="topAlignPage"
+            :columns="columns"
+            :rows="manyRows"
+            row-key="email"
+            pagination-mode="client"
+            :page-size="5"
+            pagination-position="top"
+            pagination-align="center"
+          />
+        </div>
+
+        <div>
+          <h3 class="mb-2 text-sm font-medium opacity-70">position="bottom" (default), align="end"</h3>
+          <DataTable
+            v-model:page="endAlignPage"
+            :columns="columns"
+            :rows="manyRows"
+            row-key="email"
+            pagination-mode="client"
+            :page-size="5"
+            pagination-align="end"
           />
         </div>
       </div>

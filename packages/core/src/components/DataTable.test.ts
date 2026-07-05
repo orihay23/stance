@@ -327,6 +327,49 @@ describe("DataTable", () => {
       await nextTick();
       expect(announce).toHaveBeenCalledWith("Page 2 of 5");
     });
+
+    it("renders the nav after the table by default (paginationPosition='bottom')", async () => {
+      const { container } = renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      const children = Array.from(container.querySelector(".stance-datatable")!.children);
+      const scrollIndex = children.findIndex((el) => el.classList.contains("stance-datatable__scroll"));
+      const navIndex = children.findIndex((el) => el.tagName === "NAV");
+      expect(scrollIndex).toBeGreaterThanOrEqual(0);
+      expect(navIndex).toBeGreaterThan(scrollIndex);
+    });
+
+    it("renders the nav before the table when paginationPosition is 'top'", async () => {
+      const { container } = renderHarness({
+        rows: manyRows,
+        paginationMode: "client",
+        pageSize: 10,
+        paginationPosition: "top",
+      });
+      await nextTick();
+      const children = Array.from(container.querySelector(".stance-datatable")!.children);
+      const scrollIndex = children.findIndex((el) => el.classList.contains("stance-datatable__scroll"));
+      const navIndex = children.findIndex((el) => el.tagName === "NAV");
+      expect(navIndex).toBeGreaterThanOrEqual(0);
+      expect(navIndex).toBeLessThan(scrollIndex);
+    });
+
+    it("only renders one pagination nav regardless of position", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10, paginationPosition: "top" });
+      await nextTick();
+      expect(screen.getAllByRole("navigation", { name: "Pagination" })).toHaveLength(1);
+    });
+
+    it("applies the requested alignment via data-align, defaulting to 'start'", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveAttribute("data-align", "start");
+    });
+
+    it("applies a custom paginationAlign", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10, paginationAlign: "end" });
+      await nextTick();
+      expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveAttribute("data-align", "end");
+    });
   });
 
   it("never emits !important in its styles", () => {

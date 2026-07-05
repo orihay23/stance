@@ -2,6 +2,7 @@
 import { computed, watch } from "vue";
 import { cn } from "../utils/cn";
 import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
+import DataTablePagination from "./DataTablePagination.vue";
 
 export interface DataTableColumn<T extends Record<string, unknown> = Record<string, unknown>> {
   /** Unique key. Used as the dynamic cell-slot name (`#cell-{key}`) and, unless `accessor` is given, to read `row[key]`. */
@@ -62,6 +63,10 @@ export interface DataTableProps<T extends Record<string, unknown> = Record<strin
   totalRows?: number;
   /** Server mode: total page count, if already known server-side (overrides the totalRows/pageSize calculation). */
   totalPages?: number;
+  /** Where the pagination nav renders relative to the table. @default "bottom" */
+  paginationPosition?: "top" | "bottom";
+  /** Horizontal alignment of the pagination controls. @default "start" */
+  paginationAlign?: "start" | "center" | "end";
   /** Extra classes merged with internal classes via `tailwind-merge` — applied to the root container. */
   class?: string;
 }
@@ -73,6 +78,8 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   paginationMode: "none",
   page: 1,
   pageSize: 10,
+  paginationPosition: "bottom",
+  paginationAlign: "start",
 });
 
 const emit = defineEmits<{
@@ -221,6 +228,15 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
 
 <template>
   <div :class="rootClass">
+    <DataTablePagination
+      v-if="paginationMode !== 'none' && paginationPosition === 'top'"
+      :current-page="currentPage"
+      :total-pages="totalPagesComputed"
+      :page-numbers="pageNumbers"
+      :align="props.paginationAlign"
+      @go-to-page="goToPage"
+    />
+
     <div class="stance-datatable__scroll">
       <table class="stance-datatable__table" role="table">
         <caption v-if="caption" class="stance-datatable__caption">{{ caption }}</caption>
@@ -298,43 +314,14 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
       </table>
     </div>
 
-    <nav v-if="paginationMode !== 'none'" aria-label="Pagination" class="stance-datatable__pagination">
-      <button
-        type="button"
-        class="stance-datatable__page-button stance-datatable__page-button--nav"
-        :disabled="currentPage <= 1"
-        @click="goToPage(currentPage - 1)"
-      >
-        Previous
-      </button>
-
-      <ul class="stance-datatable__page-list">
-        <li v-for="(p, i) in pageNumbers" :key="i">
-          <span v-if="p === 'ellipsis'" class="stance-datatable__page-ellipsis" aria-hidden="true">…</span>
-          <button
-            v-else
-            type="button"
-            class="stance-datatable__page-button"
-            :aria-current="p === currentPage ? 'page' : undefined"
-            :data-active="p === currentPage || undefined"
-            @click="goToPage(p)"
-          >
-            {{ p }}
-          </button>
-        </li>
-      </ul>
-
-      <span class="stance-datatable__page-status">Page {{ currentPage }} of {{ totalPagesComputed }}</span>
-
-      <button
-        type="button"
-        class="stance-datatable__page-button stance-datatable__page-button--nav"
-        :disabled="currentPage >= totalPagesComputed"
-        @click="goToPage(currentPage + 1)"
-      >
-        Next
-      </button>
-    </nav>
+    <DataTablePagination
+      v-if="paginationMode !== 'none' && paginationPosition === 'bottom'"
+      :current-page="currentPage"
+      :total-pages="totalPagesComputed"
+      :page-numbers="pageNumbers"
+      :align="props.paginationAlign"
+      @go-to-page="goToPage"
+    />
   </div>
 </template>
 
@@ -425,74 +412,6 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
   color: var(--stance-color-muted-foreground);
 }
 
-:where(.stance-datatable__pagination) {
-  display: flex;
-  align-items: center;
-  gap: var(--stance-spacing-sm, 0.5rem);
-  flex-wrap: wrap;
-  padding-top: var(--stance-spacing-md, 0.75rem);
-}
-
-:where(.stance-datatable__page-list) {
-  display: flex;
-  align-items: center;
-  gap: var(--stance-spacing-xs, 0.25rem);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-:where(.stance-datatable__page-button) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
-  padding: 0 var(--stance-spacing-sm, 0.5rem);
-  border: 1px solid var(--stance-color-border);
-  border-radius: var(--stance-radius-sm, 0.25rem);
-  background: var(--stance-color-background);
-  color: var(--stance-color-foreground);
-  font: inherit;
-  font-size: var(--stance-text-sm, 0.875rem);
-  cursor: pointer;
-}
-
-:where(.stance-datatable__page-button:disabled) {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-:where(.stance-datatable__page-button:not(:disabled):hover) {
-  background: var(--stance-color-muted);
-}
-
-:where(.stance-datatable__page-button:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-:where(.stance-datatable__page-button[data-active]) {
-  background: var(--stance-color-primary);
-  border-color: var(--stance-color-primary);
-  color: var(--stance-color-primary-foreground);
-}
-
-:where(.stance-datatable__page-ellipsis) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
-  color: var(--stance-color-muted-foreground);
-}
-
-:where(.stance-datatable__page-status) {
-  display: none;
-  font-size: var(--stance-text-sm, 0.875rem);
-  color: var(--stance-color-muted-foreground);
-}
-
 /* Below this container width, collapse the table to a stacked card per row.
    The real <thead> stays in the DOM (screen-reader-only) so the table's
    semantic header association survives for assistive tech regardless of
@@ -558,21 +477,6 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
 
   :where(.stance-datatable__status-cell)::before {
     content: none;
-  }
-
-  /* The numbered page list doesn't fit comfortably at this width — a plain
-     "Page X of Y" status plus Previous/Next always fits regardless of how
-     many total pages there are. */
-  :where(.stance-datatable__page-list) {
-    display: none;
-  }
-
-  :where(.stance-datatable__page-status) {
-    display: inline-flex;
-  }
-
-  :where(.stance-datatable__pagination) {
-    justify-content: space-between;
   }
 }
 </style>
