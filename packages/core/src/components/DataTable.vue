@@ -1,8 +1,11 @@
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
-import { computed, watch } from "vue";
+import { computed, provide, useId, watch } from "vue";
 import { cn } from "../utils/cn";
 import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
+import { RADIO_GROUP_KEY } from "../composables/useRadioGroup";
 import DataTablePagination from "./DataTablePagination.vue";
+import Checkbox from "./Checkbox.vue";
+import Radio from "./Radio.vue";
 
 export interface DataTableColumn<T extends Record<string, unknown> = Record<string, unknown>> {
   /** Unique key. Used as the dynamic cell-slot name (`#cell-{key}`) and, unless `accessor` is given, to read `row[key]`. */
@@ -23,6 +26,8 @@ export interface DataTableSortState {
 }
 
 export type DataTablePaginationMode = "client" | "server" | "none";
+
+export type DataTableSelectionMode = "single" | "multiple" | "none";
 
 export interface DataTableProps<T extends Record<string, unknown> = Record<string, unknown>> {
   columns: DataTableColumn<T>[];
@@ -67,6 +72,15 @@ export interface DataTableProps<T extends Record<string, unknown> = Record<strin
   paginationPosition?: "top" | "bottom";
   /** Horizontal alignment of the pagination controls. @default "start" */
   paginationAlign?: "start" | "center" | "end";
+  /** @default "none" */
+  selectionMode?: DataTableSelectionMode;
+  /**
+   * v-model:selected — selected row *keys* (via `rowKey`), not full row
+   * objects, so selection survives `rows` being replaced/refreshed instead
+   * of pointing at stale objects. Always an array regardless of mode;
+   * `selectionMode="single"` just constrains it to at most one entry.
+   */
+  selected?: Array<string | number>;
   /** Extra classes merged with internal classes via `tailwind-merge` — applied to the root container. */
   class?: string;
 }
@@ -80,12 +94,15 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   pageSize: 10,
   paginationPosition: "bottom",
   paginationAlign: "start",
+  selectionMode: "none",
+  selected: () => [],
 });
 
 const emit = defineEmits<{
   "update:sort": [value: DataTableSortState | null];
   "update:page": [value: number];
   "update:pageSize": [value: number];
+  "update:selected": [value: Array<string | number>];
 }>();
 
 defineSlots<{
@@ -223,6 +240,72 @@ const pageNumbers = computed<Array<number | "ellipsis">>(() => {
   return range;
 });
 
+const selectedSet = computed(() => new Set(props.selected));
+
+function isRowSelected(row: T, index: number): boolean {
+  return selectedSet.value.has(getRowKey(row, index));
+}
+
+function setRowSelected(row: T, index: number, checked: boolean) {
+  const key = getRowKey(row, index);
+  if (props.selectionMode === "single") {
+    emit("update:selected", checked ? [key] : []);
+    return;
+  }
+  if (checked) {
+    if (selectedSet.value.has(key)) return;
+    emit("update:selected", [...props.selected, key]);
+  } else {
+    emit(
+      "update:selected",
+      props.selected.filter((k) => k !== key),
+    );
+  }
+}
+
+// "Select all" scope is the currently displayed (paged) rows, not the whole
+// dataset — the header checkbox doesn't reach across pages, matching how
+// most table implementations handle this by default.
+const selectableRowKeys = computed(() => pagedRows.value.map((row, i) => getRowKey(row, i)));
+
+const allRowsSelected = computed(
+  () => selectableRowKeys.value.length > 0 && selectableRowKeys.value.every((k) => selectedSet.value.has(k)),
+);
+const someRowsSelected = computed(
+  () => !allRowsSelected.value && selectableRowKeys.value.some((k) => selectedSet.value.has(k)),
+);
+
+function setAllRowsSelected(checked: boolean) {
+  if (checked) {
+    emit("update:selected", Array.from(new Set([...props.selected, ...selectableRowKeys.value])));
+  } else {
+    const removed = new Set(selectableRowKeys.value);
+    emit(
+      "update:selected",
+      props.selected.filter((k) => !removed.has(k)),
+    );
+  }
+}
+
+// Radio needs an enclosing RadioGroup context (shared `name`, and the
+// `updateValue` callback it calls on change) for single-select mode — but
+// RadioGroup.vue itself renders its own wrapping <div>, which isn't valid
+// markup inside a <tbody>/<tr>. Providing the same context contract
+// directly lets <Radio> be used per-row without that wrapper.
+const radioGroupName = useId();
+provide(RADIO_GROUP_KEY, {
+  name: computed(() => radioGroupName),
+  modelValue: computed(() => (props.selected.length > 0 ? String(props.selected[0]) : undefined)),
+  disabled: computed(() => false),
+  required: computed(() => false),
+  invalid: computed(() => false),
+  describedBy: computed(() => undefined),
+  updateValue: (value: string) => {
+    const index = pagedRows.value.findIndex((row, i) => String(getRowKey(row, i)) === value);
+    if (index !== -1) emit("update:selected", [getRowKey(pagedRows.value[index]!, index)]);
+  },
+});
+
 const rootClass = computed(() => cn("stance-datatable", props.class));
 </script>
 
@@ -242,6 +325,17 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
         <caption v-if="caption" class="stance-datatable__caption">{{ caption }}</caption>
         <thead role="rowgroup">
           <tr role="row">
+            <th v-if="selectionMode !== 'none'" scope="col" role="columnheader" class="stance-datatable__select-cell">
+              <Checkbox
+                v-if="selectionMode === 'multiple'"
+                :model-value="allRowsSelected"
+                :indeterminate="someRowsSelected"
+                @update:model-value="setAllRowsSelected"
+              >
+                <span class="stance-datatable__visually-hidden">Select all rows</span>
+              </Checkbox>
+              <span v-else class="stance-datatable__visually-hidden">Select</span>
+            </th>
             <th
               v-for="column in columns"
               :key="column.key"
@@ -288,16 +382,28 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
         </thead>
         <tbody role="rowgroup">
           <tr v-if="loading" role="row">
-            <td :colspan="columns.length" role="cell" class="stance-datatable__status-cell">
+            <td :colspan="columns.length + (selectionMode !== 'none' ? 1 : 0)" role="cell" class="stance-datatable__status-cell">
               <slot name="loading">Loading…</slot>
             </td>
           </tr>
           <tr v-else-if="rows.length === 0" role="row">
-            <td :colspan="columns.length" role="cell" class="stance-datatable__status-cell">
+            <td :colspan="columns.length + (selectionMode !== 'none' ? 1 : 0)" role="cell" class="stance-datatable__status-cell">
               <slot name="empty">No data.</slot>
             </td>
           </tr>
           <tr v-for="(row, rowIndex) in loading || rows.length === 0 ? [] : pagedRows" :key="getRowKey(row, rowIndex)" role="row">
+            <td v-if="selectionMode !== 'none'" role="cell" data-label="Select" class="stance-datatable__select-cell">
+              <Checkbox
+                v-if="selectionMode === 'multiple'"
+                :model-value="isRowSelected(row, rowIndex)"
+                @update:model-value="(checked) => setRowSelected(row, rowIndex, checked)"
+              >
+                <span class="stance-datatable__visually-hidden">Select row</span>
+              </Checkbox>
+              <Radio v-else :value="String(getRowKey(row, rowIndex))">
+                <span class="stance-datatable__visually-hidden">Select row</span>
+              </Radio>
+            </td>
             <td
               v-for="column in columns"
               :key="column.key"
@@ -343,7 +449,8 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
   font-size: var(--stance-text-sm, 0.875rem);
 }
 
-:where(.stance-datatable__caption) {
+:where(.stance-datatable__caption),
+:where(.stance-datatable__visually-hidden) {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -353,6 +460,12 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+:where(.stance-datatable__select-cell) {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
 }
 
 :where(.stance-datatable__table th) {

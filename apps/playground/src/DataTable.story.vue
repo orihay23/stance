@@ -69,6 +69,11 @@ const serverRows = computed(() => {
 const narrowPage = ref(1);
 const topAlignPage = ref(1);
 const endAlignPage = ref(1);
+
+// --- Row selection ---
+const multipleSelected = ref<Array<string | number>>([]);
+const singleSelected = ref<Array<string | number>>([]);
+const narrowSelected = ref<Array<string | number>>([]);
 </script>
 
 <template>
@@ -215,6 +220,50 @@ const endAlignPage = ref(1);
             row-key="email"
             pagination-mode="client"
             :page-size="5"
+          />
+        </div>
+      </div>
+    </Variant>
+
+    <Variant title="Row selection (multiple)">
+      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <p class="mb-4 text-sm opacity-70">
+          Selected: {{ multipleSelected.length === 0 ? "none" : multipleSelected.join(", ") }}
+        </p>
+        <DataTable
+          v-model:selected="multipleSelected"
+          :columns="columns"
+          :rows="rows"
+          row-key="email"
+          selection-mode="multiple"
+        />
+      </div>
+    </Variant>
+
+    <Variant title="Row selection (single)">
+      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <p class="mb-4 text-sm opacity-70">
+          Selected: {{ singleSelected.length === 0 ? "none" : singleSelected.join(", ") }}
+        </p>
+        <DataTable
+          v-model:selected="singleSelected"
+          :columns="columns"
+          :rows="rows"
+          row-key="email"
+          selection-mode="single"
+        />
+      </div>
+    </Variant>
+
+    <Variant title="Row selection in a narrow container">
+      <div class="p-6" data-theme="neutral">
+        <div style="width: 280px" :style="{ color: 'var(--stance-color-foreground)' }">
+          <DataTable
+            v-model:selected="narrowSelected"
+            :columns="columns"
+            :rows="rows"
+            row-key="email"
+            selection-mode="multiple"
           />
         </div>
       </div>

@@ -19,7 +19,11 @@ import { fireEvent } from "@testing-library/vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { neutral } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
-import DataTable, { type DataTableColumn, type DataTableProps, type DataTableSortState } from "./DataTable.vue";
+import DataTable, {
+  type DataTableColumn,
+  type DataTableProps,
+  type DataTableSortState,
+} from "./DataTable.vue";
 import dataTableSource from "./DataTable.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 import { announce } from "../utils/live-region";
@@ -58,12 +62,14 @@ function renderHarness(
   props: Partial<DataTableProps<Person>> = {},
   onSort?: (v: DataTableSortState | null) => void,
   onPage?: (v: number) => void,
+  onSelected?: (v: Array<string | number>) => void,
 ) {
   const Harness = defineComponent({
     setup() {
       const sort = ref<DataTableSortState | null>(props.sort ?? null);
       const page = ref(props.page ?? 1);
       const pageSize = ref(props.pageSize ?? 10);
+      const selected = ref<Array<string | number>>(props.selected ?? []);
       return () =>
         h(DataTable<Person>, {
           columns,
@@ -83,6 +89,11 @@ function renderHarness(
           pageSize: pageSize.value,
           "onUpdate:pageSize": (v: number) => {
             pageSize.value = v;
+          },
+          selected: selected.value,
+          "onUpdate:selected": (v: Array<string | number>) => {
+            selected.value = v;
+            onSelected?.(v);
           },
         });
     },
@@ -369,6 +380,120 @@ describe("DataTable", () => {
       renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10, paginationAlign: "end" });
       await nextTick();
       expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveAttribute("data-align", "end");
+    });
+  });
+
+  describe("selection", () => {
+    it("renders no selection column when selectionMode is 'none' (the default)", () => {
+      renderHarness();
+      expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+      expect(screen.queryAllByRole("radio")).toHaveLength(0);
+      expect(screen.getAllByRole("columnheader")).toHaveLength(3);
+    });
+
+    it("multiple mode: renders a checkbox per row plus a header select-all checkbox", () => {
+      renderHarness({ selectionMode: "multiple" });
+      expect(screen.getAllByRole("checkbox", { name: "Select row" })).toHaveLength(3);
+      expect(screen.getByRole("checkbox", { name: "Select all rows" })).toBeInTheDocument();
+    });
+
+    it("multiple mode: checking a row's checkbox adds its row key to update:selected", async () => {
+      const onSelected = vi.fn();
+      renderHarness({ selectionMode: "multiple" }, undefined, undefined, onSelected);
+      const [beaCheckbox] = screen.getAllByRole("checkbox", { name: "Select row" });
+      await fireEvent.click(beaCheckbox!);
+      await nextTick();
+      expect(onSelected).toHaveBeenLastCalledWith(["Bea"]);
+    });
+
+    it("multiple mode: unchecking a selected row removes its row key", async () => {
+      const onSelected = vi.fn();
+      renderHarness({ selectionMode: "multiple", selected: ["Bea", "Amir"] }, undefined, undefined, onSelected);
+      const rowCheckboxes = screen.getAllByRole("checkbox", { name: "Select row" });
+      await fireEvent.click(rowCheckboxes[0]!); // Bea
+      await nextTick();
+      expect(onSelected).toHaveBeenLastCalledWith(["Amir"]);
+    });
+
+    it("multiple mode: header checkbox selects/deselects all currently displayed rows", async () => {
+      const onSelected = vi.fn();
+      renderHarness({ selectionMode: "multiple" }, undefined, undefined, onSelected);
+      const selectAll = screen.getByRole("checkbox", { name: "Select all rows" });
+
+      await fireEvent.click(selectAll);
+      await nextTick();
+      expect(onSelected).toHaveBeenLastCalledWith(["Bea", "Amir", "Cass"]);
+
+      await fireEvent.click(selectAll);
+      await nextTick();
+      expect(onSelected).toHaveBeenLastCalledWith([]);
+    });
+
+    it("multiple mode: header checkbox reflects checked/indeterminate state", async () => {
+      renderHarness({ selectionMode: "multiple", selected: [] });
+      const selectAll = screen.getByRole("checkbox", { name: "Select all rows" }) as HTMLInputElement;
+      expect(selectAll.checked).toBe(false);
+      expect(selectAll.indeterminate).toBe(false);
+
+      const rowCheckboxes = screen.getAllByRole("checkbox", { name: "Select row" });
+      await fireEvent.click(rowCheckboxes[0]!);
+      await nextTick();
+      expect(selectAll.indeterminate).toBe(true);
+      expect(selectAll.checked).toBe(false);
+
+      await fireEvent.click(rowCheckboxes[1]!);
+      await fireEvent.click(rowCheckboxes[2]!);
+      await nextTick();
+      expect(selectAll.checked).toBe(true);
+      expect(selectAll.indeterminate).toBe(false);
+    });
+
+    it("single mode: renders a radio per row and no header selection control", () => {
+      renderHarness({ selectionMode: "single" });
+      expect(screen.getAllByRole("radio")).toHaveLength(3);
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("single mode: selecting a row replaces (not appends to) any previous selection", async () => {
+      const onSelected = vi.fn();
+      renderHarness({ selectionMode: "single" }, undefined, undefined, onSelected);
+      const radios = screen.getAllByRole("radio", { name: "Select row" });
+
+      await fireEvent.click(radios[0]!); // Bea
+      await nextTick();
+      expect(onSelected).toHaveBeenLastCalledWith(["Bea"]);
+
+      await fireEvent.click(radios[1]!); // Amir
+      await nextTick();
+      expect(onSelected).toHaveBeenLastCalledWith(["Amir"]);
+      expect((radios[0] as HTMLInputElement).checked).toBe(false);
+      expect((radios[1] as HTMLInputElement).checked).toBe(true);
+    });
+
+    it("keeps selection keyed by row identity across a sort change", async () => {
+      const onSelected = vi.fn();
+      renderHarness({ selectionMode: "multiple", selected: ["Bea"] }, undefined, undefined, onSelected);
+      const nameButton = within(screen.getByRole("columnheader", { name: /Name/ })).getByRole("button");
+      await fireEvent.click(nameButton); // sort by name asc: Amir, Bea, Cass
+      await nextTick();
+
+      const sortedRowLabels = bodyRows().map((r) => within(r).getAllByRole("cell")[1]!.textContent);
+      expect(sortedRowLabels).toEqual(["Amir", "Bea", "Cass"]);
+      const beaCheckbox = bodyRows()[1]!.querySelector("input[type=checkbox]") as HTMLInputElement;
+      expect(beaCheckbox.checked).toBe(true);
+    });
+
+    it("puts the selection control before other interactive cell content in tab order", () => {
+      renderHarness({ selectionMode: "multiple" });
+      const firstDataRow = bodyRows()[0]!;
+      const cells = within(firstDataRow).getAllByRole("cell");
+      expect(within(cells[0]!).queryByRole("checkbox")).toBeInTheDocument();
+    });
+
+    it("accounts for the selection column in the empty/loading status row's colspan", () => {
+      renderHarness({ selectionMode: "multiple", rows: [] });
+      const statusCell = screen.getByText("No data.").closest("td")!;
+      expect(statusCell).toHaveAttribute("colspan", "4"); // 3 columns + selection column
     });
   });
 

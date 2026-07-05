@@ -67,6 +67,7 @@ export type {
   DataTableColumn,
   DataTablePaginationMode,
   DataTableProps,
+  DataTableSelectionMode,
   DataTableSortState,
 } from "./components/DataTable.vue";
 
