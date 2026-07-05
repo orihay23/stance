@@ -65,6 +65,18 @@ export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSepara
 export { default as DataTable } from "./components/DataTable.vue";
 export type { DataTableColumn, DataTableProps, DataTableSortState } from "./components/DataTable.vue";
 
+export { default as Tabs } from "./components/Tabs.vue";
+export type { TabsProps } from "./components/Tabs.vue";
+
+export { default as TabList } from "./components/TabList.vue";
+export type { TabListProps } from "./components/TabList.vue";
+
+export { default as Tab } from "./components/Tab.vue";
+export type { TabProps } from "./components/Tab.vue";
+
+export { default as TabPanel } from "./components/TabPanel.vue";
+export type { TabPanelProps } from "./components/TabPanel.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -73,6 +85,9 @@ export type { UseDismissableOptions } from "./composables/useDismissable";
 
 export { usePopoverContext } from "./composables/usePopover";
 export type { PopoverContext } from "./composables/usePopover";
+
+export { useTabsContext } from "./composables/useTabs";
+export type { TabsContext } from "./composables/useTabs";
 
 export { useDropdownMenuContext } from "./composables/useDropdownMenu";
 export type { DropdownMenuContext } from "./composables/useDropdownMenu";
