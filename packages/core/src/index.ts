@@ -62,6 +62,39 @@ export type { DropdownMenuItemProps } from "./components/DropdownMenuItem.vue";
 export { default as DropdownMenuSeparator } from "./components/DropdownMenuSeparator.vue";
 export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSeparator.vue";
 
+export { default as DataTable } from "./components/DataTable.vue";
+export type { DataTableColumn, DataTableProps, DataTableSortState } from "./components/DataTable.vue";
+
+export { default as Tabs } from "./components/Tabs.vue";
+export type { TabsProps } from "./components/Tabs.vue";
+
+export { default as TabList } from "./components/TabList.vue";
+export type { TabListProps } from "./components/TabList.vue";
+
+export { default as Tab } from "./components/Tab.vue";
+export type { TabProps } from "./components/Tab.vue";
+
+export { default as TabPanel } from "./components/TabPanel.vue";
+export type { TabPanelProps } from "./components/TabPanel.vue";
+
+export { default as Accordion } from "./components/Accordion.vue";
+export type { AccordionProps } from "./components/Accordion.vue";
+
+export { default as AccordionItem } from "./components/AccordionItem.vue";
+export type { AccordionItemProps } from "./components/AccordionItem.vue";
+
+export { default as AccordionHeader } from "./components/AccordionHeader.vue";
+export type { AccordionHeaderProps } from "./components/AccordionHeader.vue";
+
+export { default as AccordionContent } from "./components/AccordionContent.vue";
+export type { AccordionContentProps } from "./components/AccordionContent.vue";
+
+export { default as Toast } from "./components/Toast.vue";
+export type { ToastProps } from "./components/Toast.vue";
+
+export { default as ToastRegion } from "./components/ToastRegion.vue";
+export type { ToastRegionProps } from "./components/ToastRegion.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -70,6 +103,15 @@ export type { UseDismissableOptions } from "./composables/useDismissable";
 
 export { usePopoverContext } from "./composables/usePopover";
 export type { PopoverContext } from "./composables/usePopover";
+
+export { useTabsContext } from "./composables/useTabs";
+export type { TabsContext } from "./composables/useTabs";
+
+export { useAccordionContext, useAccordionItemContext } from "./composables/useAccordion";
+export type { AccordionContext, AccordionItemContext } from "./composables/useAccordion";
+
+export { useToast } from "./composables/useToast";
+export type { ToastInstance, ToastOptions } from "./composables/useToast";
 
 export { useDropdownMenuContext } from "./composables/useDropdownMenu";
 export type { DropdownMenuContext } from "./composables/useDropdownMenu";
