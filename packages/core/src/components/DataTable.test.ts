@@ -63,6 +63,8 @@ function renderHarness(
   onSort?: (v: DataTableSortState | null) => void,
   onPage?: (v: number) => void,
   onSelected?: (v: Array<string | number>) => void,
+  onGlobalFilter?: (v: string) => void,
+  onColumnFilters?: (v: Record<string, string>) => void,
 ) {
   const Harness = defineComponent({
     setup() {
@@ -70,6 +72,8 @@ function renderHarness(
       const page = ref(props.page ?? 1);
       const pageSize = ref(props.pageSize ?? 10);
       const selected = ref<Array<string | number>>(props.selected ?? []);
+      const globalFilter = ref(props.globalFilter ?? "");
+      const columnFilters = ref<Record<string, string>>(props.columnFilters ?? {});
       return () =>
         h(DataTable<Person>, {
           columns,
@@ -94,6 +98,16 @@ function renderHarness(
           "onUpdate:selected": (v: Array<string | number>) => {
             selected.value = v;
             onSelected?.(v);
+          },
+          globalFilter: globalFilter.value,
+          "onUpdate:globalFilter": (v: string) => {
+            globalFilter.value = v;
+            onGlobalFilter?.(v);
+          },
+          columnFilters: columnFilters.value,
+          "onUpdate:columnFilters": (v: Record<string, string>) => {
+            columnFilters.value = v;
+            onColumnFilters?.(v);
           },
         });
     },
@@ -494,6 +508,141 @@ describe("DataTable", () => {
       renderHarness({ selectionMode: "multiple", rows: [] });
       const statusCell = screen.getByText("No data.").closest("td")!;
       expect(statusCell).toHaveAttribute("colspan", "4"); // 3 columns + selection column
+    });
+  });
+
+  describe("filtering", () => {
+    const columnsWithFilters: DataTableColumn<Person>[] = [
+      { key: "name", header: "Name", sortable: true, filterable: true },
+      { key: "age", header: "Age", sortable: true, align: "end" },
+      { key: "role", header: "Role", filterable: true, filterOptions: ["Engineer", "Designer", "Manager"] },
+    ];
+
+    beforeEach(() => {
+      vi.mocked(announce).mockClear();
+    });
+
+    it("renders no filter UI when no column is filterable (the default)", () => {
+      renderHarness();
+      expect(screen.queryByRole("textbox", { name: "Search" })).not.toBeInTheDocument();
+    });
+
+    it("renders a labeled global search input when at least one column is filterable", () => {
+      renderHarness({ columns: columnsWithFilters });
+      expect(screen.getByRole("textbox", { name: "Search" })).toBeInTheDocument();
+    });
+
+    it("infers a text 'contains' filter by default and a select filter when filterOptions is given", () => {
+      renderHarness({ columns: columnsWithFilters });
+      expect(screen.getByLabelText("Name").tagName).toBe("INPUT");
+      expect(screen.getByLabelText("Role").tagName).toBe("SELECT");
+    });
+
+    it("global search matches across all filterable columns, case-insensitively", async () => {
+      renderHarness({ columns: columnsWithFilters, globalFilter: "eng" });
+      await nextTick();
+      const names = bodyRows().map((r) => within(r).getAllByRole("cell")[0]!.textContent);
+      expect(names).toEqual(["Bea"]); // only Bea's role ("Engineer") matches "eng"
+    });
+
+    it("global search does not match non-filterable columns", async () => {
+      renderHarness({ columns: columnsWithFilters, globalFilter: "41" }); // Bea's age, not filterable
+      await nextTick();
+      expect(screen.getByText("No rows match your filters.")).toBeInTheDocument();
+    });
+
+    it("a per-column text filter narrows rows to matches for that column only", async () => {
+      renderHarness({ columns: columnsWithFilters });
+      const nameFilter = screen.getByLabelText("Name");
+      await fireEvent.update(nameFilter, "am");
+      await nextTick();
+      const names = bodyRows().map((r) => within(r).getAllByRole("cell")[0]!.textContent);
+      expect(names).toEqual(["Amir"]);
+    });
+
+    it("a per-column select filter matches exactly", async () => {
+      renderHarness({ columns: columnsWithFilters });
+      const roleFilter = screen.getByLabelText("Role");
+      await fireEvent.update(roleFilter, "Manager");
+      await nextTick();
+      const names = bodyRows().map((r) => within(r).getAllByRole("cell")[0]!.textContent);
+      expect(names).toEqual(["Cass"]);
+    });
+
+    it("composes global search and per-column filters together (AND, not OR)", async () => {
+      renderHarness({ columns: columnsWithFilters, globalFilter: "a" }); // matches Amir, Cass by name/role text
+      const roleFilter = screen.getByLabelText("Role");
+      await fireEvent.update(roleFilter, "Manager");
+      await nextTick();
+      const names = bodyRows().map((r) => within(r).getAllByRole("cell")[0]!.textContent);
+      expect(names).toEqual(["Cass"]);
+    });
+
+    it("shows a no-results message (not the empty-dataset message) when filters remove every row", async () => {
+      renderHarness({ columns: columnsWithFilters, globalFilter: "nobody-has-this-name" });
+      await nextTick();
+      expect(screen.getByText("No rows match your filters.")).toBeInTheDocument();
+      expect(screen.queryByText("No data.")).not.toBeInTheDocument();
+    });
+
+    it("renders per-column filters inline (no disclosure) at 4 or fewer filterable columns", () => {
+      renderHarness({ columns: columnsWithFilters });
+      expect(screen.queryByRole("group", { name: "Filters" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Filters")).not.toBeInTheDocument();
+    });
+
+    it("collapses per-column filters into a 'Filters' disclosure past ~4 filterable columns", () => {
+      const manyFilterableColumns: DataTableColumn<Person>[] = [
+        { key: "name", header: "Name", filterable: true },
+        { key: "age", header: "Age", filterable: true },
+        { key: "role", header: "Role", filterable: true },
+        { key: "extra1", header: "Extra 1", filterable: true, accessor: () => "" },
+        { key: "extra2", header: "Extra 2", filterable: true, accessor: () => "" },
+      ];
+      const { container } = renderHarness({ columns: manyFilterableColumns });
+      expect(container.querySelector("details.stance-datatable__column-filters")).toBeInTheDocument();
+      expect(screen.getByText("Filters").tagName).toBe("SUMMARY");
+    });
+
+    it("does not filter client-side when manualFilter is true", async () => {
+      renderHarness({ columns: columnsWithFilters, globalFilter: "am", manualFilter: true });
+      await nextTick();
+      expect(bodyRows()).toHaveLength(3); // all rows still shown; parent owns filtering
+    });
+
+    it("filtering, sorting, and pagination compose correctly together", async () => {
+      const manyPeople: Person[] = Array.from({ length: 12 }, (_, i) => ({
+        name: `Person ${String(i + 1).padStart(2, "0")}`,
+        age: 20 + i,
+        role: i % 3 === 0 ? "Manager" : "Engineer",
+      }));
+      renderHarness({
+        columns: columnsWithFilters,
+        rows: manyPeople,
+        globalFilter: "Engineer", // 8 of 12 rows (excludes every 3rd)
+        sort: { key: "name", direction: "desc" },
+        paginationMode: "client",
+        pageSize: 5,
+      });
+      await nextTick();
+      // Filtered to 8 Engineers (every name not a multiple-of-3 index), sorted
+      // by name desc, page 1 of 5 shows the 5 highest-numbered engineer names.
+      const names = bodyRows().map((r) => within(r).getAllByRole("cell")[0]!.textContent);
+      expect(names).toEqual(["Person 12", "Person 11", "Person 09", "Person 08", "Person 06"]);
+      expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument(); // ceil(8/5) = 2 pages
+    });
+
+    it("announces the filtered result count, debounced", async () => {
+      vi.useFakeTimers();
+      try {
+        renderHarness({ columns: columnsWithFilters });
+        const search = screen.getByRole("textbox", { name: "Search" });
+        await fireEvent.update(search, "am");
+        await vi.advanceTimersByTimeAsync(500);
+        expect(announce).toHaveBeenCalledWith("1 result matches your filters");
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

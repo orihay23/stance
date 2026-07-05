@@ -74,6 +74,34 @@ const endAlignPage = ref(1);
 const multipleSelected = ref<Array<string | number>>([]);
 const singleSelected = ref<Array<string | number>>([]);
 const narrowSelected = ref<Array<string | number>>([]);
+
+// --- Filtering ---
+const filterableColumns: DataTableColumn<Person>[] = [
+  { key: "name", header: "Name", sortable: true, filterable: true },
+  { key: "age", header: "Age", sortable: true, align: "end" },
+  { key: "role", header: "Role", sortable: true, filterable: true, filterOptions: [...roles] },
+  { key: "email", header: "Email", filterable: true },
+];
+const filterGlobal = ref("");
+const filterByColumn = ref<Record<string, string>>({});
+const filterSort = ref<DataTableSortState | null>(null);
+const filterPage = ref(1);
+
+const manyFilterableColumns: DataTableColumn<Person>[] = [
+  { key: "name", header: "Name", sortable: true, filterable: true },
+  { key: "age", header: "Age", sortable: true, align: "end", filterable: true },
+  { key: "role", header: "Role", sortable: true, filterable: true, filterOptions: [...roles] },
+  { key: "email", header: "Email", filterable: true },
+  {
+    key: "seniority",
+    header: "Seniority",
+    filterable: true,
+    filterOptions: ["Junior", "Senior"],
+    accessor: (row) => (row.age >= 35 ? "Senior" : "Junior"),
+  },
+];
+const manyFilterGlobal = ref("");
+const manyFilterByColumn = ref<Record<string, string>>({});
 </script>
 
 <template>
@@ -266,6 +294,42 @@ const narrowSelected = ref<Array<string | number>>([]);
             selection-mode="multiple"
           />
         </div>
+      </div>
+    </Variant>
+
+    <Variant title="Filtering (global search + per-column)">
+      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <p class="mb-4 text-sm opacity-70">
+          Global search matches Name/Role/Email (filterable columns). Role has a select-from-values
+          filter (inferred from filterOptions); Name/Email get free-text "contains" inputs.
+        </p>
+        <DataTable
+          v-model:global-filter="filterGlobal"
+          v-model:column-filters="filterByColumn"
+          v-model:sort="filterSort"
+          v-model:page="filterPage"
+          :columns="filterableColumns"
+          :rows="manyRows"
+          row-key="email"
+          pagination-mode="client"
+          :page-size="5"
+        />
+      </div>
+    </Variant>
+
+    <Variant title="Filtering (Filters disclosure past 4 filterable columns)">
+      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <p class="mb-4 text-sm opacity-70">
+          5 filterable columns here — per-column filters collapse behind a "Filters" disclosure
+          instead of crowding the toolbar.
+        </p>
+        <DataTable
+          v-model:global-filter="manyFilterGlobal"
+          v-model:column-filters="manyFilterByColumn"
+          :columns="manyFilterableColumns"
+          :rows="rows"
+          row-key="email"
+        />
       </div>
     </Variant>
 

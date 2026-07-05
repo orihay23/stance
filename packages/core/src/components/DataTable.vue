@@ -1,11 +1,13 @@
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
-import { computed, provide, useId, watch } from "vue";
+import { computed, onUnmounted, provide, useId, watch } from "vue";
 import { cn } from "../utils/cn";
 import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
 import { RADIO_GROUP_KEY } from "../composables/useRadioGroup";
 import DataTablePagination from "./DataTablePagination.vue";
 import Checkbox from "./Checkbox.vue";
 import Radio from "./Radio.vue";
+import Input from "./Input.vue";
+import Select from "./Select.vue";
 
 export interface DataTableColumn<T extends Record<string, unknown> = Record<string, unknown>> {
   /** Unique key. Used as the dynamic cell-slot name (`#cell-{key}`) and, unless `accessor` is given, to read `row[key]`. */
@@ -18,6 +20,12 @@ export interface DataTableColumn<T extends Record<string, unknown> = Record<stri
   sortFn?: (a: T, b: T) => number;
   /** @default "start" */
   align?: "start" | "center" | "end";
+  /** Makes this column eligible for the global search and gives it its own filter control. @default false */
+  filterable?: boolean;
+  /** @default "text" unless `filterOptions` is given, in which case "select" */
+  filterType?: DataTableFilterType;
+  /** Renders the column's filter as a `<select>` of these values instead of a free-text "contains" input. */
+  filterOptions?: string[];
 }
 
 export interface DataTableSortState {
@@ -28,6 +36,8 @@ export interface DataTableSortState {
 export type DataTablePaginationMode = "client" | "server" | "none";
 
 export type DataTableSelectionMode = "single" | "multiple" | "none";
+
+export type DataTableFilterType = "text" | "select";
 
 export interface DataTableProps<T extends Record<string, unknown> = Record<string, unknown>> {
   columns: DataTableColumn<T>[];
@@ -81,6 +91,18 @@ export interface DataTableProps<T extends Record<string, unknown> = Record<strin
    * `selectionMode="single"` just constrains it to at most one entry.
    */
   selected?: Array<string | number>;
+  /** v-model:globalFilter — free-text query matched against every `filterable` column. */
+  globalFilter?: string;
+  /** v-model:columnFilters — per-column filter values, keyed by column `key`. Absent/empty keys mean "no filter". */
+  columnFilters?: Record<string, string>;
+  /**
+   * Skips DataTable's own client-side filtering of `rows` — the filter UI
+   * and `globalFilter`/`columnFilters` state still work normally, but it's
+   * the consumer's responsibility to pass `rows` already filtered (e.g.
+   * filtering happened server-side, alongside `paginationMode="server"`).
+   * @default false
+   */
+  manualFilter?: boolean;
   /** Extra classes merged with internal classes via `tailwind-merge` — applied to the root container. */
   class?: string;
 }
@@ -96,6 +118,9 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
   paginationAlign: "start",
   selectionMode: "none",
   selected: () => [],
+  globalFilter: "",
+  columnFilters: () => ({}),
+  manualFilter: false,
 });
 
 const emit = defineEmits<{
@@ -103,6 +128,8 @@ const emit = defineEmits<{
   "update:page": [value: number];
   "update:pageSize": [value: number];
   "update:selected": [value: Array<string | number>];
+  "update:globalFilter": [value: string];
+  "update:columnFilters": [value: Record<string, string>];
 }>();
 
 defineSlots<{
@@ -110,6 +137,8 @@ defineSlots<{
   empty?(): unknown;
   /** Shown instead of rows while `loading` is true. */
   loading?(): unknown;
+  /** Shown instead of rows when filters remove every row from a non-empty dataset. */
+  "no-results"?(): unknown;
   /** Per-column custom cell rendering, dynamically named `cell-{column.key}`. */
   [slotName: `cell-${string}`]: (scope: { row: T; value: unknown; rowIndex: number }) => unknown;
 }>();
@@ -134,14 +163,102 @@ function defaultCompare(column: DataTableColumn<T>) {
   };
 }
 
+const { announce } = useLiveAnnouncer();
+
+const filterableColumns = computed(() => props.columns.filter((c) => c.filterable));
+
+function filterTypeFor(column: DataTableColumn<T>): DataTableFilterType {
+  return column.filterType ?? (column.filterOptions ? "select" : "text");
+}
+
+const hasActiveFilters = computed(() => {
+  if (props.globalFilter.trim() !== "") return true;
+  return Object.values(props.columnFilters).some((value) => value !== "");
+});
+
+// Filtering runs ahead of sorting, which runs ahead of pagination, so the
+// three compose correctly: sort orders the filtered set, and pagination
+// slices the filtered+sorted set (not the original `rows`).
+const filteredRows = computed(() => {
+  if (props.manualFilter) return props.rows;
+  let result = props.rows;
+
+  const query = props.globalFilter.trim().toLowerCase();
+  if (query) {
+    result = result.filter((row) =>
+      filterableColumns.value.some((column) => String(cellValue(column, row) ?? "").toLowerCase().includes(query)),
+    );
+  }
+
+  const activeColumnFilters = Object.entries(props.columnFilters).filter(([, value]) => value !== "");
+  if (activeColumnFilters.length > 0) {
+    result = result.filter((row) =>
+      activeColumnFilters.every(([key, value]) => {
+        const column = props.columns.find((c) => c.key === key);
+        if (!column) return true;
+        const cell = cellValue(column, row);
+        if (filterTypeFor(column) === "select") return String(cell ?? "") === value;
+        return String(cell ?? "")
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      }),
+    );
+  }
+
+  return result;
+});
+
+const noResultsFromFilter = computed(
+  () => props.rows.length > 0 && hasActiveFilters.value && filteredRows.value.length === 0,
+);
+
+function columnFilterValue(column: DataTableColumn<T>): string {
+  return props.columnFilters[column.key] ?? "";
+}
+
+function setColumnFilter(column: DataTableColumn<T>, value: string) {
+  const next = { ...props.columnFilters };
+  if (value === "") {
+    delete next[column.key];
+  } else {
+    next[column.key] = value;
+  }
+  emit("update:columnFilters", next);
+}
+
+const filterIdBase = useId();
+const globalFilterId = computed(() => `${filterIdBase}-global-filter`);
+function columnFilterId(column: DataTableColumn<T>): string {
+  return `${filterIdBase}-filter-${column.key}`;
+}
+
+let filterAnnounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+watch(
+  () => [props.globalFilter, props.columnFilters, filteredRows.value.length] as const,
+  () => {
+    if (props.manualFilter || !hasActiveFilters.value) return;
+    if (filterAnnounceTimer) clearTimeout(filterAnnounceTimer);
+    filterAnnounceTimer = setTimeout(() => {
+      const count = filteredRows.value.length;
+      announce(`${count} ${count === 1 ? "result matches" : "results match"} your filters`);
+    }, 400);
+  },
+);
+
+onUnmounted(() => {
+  if (filterAnnounceTimer) clearTimeout(filterAnnounceTimer);
+});
+
 const sortedRows = computed(() => {
-  if (props.manualSort || !props.sort) return props.rows;
+  const source = filteredRows.value;
+  if (props.manualSort || !props.sort) return source;
   const sort = props.sort;
   const column = props.columns.find((c) => c.key === sort.key);
-  if (!column) return props.rows;
+  if (!column) return source;
   const compare = column.sortFn ?? defaultCompare(column);
   const factor = sort.direction === "asc" ? 1 : -1;
-  return [...props.rows].sort((a, b) => compare(a, b) * factor);
+  return [...source].sort((a, b) => compare(a, b) * factor);
 });
 
 function toggleSort(column: DataTableColumn<T>) {
@@ -163,8 +280,6 @@ function ariaSortFor(column: DataTableColumn<T>): "ascending" | "descending" | "
   if (props.sort?.key !== column.key) return "none";
   return props.sort.direction === "asc" ? "ascending" : "descending";
 }
-
-const { announce } = useLiveAnnouncer();
 
 const totalPagesComputed = computed(() => {
   if (props.paginationMode === "server") {
@@ -311,6 +426,45 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
 
 <template>
   <div :class="rootClass">
+    <div v-if="filterableColumns.length > 0" class="stance-datatable__filters">
+      <div class="stance-datatable__global-filter">
+        <label :for="globalFilterId" class="stance-datatable__visually-hidden">Search</label>
+        <Input
+          :id="globalFilterId"
+          :model-value="props.globalFilter"
+          placeholder="Search…"
+          @update:model-value="(v) => emit('update:globalFilter', v)"
+        />
+      </div>
+
+      <component
+        :is="filterableColumns.length > 4 ? 'details' : 'div'"
+        class="stance-datatable__column-filters"
+      >
+        <summary v-if="filterableColumns.length > 4" class="stance-datatable__filters-summary">Filters</summary>
+        <div class="stance-datatable__column-filters-body">
+          <div v-for="column in filterableColumns" :key="column.key" class="stance-datatable__column-filter">
+            <label :for="columnFilterId(column)">{{ column.header }}</label>
+            <Select
+              v-if="filterTypeFor(column) === 'select'"
+              :id="columnFilterId(column)"
+              :model-value="columnFilterValue(column)"
+              @update:model-value="(v) => setColumnFilter(column, v)"
+            >
+              <option value="">All</option>
+              <option v-for="opt in column.filterOptions" :key="opt" :value="opt">{{ opt }}</option>
+            </Select>
+            <Input
+              v-else
+              :id="columnFilterId(column)"
+              :model-value="columnFilterValue(column)"
+              @update:model-value="(v) => setColumnFilter(column, v)"
+            />
+          </div>
+        </div>
+      </component>
+    </div>
+
     <DataTablePagination
       v-if="paginationMode !== 'none' && paginationPosition === 'top'"
       :current-page="currentPage"
@@ -391,7 +545,12 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
               <slot name="empty">No data.</slot>
             </td>
           </tr>
-          <tr v-for="(row, rowIndex) in loading || rows.length === 0 ? [] : pagedRows" :key="getRowKey(row, rowIndex)" role="row">
+          <tr v-else-if="noResultsFromFilter" role="row">
+            <td :colspan="columns.length + (selectionMode !== 'none' ? 1 : 0)" role="cell" class="stance-datatable__status-cell">
+              <slot name="no-results">No rows match your filters.</slot>
+            </td>
+          </tr>
+          <tr v-for="(row, rowIndex) in loading || rows.length === 0 || noResultsFromFilter ? [] : pagedRows" :key="getRowKey(row, rowIndex)" role="row">
             <td v-if="selectionMode !== 'none'" role="cell" data-label="Select" class="stance-datatable__select-cell">
               <Checkbox
                 v-if="selectionMode === 'multiple'"
@@ -466,6 +625,83 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
   width: 1%;
   white-space: nowrap;
   text-align: center;
+}
+
+/*
+ * Filter controls live in a toolbar above the <table> rather than embedded
+ * in the header row itself — the collapsed narrow view (below) makes the
+ * real <thead> visually-hidden, and filters need to stay usable there, not
+ * disappear along with it.
+ */
+:where(.stance-datatable__filters) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--stance-spacing-md, 0.75rem);
+  padding-bottom: var(--stance-spacing-md, 0.75rem);
+}
+
+:where(.stance-datatable__global-filter) {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+}
+
+:where(.stance-datatable__column-filters) {
+  display: contents;
+}
+
+:where(.stance-datatable__column-filters-body) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--stance-spacing-md, 0.75rem);
+}
+
+:where(.stance-datatable__column-filter) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stance-spacing-xs, 0.25rem);
+  min-width: 9rem;
+  font-size: var(--stance-text-sm, 0.875rem);
+}
+
+:where(.stance-datatable__column-filter label) {
+  color: var(--stance-color-muted-foreground);
+  font-weight: var(--stance-font-weight-medium, 500);
+}
+
+:where(.stance-datatable__filters-summary) {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 var(--stance-spacing-md, 0.75rem);
+  border: 1px solid var(--stance-color-border);
+  border-radius: var(--stance-radius-sm, 0.25rem);
+  color: var(--stance-color-foreground);
+  font-size: var(--stance-text-sm, 0.875rem);
+  cursor: pointer;
+  list-style: none;
+}
+
+:where(.stance-datatable__filters-summary::-webkit-details-marker) {
+  display: none;
+}
+
+:where(.stance-datatable__filters-summary:hover) {
+  background: var(--stance-color-muted);
+}
+
+:where(.stance-datatable__filters-summary:focus-visible) {
+  outline: 2px solid var(--stance-color-ring, currentColor);
+  outline-offset: 2px;
+}
+
+:where(details.stance-datatable__column-filters) {
+  display: block;
+}
+
+:where(details.stance-datatable__column-filters .stance-datatable__column-filters-body) {
+  margin-top: var(--stance-spacing-md, 0.75rem);
 }
 
 :where(.stance-datatable__table th) {
