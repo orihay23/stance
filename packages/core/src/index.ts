@@ -105,6 +105,9 @@ export type { ToastRegionProps } from "./components/ToastRegion.vue";
 export { default as Card } from "./components/Card.vue";
 export type { CardProps, CardVariant } from "./components/Card.vue";
 
+export { default as Grid } from "./components/Grid.vue";
+export type { GridColumns, GridGap, GridProps, GridResponsiveMode } from "./components/Grid.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
