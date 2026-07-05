@@ -102,6 +102,9 @@ export type { ToastProps } from "./components/Toast.vue";
 export { default as ToastRegion } from "./components/ToastRegion.vue";
 export type { ToastRegionProps } from "./components/ToastRegion.vue";
 
+export { default as Card } from "./components/Card.vue";
+export type { CardProps, CardVariant } from "./components/Card.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
