@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { DataTable, type DataTableColumn, type DataTableSortState } from "@stance/core";
 import { compileTheme, neutral } from "@stance/themes";
 
@@ -42,6 +42,31 @@ const darkSort = ref<DataTableSortState | null>(null);
 const wideSort = ref<DataTableSortState | null>(null);
 const narrowSort = ref<DataTableSortState | null>(null);
 const tinySort = ref<DataTableSortState | null>(null);
+
+const roles = ["Engineer", "Designer", "Manager"] as const;
+const manyRows: Person[] = Array.from({ length: 25 }, (_, i) => ({
+  name: `Person ${String(i + 1).padStart(2, "0")}`,
+  age: 22 + (i % 30),
+  role: roles[i % roles.length]!,
+  email: `person${i + 1}@example.com`,
+}));
+
+// --- Client mode: DataTable holds the full dataset and paginates itself. ---
+const clientPage = ref(1);
+const clientPageSize = ref(5);
+const clientSort = ref<DataTableSortState | null>(null);
+
+// --- Server mode (simulated): only the current page's rows are ever passed
+// in, as if fetched from an API per page; DataTable just renders the nav
+// and reports back which page/size was requested. ---
+const serverPage = ref(1);
+const serverPageSize = ref(5);
+const serverRows = computed(() => {
+  const start = (serverPage.value - 1) * serverPageSize.value;
+  return manyRows.slice(start, start + serverPageSize.value);
+});
+
+const narrowPage = ref(1);
 </script>
 
 <template>
@@ -138,6 +163,57 @@ const tinySort = ref<DataTableSortState | null>(null);
           <div style="width: 280px" :style="{ color: 'var(--stance-color-foreground)' }">
             <DataTable v-model:sort="tinySort" :columns="columns" :rows="rows" row-key="email" />
           </div>
+        </div>
+      </div>
+    </Variant>
+
+    <Variant title="Pagination (client mode)">
+      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <p class="mb-4 text-sm opacity-70">
+          DataTable holds all 25 rows and slices/sorts them itself based on page/pageSize.
+        </p>
+        <DataTable
+          v-model:sort="clientSort"
+          v-model:page="clientPage"
+          v-model:page-size="clientPageSize"
+          :columns="columns"
+          :rows="manyRows"
+          row-key="email"
+          pagination-mode="client"
+        />
+      </div>
+    </Variant>
+
+    <Variant title="Pagination (server mode, simulated)">
+      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+        <p class="mb-4 text-sm opacity-70">
+          Only the current page's 5 rows are ever passed in — as if fetched per page from an API —
+          and DataTable just renders the nav and reports back the requested page.
+        </p>
+        <DataTable
+          v-model:page="serverPage"
+          v-model:page-size="serverPageSize"
+          :columns="columns"
+          :rows="serverRows"
+          row-key="email"
+          pagination-mode="server"
+          :total-rows="manyRows.length"
+          manual-sort
+        />
+      </div>
+    </Variant>
+
+    <Variant title="Pagination in a narrow container">
+      <div class="p-6" data-theme="neutral">
+        <div style="width: 280px" :style="{ color: 'var(--stance-color-foreground)' }">
+          <DataTable
+            v-model:page="narrowPage"
+            :columns="columns"
+            :rows="manyRows"
+            row-key="email"
+            pagination-mode="client"
+            :page-size="5"
+          />
         </div>
       </div>
     </Variant>

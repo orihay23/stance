@@ -16,12 +16,15 @@
 import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { neutral } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import DataTable, { type DataTableColumn, type DataTableProps, type DataTableSortState } from "./DataTable.vue";
 import dataTableSource from "./DataTable.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { announce } from "../utils/live-region";
+
+vi.mock("../utils/live-region", () => ({ announce: vi.fn() }));
 
 const themes = [neutral];
 const modes = ["light", "dark"] as const;
@@ -51,10 +54,16 @@ const rows: Person[] = [
   { name: "Cass", age: 35, role: "Manager" },
 ];
 
-function renderHarness(props: Partial<DataTableProps<Person>> = {}, onSort?: (v: DataTableSortState | null) => void) {
+function renderHarness(
+  props: Partial<DataTableProps<Person>> = {},
+  onSort?: (v: DataTableSortState | null) => void,
+  onPage?: (v: number) => void,
+) {
   const Harness = defineComponent({
     setup() {
       const sort = ref<DataTableSortState | null>(props.sort ?? null);
+      const page = ref(props.page ?? 1);
+      const pageSize = ref(props.pageSize ?? 10);
       return () =>
         h(DataTable<Person>, {
           columns,
@@ -66,6 +75,15 @@ function renderHarness(props: Partial<DataTableProps<Person>> = {}, onSort?: (v:
             sort.value = v;
             onSort?.(v);
           },
+          page: page.value,
+          "onUpdate:page": (v: number) => {
+            page.value = v;
+            onPage?.(v);
+          },
+          pageSize: pageSize.value,
+          "onUpdate:pageSize": (v: number) => {
+            pageSize.value = v;
+          },
         });
     },
   });
@@ -75,6 +93,12 @@ function renderHarness(props: Partial<DataTableProps<Person>> = {}, onSort?: (v:
 function bodyRows() {
   return screen.getAllByRole("row").slice(1); // drop the header row
 }
+
+const manyRows: Person[] = Array.from({ length: 25 }, (_, i) => ({
+  name: `Person ${String(i + 1).padStart(2, "0")}`,
+  age: 20 + i,
+  role: "Engineer",
+}));
 
 describe("DataTable", () => {
   it("renders semantic table markup with explicit roles", () => {
@@ -207,6 +231,102 @@ describe("DataTable", () => {
     const { container } = renderHarness({ caption: "Team roster" });
     const caption = container.querySelector("caption");
     expect(caption).toHaveTextContent("Team roster");
+  });
+
+  describe("pagination", () => {
+    beforeEach(() => {
+      vi.mocked(announce).mockClear();
+    });
+
+    it("renders no pagination nav when paginationMode is 'none' (the default)", () => {
+      renderHarness();
+      expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
+    });
+
+    it("client mode: slices rows into pages and shows all rows when paginationMode is 'none'", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      expect(bodyRows()).toHaveLength(10);
+      expect(screen.getByText("Person 01")).toBeInTheDocument();
+      expect(screen.queryByText("Person 11")).not.toBeInTheDocument();
+    });
+
+    it("client mode: Next/Previous navigate pages and disable at the boundaries", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+
+      const prev = screen.getByRole("button", { name: "Previous" });
+      const next = screen.getByRole("button", { name: "Next" });
+      expect(prev).toBeDisabled();
+      expect(next).not.toBeDisabled();
+
+      await fireEvent.click(next);
+      await nextTick();
+      expect(screen.getByText("Person 11")).toBeInTheDocument();
+      expect(prev).not.toBeDisabled();
+
+      await fireEvent.click(next);
+      await nextTick();
+      expect(screen.getByText("Person 21")).toBeInTheDocument();
+      expect(screen.getAllByRole("row")).toHaveLength(6); // header + 5 rows on the last page
+      expect(next).toBeDisabled();
+    });
+
+    it("marks the active page button with aria-current=page", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      expect(screen.getByRole("button", { name: "1" })).toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("button", { name: "2" })).not.toHaveAttribute("aria-current");
+
+      await fireEvent.click(screen.getByRole("button", { name: "2" }));
+      await nextTick();
+      expect(screen.getByRole("button", { name: "2" })).toHaveAttribute("aria-current", "page");
+    });
+
+    it("wraps the pagination controls in a real <nav aria-label='Pagination'>", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      const nav = screen.getByRole("navigation", { name: "Pagination" });
+      expect(nav.tagName).toBe("NAV");
+    });
+
+    it("server mode: renders only the given rows and derives totalPages from totalRows", async () => {
+      const serverPage = manyRows.slice(0, 10);
+      renderHarness({ rows: serverPage, paginationMode: "server", pageSize: 10, totalRows: 25 });
+      await nextTick();
+      expect(bodyRows()).toHaveLength(10);
+      expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument(); // ceil(25/10) = 3 pages
+    });
+
+    it("server mode: totalPages prop overrides the totalRows/pageSize calculation when given", async () => {
+      renderHarness({ rows: manyRows.slice(0, 10), paginationMode: "server", pageSize: 10, totalRows: 25, totalPages: 7 });
+      await nextTick();
+      expect(screen.getByRole("button", { name: "7" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "3" })).not.toBeInTheDocument();
+    });
+
+    it("clamps and corrects an out-of-range page via update:page", async () => {
+      const onPage = vi.fn();
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10, page: 99 }, undefined, onPage);
+      await nextTick();
+      expect(onPage).toHaveBeenCalledWith(3); // clamped to the last real page
+    });
+
+    it("announces the visible row range on page change", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      await fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      await nextTick();
+      expect(announce).toHaveBeenCalledWith("Showing rows 11–20 of 25");
+    });
+
+    it("announces by page number alone when the total row count isn't known (server mode without totalRows)", async () => {
+      renderHarness({ rows: manyRows.slice(0, 10), paginationMode: "server", pageSize: 10, totalPages: 5 });
+      await nextTick();
+      await fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      await nextTick();
+      expect(announce).toHaveBeenCalledWith("Page 2 of 5");
+    });
   });
 
   it("never emits !important in its styles", () => {
