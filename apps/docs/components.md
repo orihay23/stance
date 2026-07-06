@@ -143,6 +143,12 @@ const groups = ref([
     includes: [],
     summary: "Container-query-driven collapse of intermediate items into a menu once the trail is too long.",
   },
+  {
+    storyId: "src-splitter-story-vue",
+    name: "Splitter",
+    includes: ["SplitterPane"],
+    summary: "Draggable and keyboard-resizable panes (2+), horizontal or vertical, with per-pane min/max and v-model persisted sizes.",
+  },
 ]);
 </script>
 
@@ -174,5 +180,5 @@ alongside.
 
 ## Not yet built
 
-Splitter, DatePicker, and an exploratory look at TreeTable are planned for
-the next component phase.
+DatePicker, and an exploratory look at TreeTable are planned for the next
+component phase.

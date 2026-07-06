@@ -120,6 +120,12 @@ export type { AvatarProps, AvatarSize } from "./components/Avatar.vue";
 export { default as Breadcrumb } from "./components/Breadcrumb.vue";
 export type { BreadcrumbItem, BreadcrumbProps } from "./components/Breadcrumb.vue";
 
+export { default as Splitter } from "./components/Splitter.vue";
+export type { SplitterOrientation, SplitterProps } from "./components/Splitter.vue";
+
+export { default as SplitterPane } from "./components/SplitterPane.vue";
+export type { SplitterPaneProps } from "./components/SplitterPane.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -142,3 +148,6 @@ export { useLiveAnnouncer } from "./composables/useLiveAnnouncer";
 
 export { useDropdownMenuContext } from "./composables/useDropdownMenu";
 export type { DropdownMenuContext } from "./composables/useDropdownMenu";
+
+export { useSplitterContext } from "./composables/useSplitter";
+export type { SplitterContext, SplitterPaneConstraints } from "./composables/useSplitter";
