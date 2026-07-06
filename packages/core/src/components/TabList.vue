@@ -77,6 +77,11 @@ const rootClass = computed(() => cn("stance-tablist", props.class));
   display: flex;
   gap: var(--stance-spacing-xs, 0.25rem);
   border-bottom: 1px solid var(--stance-color-border);
+  /* More tabs than fit scroll horizontally instead of overflowing the
+     container — the individual tabs don't shrink (see .stance-tab), so
+     without this the rightmost one would just spill past the edge. */
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 :where(.stance-tablist[aria-orientation="vertical"]) {
@@ -84,5 +89,7 @@ const rootClass = computed(() => cn("stance-tablist", props.class));
   border-bottom: none;
   border-inline-end: 1px solid var(--stance-color-border);
   padding-inline-end: var(--stance-spacing-sm, 0.5rem);
+  overflow-x: visible;
+  overflow-y: auto;
 }
 </style>
