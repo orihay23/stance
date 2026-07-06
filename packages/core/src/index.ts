@@ -108,6 +108,18 @@ export type { CardProps, CardVariant } from "./components/Card.vue";
 export { default as Grid } from "./components/Grid.vue";
 export type { GridColumns, GridGap, GridProps, GridResponsiveMode } from "./components/Grid.vue";
 
+export { default as Badge } from "./components/Badge.vue";
+export type { BadgeProps, BadgeVariant } from "./components/Badge.vue";
+
+export { default as ProgressBar } from "./components/ProgressBar.vue";
+export type { ProgressBarProps } from "./components/ProgressBar.vue";
+
+export { default as Avatar } from "./components/Avatar.vue";
+export type { AvatarProps, AvatarSize } from "./components/Avatar.vue";
+
+export { default as Breadcrumb } from "./components/Breadcrumb.vue";
+export type { BreadcrumbItem, BreadcrumbProps } from "./components/Breadcrumb.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
