@@ -129,6 +129,15 @@ export type { SplitterPaneProps } from "./components/SplitterPane.vue";
 export { default as DatePicker } from "./components/DatePicker.vue";
 export type { DatePickerMode, DatePickerProps, DatePickerRangeValue } from "./components/DatePicker.vue";
 
+export { default as TreeTable } from "./components/TreeTable.vue";
+export type {
+  TreeTableColumn,
+  TreeTableFilterType,
+  TreeTableProps,
+  TreeTableSelectionMode,
+  TreeTableSortState,
+} from "./components/TreeTable.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
