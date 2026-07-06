@@ -9,6 +9,11 @@
  *    activation), wrapping at the ends; Home/End jump to the first/last tab.
  * 3. Turn on a screen reader and move between tabs — each should announce
  *    "tab", its selected state, and its position/count if the AT reports one.
+ * 4. In a narrow container where the tabs collectively don't fit, confirm
+ *    the tablist scrolls horizontally (not the page) and that moving focus
+ *    with the arrow keys/Home/End auto-scrolls an off-screen tab into view
+ *    — jsdom has no real layout, so scrollWidth/clientWidth can't be
+ *    asserted here.
  */
 import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";

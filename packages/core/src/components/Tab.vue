@@ -49,6 +49,7 @@ const rootClass = computed(() => cn("stance-tab", props.class));
 <style>
 :where(.stance-tab) {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: var(--stance-spacing-xs, 0.25rem);
   background: none;
