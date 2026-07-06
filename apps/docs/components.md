@@ -155,6 +155,12 @@ const groups = ref([
     includes: [],
     summary: "Single-date or range selection via a WAI-ARIA grid dialog, full keyboard support, locale-aware (Intl-based, no date dependency), and a typed-text-input companion.",
   },
+  {
+    storyId: "src-treetable-story-vue",
+    name: "TreeTable",
+    includes: [],
+    summary: "role=treegrid nested data table — expand/collapse, per-sibling-group sort, ancestor-preserving filter, roving-tabindex keyboard grid, and card-collapse at narrow widths.",
+  },
 ]);
 </script>
 
@@ -184,6 +190,4 @@ alongside.
   </tbody>
 </table>
 
-## Not yet built
-
-An exploratory look at TreeTable is planned for the next component phase.
+This completes the initial component list from CLAUDE.md.
