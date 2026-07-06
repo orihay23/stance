@@ -1,0 +1,687 @@
+<script setup lang="ts">
+import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
+import { computed, nextTick, ref, useId, useTemplateRef, watch } from "vue";
+import { cn } from "../utils/cn";
+import { getOverlayRoot } from "../utils/dom";
+import { popBackgroundInert, pushBackgroundInert } from "../utils/inert-background";
+import { detectThemeContext } from "../utils/theme-context";
+import {
+  addDays,
+  addMonths,
+  clampDate,
+  endOfWeek,
+  formatDate,
+  getFirstDayOfWeekForLocale,
+  getLocaleMonthLabel,
+  getLocaleWeekdayNames,
+  getMonthGrid,
+  isAfter,
+  isBefore,
+  isSameDay,
+  parseDate,
+  startOfWeek,
+  type Weekday,
+} from "../utils/date";
+import { useDismissable } from "../composables/useDismissable";
+import { useFocusTrap } from "../composables/useFocusTrap";
+import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
+
+export type DatePickerMode = "single" | "range";
+
+export interface DatePickerRangeValue {
+  start?: Date;
+  end?: Date;
+}
+
+export interface DatePickerProps {
+  /** @default "single" */
+  mode?: DatePickerMode;
+  /** v-model. A `Date | undefined` in mode="single"; a `DatePickerRangeValue` in mode="range" — kept as a plain union rather than discriminated by `mode`, same reasoning as Accordion's `modelValue`. */
+  modelValue?: Date | DatePickerRangeValue;
+  /** Earliest selectable date (inclusive). */
+  min?: Date;
+  /** Latest selectable date (inclusive). */
+  max?: Date;
+  /** Arbitrary per-date disabling (holidays, booked days, etc.) beyond min/max. */
+  disabledDates?: (date: Date) => boolean;
+  /** BCP 47 tag driving month/weekday names and the typed-input format. @default "en-US" */
+  locale?: string;
+  /** Overrides the locale-derived week start (0=Sunday…6=Saturday) for locales `Intl` doesn't resolve correctly (see date.ts). */
+  firstDayOfWeek?: Weekday;
+  disabled?: boolean;
+  required?: boolean;
+  /** Marks the input invalid: set this for externally-known validation failures. Typed text that doesn't parse to a real, enabled date sets the same visual/aria state internally. */
+  invalid?: boolean;
+  placeholder?: string;
+  /** id for the underlying text input. Auto-generated via `useId()` if omitted — pass your own to pair with an external `<label for>`, same convention as Input.vue. */
+  id?: string;
+  /** Extra classes merged with internal classes via `tailwind-merge` — applied to the root container. */
+  class?: string;
+}
+
+const props = withDefaults(defineProps<DatePickerProps>(), {
+  mode: "single",
+  locale: "en-US",
+  disabled: false,
+  required: false,
+  invalid: false,
+});
+
+const emit = defineEmits<{
+  "update:modelValue": [value: Date | DatePickerRangeValue | undefined];
+}>();
+
+const { announce } = useLiveAnnouncer();
+
+const baseId = useId();
+const inputId = computed(() => props.id ?? `${baseId}-input`);
+const dialogId = `${baseId}-dialog`;
+
+const open = ref(false);
+const focusedDate = ref(clampDate(new Date(), props.min, props.max));
+const pendingRangeStart = ref<Date | undefined>(undefined);
+const inputText = ref("");
+const hasParseError = ref(false);
+
+const fieldRef = useTemplateRef<HTMLElement>("fieldRef");
+const inputRef = useTemplateRef<HTMLInputElement>("inputRef");
+const triggerRef = useTemplateRef<HTMLButtonElement>("triggerRef");
+const dialogRef = useTemplateRef<HTMLElement>("dialogRef");
+const activeCellRef = ref<HTMLElement | null>(null);
+
+const singleValue = computed(() => (props.mode === "single" ? (props.modelValue as Date | undefined) : undefined));
+const rangeValue = computed(() =>
+  props.mode === "range" ? (props.modelValue as DatePickerRangeValue | undefined) : undefined,
+);
+
+watch(
+  singleValue,
+  (value) => {
+    inputText.value = value ? formatDate(value, props.locale) : "";
+  },
+  { immediate: true },
+);
+
+const rangeDisplayText = computed(() => {
+  const value = rangeValue.value;
+  if (!value?.start) return "";
+  const startText = formatDate(value.start, props.locale);
+  if (!value.end) return `${startText} – Select end date`;
+  return `${startText} – ${formatDate(value.end, props.locale)}`;
+});
+
+const fieldValue = computed(() => (props.mode === "single" ? inputText.value : rangeDisplayText.value));
+
+const effectiveFirstDayOfWeek = computed(
+  () => props.firstDayOfWeek ?? getFirstDayOfWeekForLocale(props.locale),
+);
+const viewYear = computed(() => focusedDate.value.getFullYear());
+const viewMonth = computed(() => focusedDate.value.getMonth());
+const weeks = computed(() => getMonthGrid(viewYear.value, viewMonth.value, effectiveFirstDayOfWeek.value));
+const weekdayLabels = computed(() => getLocaleWeekdayNames(props.locale, effectiveFirstDayOfWeek.value));
+const monthLabel = computed(() => getLocaleMonthLabel(props.locale, viewYear.value, viewMonth.value));
+
+const prevMonthDate = computed(() => addMonths(focusedDate.value, -1));
+const nextMonthDate = computed(() => addMonths(focusedDate.value, 1));
+const prevMonthLabel = computed(() => getLocaleMonthLabel(props.locale, prevMonthDate.value.getFullYear(), prevMonthDate.value.getMonth()));
+const nextMonthLabel = computed(() => getLocaleMonthLabel(props.locale, nextMonthDate.value.getFullYear(), nextMonthDate.value.getMonth()));
+
+const isPrevMonthDisabled = computed(() => {
+  if (!props.min) return false;
+  return isBefore(new Date(viewYear.value, viewMonth.value, 0), props.min);
+});
+const isNextMonthDisabled = computed(() => {
+  if (!props.max) return false;
+  return isAfter(new Date(viewYear.value, viewMonth.value + 1, 1), props.max);
+});
+
+function isDisabledDate(date: Date): boolean {
+  if (props.min && isBefore(date, props.min)) return true;
+  if (props.max && isAfter(date, props.max)) return true;
+  return props.disabledDates?.(date) ?? false;
+}
+
+function isSelected(date: Date): boolean {
+  if (props.mode === "single") return singleValue.value ? isSameDay(date, singleValue.value) : false;
+  const value = rangeValue.value;
+  return Boolean(value && ((value.start && isSameDay(date, value.start)) || (value.end && isSameDay(date, value.end))));
+}
+
+function currentRangeBounds(): { start: Date; end: Date } | undefined {
+  const value = rangeValue.value;
+  if (value?.start && value?.end) return { start: value.start, end: value.end };
+  if (pendingRangeStart.value) {
+    const a = pendingRangeStart.value;
+    const b = focusedDate.value;
+    return isBefore(b, a) ? { start: b, end: a } : { start: a, end: b };
+  }
+  return undefined;
+}
+
+function isInRange(date: Date): boolean {
+  if (props.mode !== "range") return false;
+  const bounds = currentRangeBounds();
+  if (!bounds) return false;
+  return !isBefore(date, bounds.start) && !isAfter(date, bounds.end);
+}
+
+function isToday(date: Date): boolean {
+  return isSameDay(date, new Date());
+}
+
+function isOutsideMonth(date: Date): boolean {
+  return date.getMonth() !== viewMonth.value;
+}
+
+function moveFocus(date: Date) {
+  focusedDate.value = date;
+  nextTick(() => activeCellRef.value?.focus());
+}
+
+function setActiveCellRef(day: Date, el: Element | null) {
+  if (isSameDay(day, focusedDate.value)) {
+    activeCellRef.value = el as HTMLElement | null;
+  }
+}
+
+function prevMonth() {
+  if (isPrevMonthDisabled.value) return;
+  moveFocus(prevMonthDate.value);
+}
+
+function nextMonth() {
+  if (isNextMonthDisabled.value) return;
+  moveFocus(nextMonthDate.value);
+}
+
+function selectDay(date: Date) {
+  if (props.disabled || isDisabledDate(date)) return;
+
+  if (props.mode === "single") {
+    emit("update:modelValue", date);
+    closeCalendar();
+    return;
+  }
+
+  if (!pendingRangeStart.value) {
+    pendingRangeStart.value = date;
+    emit("update:modelValue", { start: date });
+    announce(`Start date selected: ${formatDate(date, props.locale)}. Choose the end date.`);
+    return;
+  }
+
+  const a = pendingRangeStart.value;
+  const [start, end] = isBefore(date, a) ? [date, a] : [a, date];
+  pendingRangeStart.value = undefined;
+  emit("update:modelValue", { start, end });
+  announce(`Date range selected: ${formatDate(start, props.locale)} to ${formatDate(end, props.locale)}.`);
+  closeCalendar();
+}
+
+function onGridKeydown(event: KeyboardEvent) {
+  const current = focusedDate.value;
+  switch (event.key) {
+    case "ArrowRight":
+      event.preventDefault();
+      moveFocus(addDays(current, 1));
+      break;
+    case "ArrowLeft":
+      event.preventDefault();
+      moveFocus(addDays(current, -1));
+      break;
+    case "ArrowDown":
+      event.preventDefault();
+      moveFocus(addDays(current, 7));
+      break;
+    case "ArrowUp":
+      event.preventDefault();
+      moveFocus(addDays(current, -7));
+      break;
+    case "PageDown":
+      event.preventDefault();
+      moveFocus(addMonths(current, event.shiftKey ? 12 : 1));
+      break;
+    case "PageUp":
+      event.preventDefault();
+      moveFocus(addMonths(current, event.shiftKey ? -12 : -1));
+      break;
+    case "Home":
+      event.preventDefault();
+      moveFocus(startOfWeek(current, effectiveFirstDayOfWeek.value));
+      break;
+    case "End":
+      event.preventDefault();
+      moveFocus(endOfWeek(current, effectiveFirstDayOfWeek.value));
+      break;
+    case "Enter":
+    case " ":
+      event.preventDefault();
+      selectDay(current);
+      break;
+  }
+}
+
+function openCalendar() {
+  if (props.disabled) return;
+  const anchor = props.mode === "single" ? singleValue.value : rangeValue.value?.end ?? rangeValue.value?.start;
+  focusedDate.value = clampDate(anchor ?? new Date(), props.min, props.max);
+  open.value = true;
+}
+
+function closeCalendar() {
+  open.value = false;
+}
+
+function onFieldClick() {
+  if (!open.value) openCalendar();
+}
+
+function onInputKeydown(event: KeyboardEvent) {
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    openCalendar();
+    return;
+  }
+  if (props.mode === "single" && event.key === "Enter") {
+    commitTypedInput();
+  }
+}
+
+function onInputBlur() {
+  if (props.mode === "single") commitTypedInput();
+}
+
+function commitTypedInput() {
+  const text = inputText.value.trim();
+  if (!text) {
+    hasParseError.value = false;
+    if (singleValue.value) emit("update:modelValue", undefined);
+    return;
+  }
+  const parsed = parseDate(text, props.locale);
+  if (!parsed || isDisabledDate(parsed)) {
+    hasParseError.value = true;
+    return;
+  }
+  hasParseError.value = false;
+  emit("update:modelValue", parsed);
+}
+
+const overlayRoot = getOverlayRoot();
+const themeContext = ref(detectThemeContext(null));
+
+const { floatingStyles } = useFloating(fieldRef, dialogRef, {
+  open,
+  placement: "bottom-start",
+  middleware: [offset(8), flip(), shift({ padding: 8 })],
+  whileElementsMounted: autoUpdate,
+});
+
+// Registered before useFocusTrap so that on close, the background is made
+// non-inert again before useFocusTrap tries to restore focus to whatever
+// triggered the calendar — focusing an inert element silently fails (see the
+// identical fix in Dialog.vue/PopoverContent.vue).
+watch(open, (isOpen) => {
+  if (isOpen) {
+    themeContext.value = detectThemeContext(document.activeElement);
+    pushBackgroundInert(overlayRoot);
+  } else {
+    popBackgroundInert();
+  }
+});
+
+// Matches the WAI-ARIA Date Picker Dialog pattern's explicit "dialog"
+// framing (Tab cycles within it, closing restores focus to whatever opened
+// it) — the same recipe this library's own Popover uses for `modal: true`.
+useFocusTrap({
+  container: dialogRef,
+  active: open,
+  initialFocus: activeCellRef,
+});
+
+useDismissable({
+  active: open,
+  containers: [fieldRef, dialogRef],
+  onDismiss: closeCalendar,
+});
+
+const rootClass = computed(() => cn("stance-date-picker", props.class));
+</script>
+
+<template>
+  <div :class="rootClass">
+    <div ref="fieldRef" class="stance-date-picker__field" @click="onFieldClick">
+      <input
+        ref="inputRef"
+        :id="inputId"
+        type="text"
+        class="stance-date-picker__input"
+        :value="fieldValue"
+        :readonly="mode === 'range'"
+        :disabled="disabled"
+        :required="required || undefined"
+        :aria-invalid="invalid || hasParseError || undefined"
+        :placeholder="placeholder ?? (mode === 'single' ? 'Select a date' : 'Select a date range')"
+        autocomplete="off"
+        @input="mode === 'single' && (inputText = ($event.target as HTMLInputElement).value)"
+        @keydown="onInputKeydown"
+        @blur="onInputBlur"
+      />
+      <button
+        ref="triggerRef"
+        type="button"
+        class="stance-date-picker__trigger"
+        :disabled="disabled"
+        aria-haspopup="dialog"
+        :aria-expanded="open"
+        :aria-controls="open ? dialogId : undefined"
+        aria-label="Choose date"
+        @click="open ? closeCalendar() : openCalendar()"
+      >
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M2 6.5h12M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <Teleport :to="overlayRoot">
+      <div
+        v-if="open"
+        ref="dialogRef"
+        :id="dialogId"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="`Choose date, ${monthLabel}`"
+        :class="['stance-date-picker__dialog', { dark: themeContext.dark }]"
+        :data-theme="themeContext.theme ?? undefined"
+        :style="floatingStyles"
+        tabindex="-1"
+      >
+        <div class="stance-date-picker__nav">
+          <button
+            type="button"
+            class="stance-date-picker__nav-button"
+            :disabled="isPrevMonthDisabled"
+            :aria-label="`Previous month, ${prevMonthLabel}`"
+            @click="prevMonth"
+          >
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M10 3l-5 5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <span class="stance-date-picker__month-label">{{ monthLabel }}</span>
+          <button
+            type="button"
+            class="stance-date-picker__nav-button"
+            :disabled="isNextMonthDisabled"
+            :aria-label="`Next month, ${nextMonthLabel}`"
+            @click="nextMonth"
+          >
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div role="grid" :aria-label="monthLabel" class="stance-date-picker__grid" @keydown="onGridKeydown">
+          <div role="row" class="stance-date-picker__row stance-date-picker__row--header">
+            <span
+              v-for="weekday in weekdayLabels"
+              :key="weekday.full"
+              role="columnheader"
+              :aria-label="weekday.full"
+              class="stance-date-picker__weekday"
+            >
+              {{ weekday.short }}
+            </span>
+          </div>
+          <div v-for="(week, weekIndex) in weeks" :key="weekIndex" role="row" class="stance-date-picker__row">
+            <div
+              v-for="day in week"
+              :key="day.getTime()"
+              :ref="(el) => setActiveCellRef(day, el as Element | null)"
+              role="gridcell"
+              class="stance-date-picker__cell"
+              :tabindex="isSameDay(day, focusedDate) ? 0 : -1"
+              :aria-selected="isSelected(day)"
+              :aria-current="isToday(day) ? 'date' : undefined"
+              :aria-disabled="isDisabledDate(day) || undefined"
+              :data-outside-month="isOutsideMonth(day) || undefined"
+              :data-in-range="isInRange(day) || undefined"
+              :data-selected="isSelected(day) || undefined"
+              :data-today="isToday(day) || undefined"
+              @click="selectDay(day)"
+              @focus="focusedDate = day"
+            >
+              {{ day.getDate() }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>
+
+<style>
+:where(.stance-date-picker) {
+  container-type: inline-size;
+  container-name: stance-date-picker;
+  font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
+  color: var(--stance-color-foreground);
+}
+
+:where(.stance-date-picker__field) {
+  display: flex;
+  align-items: center;
+  gap: var(--stance-spacing-xs, 0.25rem);
+  border: 1px solid var(--stance-color-border);
+  border-radius: var(--stance-radius-md, 0.5rem);
+  background: var(--stance-color-background);
+  padding-inline-end: var(--stance-spacing-xs, 0.25rem);
+}
+
+:where(.stance-date-picker__field:focus-within) {
+  outline: 2px solid var(--stance-color-ring, currentColor);
+  outline-offset: 2px;
+}
+
+:where(.stance-date-picker__input) {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: var(--stance-spacing-sm, 0.5rem) var(--stance-spacing-md, 0.75rem);
+  font: inherit;
+  color: inherit;
+}
+
+:where(.stance-date-picker__input:focus) {
+  outline: none;
+}
+
+:where(.stance-date-picker__input[aria-invalid="true"]) {
+  color: var(--stance-color-danger, currentColor);
+}
+
+:where(.stance-date-picker__trigger) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--stance-radius-sm, 0.25rem);
+  background: none;
+  color: var(--stance-color-muted-foreground);
+  cursor: pointer;
+}
+
+:where(.stance-date-picker__trigger svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+:where(.stance-date-picker__trigger:hover) {
+  background: var(--stance-color-muted);
+}
+
+:where(.stance-date-picker__trigger:focus-visible) {
+  outline: 2px solid var(--stance-color-ring, currentColor);
+  outline-offset: 2px;
+}
+
+:where(.stance-date-picker__trigger:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:where(.stance-date-picker__dialog) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stance-spacing-sm, 0.5rem);
+  width: 18rem;
+  max-width: calc(100vw - 1rem);
+  background: var(--stance-color-background);
+  border: 1px solid var(--stance-color-border);
+  border-radius: var(--stance-radius-lg, 0.75rem);
+  box-shadow: var(--stance-shadow-lg);
+  padding: var(--stance-spacing-md, 0.75rem);
+  font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
+  color: var(--stance-color-foreground);
+  pointer-events: auto;
+}
+
+:where(.stance-date-picker__dialog:focus-visible) {
+  outline: none;
+}
+
+:where(.stance-date-picker__nav) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+:where(.stance-date-picker__month-label) {
+  font-weight: var(--stance-font-weight-semibold, 600);
+  font-size: var(--stance-text-sm, 0.875rem);
+}
+
+:where(.stance-date-picker__nav-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--stance-radius-sm, 0.25rem);
+  background: none;
+  color: var(--stance-color-foreground);
+  cursor: pointer;
+}
+
+:where(.stance-date-picker__nav-button svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+:where(.stance-date-picker__nav-button:hover) {
+  background: var(--stance-color-muted);
+}
+
+:where(.stance-date-picker__nav-button:focus-visible) {
+  outline: 2px solid var(--stance-color-ring, currentColor);
+  outline-offset: 2px;
+}
+
+:where(.stance-date-picker__nav-button:disabled) {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+:where(.stance-date-picker__grid) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+:where(.stance-date-picker__row) {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+:where(.stance-date-picker__weekday) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  font-size: var(--stance-text-xs, 0.75rem);
+  color: var(--stance-color-muted-foreground);
+}
+
+:where(.stance-date-picker__cell) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  border-radius: var(--stance-radius-sm, 0.25rem);
+  font-size: var(--stance-text-sm, 0.875rem);
+  cursor: pointer;
+  user-select: none;
+}
+
+:where(.stance-date-picker__cell[data-outside-month]) {
+  color: var(--stance-color-muted-foreground);
+  opacity: 0.6;
+}
+
+:where(.stance-date-picker__cell[data-today]) {
+  font-weight: var(--stance-font-weight-semibold, 600);
+  box-shadow: inset 0 0 0 1px var(--stance-color-border);
+}
+
+:where(.stance-date-picker__cell:hover) {
+  background: var(--stance-color-muted);
+}
+
+:where(.stance-date-picker__cell[data-in-range]) {
+  background: var(--stance-color-primary);
+  opacity: 0.16;
+  border-radius: 0;
+}
+
+:where(.stance-date-picker__cell[data-selected]) {
+  background: var(--stance-color-primary);
+  color: var(--stance-color-primary-foreground);
+  opacity: 1;
+}
+
+:where(.stance-date-picker__cell[aria-disabled="true"]) {
+  color: var(--stance-color-muted-foreground);
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+:where(.stance-date-picker__cell:focus-visible) {
+  outline: 2px solid var(--stance-color-ring, currentColor);
+  outline-offset: 2px;
+}
+
+/* Below this container width, tighten spacing/typography so a single-month
+   view still fits without overflowing — this component never assumes room
+   for a two-month side-by-side layout in the first place. */
+@container stance-date-picker (max-width: 18rem) {
+  :where(.stance-date-picker__dialog) {
+    width: 100%;
+    padding: var(--stance-spacing-sm, 0.5rem);
+  }
+
+  :where(.stance-date-picker__cell),
+  :where(.stance-date-picker__weekday) {
+    height: 1.75rem;
+    font-size: var(--stance-text-xs, 0.75rem);
+  }
+}
+</style>

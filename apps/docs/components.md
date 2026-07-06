@@ -149,6 +149,12 @@ const groups = ref([
     includes: ["SplitterPane"],
     summary: "Draggable and keyboard-resizable panes (2+), horizontal or vertical, with per-pane min/max and v-model persisted sizes.",
   },
+  {
+    storyId: "src-datepicker-story-vue",
+    name: "DatePicker",
+    includes: [],
+    summary: "Single-date or range selection via a WAI-ARIA grid dialog, full keyboard support, locale-aware (Intl-based, no date dependency), and a typed-text-input companion.",
+  },
 ]);
 </script>
 
@@ -180,5 +186,4 @@ alongside.
 
 ## Not yet built
 
-DatePicker, and an exploratory look at TreeTable are planned for the next
-component phase.
+An exploratory look at TreeTable is planned for the next component phase.
