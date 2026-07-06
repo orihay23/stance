@@ -119,6 +119,30 @@ const groups = ref([
     includes: [],
     summary: "Responsive column layout via container queries or viewport breakpoints; composes with Card.",
   },
+  {
+    storyId: "src-badge-story-vue",
+    name: "Badge",
+    includes: [],
+    summary: "Decorative by default; pass a label for badges conveying a count or status that matters functionally.",
+  },
+  {
+    storyId: "src-progressbar-story-vue",
+    name: "ProgressBar",
+    includes: [],
+    summary: "Determinate and indeterminate modes, role=progressbar with correct aria-value* attributes.",
+  },
+  {
+    storyId: "src-avatar-story-vue",
+    name: "Avatar",
+    includes: [],
+    summary: "Image with graceful fallback to initials or an icon on load failure or when no image is given.",
+  },
+  {
+    storyId: "src-breadcrumb-story-vue",
+    name: "Breadcrumb",
+    includes: [],
+    summary: "Container-query-driven collapse of intermediate items into a menu once the trail is too long.",
+  },
 ]);
 </script>
 
@@ -150,6 +174,5 @@ alongside.
 
 ## Not yet built
 
-Splitter, DatePicker, small display primitives (Progress Bar, Breadcrumb,
-Avatar, Badge), and an exploratory look at TreeTable are planned for the next
-component phase.
+Splitter, DatePicker, and an exploratory look at TreeTable are planned for
+the next component phase.
