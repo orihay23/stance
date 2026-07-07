@@ -266,6 +266,29 @@ describe("DatePicker", () => {
     expect(input).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("sets aria-invalid when invalid, without a dangling aria-describedby if there's no error slot", () => {
+    render(DatePicker, { props: { invalid: true } });
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("wires aria-describedby to the error slot's id when invalid and an error slot is provided", () => {
+    render(DatePicker, { props: { invalid: true }, slots: { error: "A date is required" } });
+    const input = screen.getByRole("textbox");
+    const describedBy = input.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    const errorEl = document.getElementById(describedBy!);
+    expect(errorEl).toHaveTextContent("A date is required");
+  });
+
+  it("does not render or wire the error slot when not invalid", () => {
+    render(DatePicker, { props: { invalid: false }, slots: { error: "A date is required" } });
+    const input = screen.getByRole("textbox");
+    expect(input).not.toHaveAttribute("aria-describedby");
+    expect(screen.queryByText("A date is required")).not.toBeInTheDocument();
+  });
+
   it("never emits !important in DatePicker's styles", () => {
     expect(datePickerSource).not.toContain("!important");
   });

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
-import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
+import { computed, useTemplateRef } from "vue";
 import { cn } from "../utils/cn";
 import { getOverlayRoot } from "../utils/dom";
-import { popBackgroundInert, pushBackgroundInert } from "../utils/inert-background";
-import { detectThemeContext } from "../utils/theme-context";
 import { useDismissable } from "../composables/useDismissable";
+import { useFloatingOverlay } from "../composables/useFloatingOverlay";
 import { useFocusTrap } from "../composables/useFocusTrap";
+import { useModalBackground } from "../composables/useModalBackground";
+import { useOverlayThemeContext } from "../composables/useOverlayThemeContext";
 import { usePopoverContext } from "../composables/usePopover";
 
 export interface PopoverContentProps {
@@ -27,35 +27,23 @@ const contentRef = useTemplateRef<HTMLElement>("contentRef");
 const open = computed(() => context?.open.value ?? false);
 const modal = computed(() => context?.modal.value ?? false);
 
-const { floatingStyles } = useFloating(
+const { floatingStyles } = useFloatingOverlay(
   computed(() => context?.triggerRef.value ?? null),
   contentRef,
   {
     open,
     placement: computed(() => context?.placement.value ?? "bottom"),
-    middleware: computed(() => [
-      offset(context?.offset.value ?? 8),
-      flip(),
-      shift({ padding: 8 }),
-    ]),
-    whileElementsMounted: autoUpdate,
+    offset: computed(() => context?.offset.value ?? 8),
   },
 );
 
-const themeContext = ref(detectThemeContext(null));
+const themeContext = useOverlayThemeContext(open, () => context?.triggerRef.value ?? document.activeElement);
 
-// Registered before useFocusTrap so that when `modal` is true, the
-// background is made non-inert again before useFocusTrap tries to restore
-// focus to the trigger — focusing an inert element silently fails (see the
-// identical fix in Dialog.vue).
-watch(open, (isOpen) => {
-  if (isOpen) {
-    themeContext.value = detectThemeContext(context?.triggerRef.value ?? document.activeElement);
-    if (modal.value) pushBackgroundInert(overlayRoot);
-  } else {
-    if (modal.value) popBackgroundInert();
-  }
-});
+// Must run before useFocusTrap so that when `modal` is true, the background
+// is made non-inert again before useFocusTrap tries to restore focus to the
+// trigger — focusing an inert element silently fails (see the identical fix
+// in Dialog.vue).
+useModalBackground(open, overlayRoot, modal);
 
 useFocusTrap({
   container: contentRef,
@@ -69,10 +57,6 @@ useDismissable({
   closeOnEscape: computed(() => context?.closeOnEscape.value ?? true),
   closeOnOutsideClick: computed(() => context?.closeOnOutsideClick.value ?? true),
   onDismiss: () => context?.setOpen(false),
-});
-
-onBeforeUnmount(() => {
-  if (open.value && modal.value) popBackgroundInert();
 });
 
 const contentClass = computed(() => cn("stance-popover__content", props.class));

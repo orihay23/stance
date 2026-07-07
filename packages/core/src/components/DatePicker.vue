@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
 import { computed, nextTick, ref, useId, useTemplateRef, watch } from "vue";
 import { cn } from "../utils/cn";
 import { getOverlayRoot } from "../utils/dom";
-import { popBackgroundInert, pushBackgroundInert } from "../utils/inert-background";
-import { detectThemeContext } from "../utils/theme-context";
 import {
   addDays,
   addMonths,
@@ -23,8 +20,17 @@ import {
   type Weekday,
 } from "../utils/date";
 import { useDismissable } from "../composables/useDismissable";
+import { useErrorSlot } from "../composables/useErrorSlot";
+import { useFloatingOverlay } from "../composables/useFloatingOverlay";
 import { useFocusTrap } from "../composables/useFocusTrap";
 import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
+import { useModalBackground } from "../composables/useModalBackground";
+import { useOverlayThemeContext } from "../composables/useOverlayThemeContext";
+
+// The template now has two root nodes (the field/calendar wrapper and the
+// conditional error <p>) once the error slot is added, so Vue disables
+// automatic attrs fallthrough — same reason Input/Textarea need this.
+defineOptions({ inheritAttrs: false });
 
 export type DatePickerMode = "single" | "range";
 
@@ -71,6 +77,11 @@ const emit = defineEmits<{
   "update:modelValue": [value: Date | DatePickerRangeValue | undefined];
 }>();
 
+const slots = defineSlots<{
+  /** Error message shown — and wired to `aria-describedby` — when `invalid` (or a typed parse error) is true. */
+  error?(): unknown;
+}>();
+
 const { announce } = useLiveAnnouncer();
 
 const baseId = useId();
@@ -82,6 +93,12 @@ const focusedDate = ref(clampDate(new Date(), props.min, props.max));
 const pendingRangeStart = ref<Date | undefined>(undefined);
 const inputText = ref("");
 const hasParseError = ref(false);
+
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => inputId.value,
+  () => props.invalid || hasParseError.value,
+  () => Boolean(slots.error),
+);
 
 const fieldRef = useTemplateRef<HTMLElement>("fieldRef");
 const inputRef = useTemplateRef<HTMLInputElement>("inputRef");
@@ -272,8 +289,15 @@ function closeCalendar() {
   open.value = false;
 }
 
-function onFieldClick() {
-  if (!open.value) openCalendar();
+function onFieldClick(event: MouseEvent) {
+  // Clicking the input itself in single mode is how you start typing a
+  // date (see the props doc) — don't yank focus into the focus-trapped
+  // calendar dialog for that. Range mode's input is read-only, so opening
+  // on click there is still the right behavior; so is clicking the rest of
+  // the field wrapper (e.g. its padding) in either mode.
+  if (open.value) return;
+  if (props.mode === "single" && event.target === inputRef.value) return;
+  openCalendar();
 }
 
 function onInputKeydown(event: KeyboardEvent) {
@@ -308,27 +332,19 @@ function commitTypedInput() {
 }
 
 const overlayRoot = getOverlayRoot();
-const themeContext = ref(detectThemeContext(null));
 
-const { floatingStyles } = useFloating(fieldRef, dialogRef, {
+const { floatingStyles } = useFloatingOverlay(fieldRef, dialogRef, {
   open,
   placement: "bottom-start",
-  middleware: [offset(8), flip(), shift({ padding: 8 })],
-  whileElementsMounted: autoUpdate,
 });
 
-// Registered before useFocusTrap so that on close, the background is made
+const themeContext = useOverlayThemeContext(open, () => document.activeElement);
+
+// Must run before useFocusTrap so that on close, the background is made
 // non-inert again before useFocusTrap tries to restore focus to whatever
 // triggered the calendar — focusing an inert element silently fails (see the
 // identical fix in Dialog.vue/PopoverContent.vue).
-watch(open, (isOpen) => {
-  if (isOpen) {
-    themeContext.value = detectThemeContext(document.activeElement);
-    pushBackgroundInert(overlayRoot);
-  } else {
-    popBackgroundInert();
-  }
-});
+useModalBackground(open, overlayRoot);
 
 // Matches the WAI-ARIA Date Picker Dialog pattern's explicit "dialog"
 // framing (Tab cycles within it, closing restores focus to whatever opened
@@ -349,8 +365,13 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
 </script>
 
 <template>
-  <div :class="rootClass">
-    <div ref="fieldRef" class="stance-date-picker__field" @click="onFieldClick">
+  <div :class="rootClass" v-bind="$attrs">
+    <div
+      ref="fieldRef"
+      class="stance-date-picker__field"
+      :data-invalid="invalid || hasParseError || undefined"
+      @click="onFieldClick"
+    >
       <input
         ref="inputRef"
         :id="inputId"
@@ -361,6 +382,7 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
         :disabled="disabled"
         :required="required || undefined"
         :aria-invalid="invalid || hasParseError || undefined"
+        :aria-describedby="describedBy"
         :placeholder="placeholder ?? (mode === 'single' ? 'Select a date' : 'Select a date range')"
         autocomplete="off"
         @input="mode === 'single' && (inputText = ($event.target as HTMLInputElement).value)"
@@ -376,7 +398,7 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
         :aria-expanded="open"
         :aria-controls="open ? dialogId : undefined"
         aria-label="Choose date"
-        @click="open ? closeCalendar() : openCalendar()"
+        @click.stop="open ? closeCalendar() : openCalendar()"
       >
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5" />
@@ -461,6 +483,10 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
       </div>
     </Teleport>
   </div>
+
+  <p v-if="showError" :id="errorId" class="stance-date-picker-error">
+    <slot name="error" />
+  </p>
 </template>
 
 <style>
@@ -482,8 +508,18 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
 }
 
 :where(.stance-date-picker__field:focus-within) {
+  border-color: var(--stance-color-ring);
   outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
+  outline-offset: 1px;
+}
+
+:where(.stance-date-picker__field[data-invalid]) {
+  border-color: var(--stance-color-destructive);
+}
+
+:where(.stance-date-picker__field[data-invalid]:focus-within) {
+  border-color: var(--stance-color-destructive);
+  outline-color: var(--stance-color-destructive);
 }
 
 :where(.stance-date-picker__input) {
@@ -501,7 +537,13 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
 }
 
 :where(.stance-date-picker__input[aria-invalid="true"]) {
-  color: var(--stance-color-danger, currentColor);
+  color: var(--stance-color-destructive, currentColor);
+}
+
+:where(.stance-date-picker-error) {
+  margin: var(--stance-spacing-xs, 0.25rem) 0 0;
+  font-size: var(--stance-text-sm, 0.875rem);
+  color: var(--stance-color-destructive);
 }
 
 :where(.stance-date-picker__trigger) {
@@ -647,8 +689,7 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
 }
 
 :where(.stance-date-picker__cell[data-in-range]) {
-  background: var(--stance-color-primary);
-  opacity: 0.16;
+  background: color-mix(in oklch, var(--stance-color-primary) 16%, transparent);
   border-radius: 0;
 }
 

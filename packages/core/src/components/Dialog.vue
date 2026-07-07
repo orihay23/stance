@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, useId, useTemplateRef, watch, watchEffect } from "vue";
+import { computed, useId, useTemplateRef, watchEffect } from "vue";
 import { cn } from "../utils/cn";
 import { getOverlayRoot } from "../utils/dom";
-import { popBackgroundInert, pushBackgroundInert } from "../utils/inert-background";
-import { detectThemeContext } from "../utils/theme-context";
 import { useDismissable } from "../composables/useDismissable";
 import { useFocusTrap } from "../composables/useFocusTrap";
+import { useModalBackground } from "../composables/useModalBackground";
+import { useOverlayThemeContext } from "../composables/useOverlayThemeContext";
 
 export interface DialogProps {
   /** v-model open state. */
@@ -63,23 +63,16 @@ const descriptionId = useId();
 const overlayRoot = getOverlayRoot();
 const panelRef = useTemplateRef<HTMLElement>("panelRef");
 
-const themeContext = ref(detectThemeContext(null));
+// document.activeElement here is still whatever triggered the dialog
+// (before useFocusTrap moves focus away), which is still in its original
+// DOM location even though the dialog's own output teleports.
+const themeContext = useOverlayThemeContext(isOpen, () => document.activeElement);
 
-// Registered before useFocusTrap so that on close, the background is made
+// Must run before useFocusTrap so that on close, the background is made
 // non-inert again before useFocusTrap tries to restore focus to whatever
 // triggered the dialog — focusing an inert element silently fails, which
 // would otherwise leave focus stranded on <body>.
-watch(isOpen, (open) => {
-  if (open) {
-    // document.activeElement here is still whatever triggered the dialog
-    // (before useFocusTrap moves focus away), which is still in its
-    // original DOM location even though the dialog's own output teleports.
-    themeContext.value = detectThemeContext(document.activeElement);
-    pushBackgroundInert(overlayRoot);
-  } else {
-    popBackgroundInert();
-  }
-});
+useModalBackground(isOpen, overlayRoot);
 
 useFocusTrap({
   container: panelRef,
@@ -92,10 +85,6 @@ useDismissable({
   closeOnEscape: computed(() => props.closeOnEscape),
   closeOnOutsideClick: computed(() => props.closeOnOutsideClick),
   onDismiss: () => emit("update:modelValue", false),
-});
-
-onBeforeUnmount(() => {
-  if (isOpen.value) popBackgroundInert();
 });
 
 const panelClass = computed(() => cn("stance-dialog__panel", props.class));

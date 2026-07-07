@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, useId, useTemplateRef, watch } from "vue";
 import { cn } from "../utils/cn";
+import { useErrorSlot } from "../composables/useErrorSlot";
 
 // The template has two root nodes (the <textarea> and the conditional error
 // <p>), so Vue disables automatic attrs fallthrough regardless of which root
@@ -57,9 +58,11 @@ const slots = defineSlots<{
 
 const generatedId = useId();
 const textareaId = computed(() => props.id ?? generatedId);
-const errorId = computed(() => `${textareaId.value}-error`);
-const showError = computed(() => props.invalid && Boolean(slots.error));
-const describedBy = computed(() => (showError.value ? errorId.value : undefined));
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => textareaId.value,
+  () => props.invalid,
+  () => Boolean(slots.error),
+);
 
 const rootClass = computed(() => cn("stance-textarea", props.class));
 
@@ -144,8 +147,8 @@ onMounted(() => {
   line-height: var(--stance-leading-normal, 1.5);
   color: var(--stance-color-foreground);
   transition:
-    border-color 0.15s ease,
-    outline-color 0.15s ease;
+    border-color var(--stance-motion-duration, 0.15s) ease,
+    outline-color var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-textarea[data-auto-grow]) {

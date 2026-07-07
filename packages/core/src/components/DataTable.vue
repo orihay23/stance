@@ -1,13 +1,15 @@
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
-import { computed, onUnmounted, provide, useId, watch } from "vue";
+import { computed, provide, useId, watch } from "vue";
 import { cn } from "../utils/cn";
-import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
 import { RADIO_GROUP_KEY } from "../composables/useRadioGroup";
+import { defaultCompare, useTableSort } from "../composables/useTableSort";
+import { useTableFilters } from "../composables/useTableFilters";
 import DataTablePagination from "./DataTablePagination.vue";
+import SortHeaderButton from "./SortHeaderButton.vue";
+import TableFilterToolbar from "./TableFilterToolbar.vue";
 import Checkbox from "./Checkbox.vue";
 import Radio from "./Radio.vue";
-import Input from "./Input.vue";
-import Select from "./Select.vue";
+import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
 
 export interface DataTableColumn<T extends Record<string, unknown> = Record<string, unknown>> {
   /** Unique key. Used as the dynamic cell-slot name (`#cell-{key}`) and, unless `accessor` is given, to read `row[key]`. */
@@ -65,14 +67,20 @@ export interface DataTableProps<T extends Record<string, unknown> = Record<strin
    *
    * `"server"`: `rows` is assumed to already be just the current page (the
    * parent fetches per page); DataTable only renders the pagination UI and
-   * emits `update:page`/`update:pageSize` for the parent to react to.
+   * emits `update:page` for the parent to react to.
    * Provide `totalRows` (or `totalPages` directly, which takes precedence)
    * so the page count and the "Showing rows…" announcement are correct.
    */
   paginationMode?: DataTablePaginationMode;
   /** v-model:page (1-indexed). @default 1 */
   page?: number;
-  /** v-model:pageSize. @default 10 */
+  /**
+   * Rows per page, combined with `page` to compute which rows to show in
+   * client mode (and, in server mode, to compute `totalPages` from
+   * `totalRows`). A plain prop, not a v-model — DataTable has no page-size
+   * picker UI; the consumer owns this value entirely.
+   * @default 10
+   */
   pageSize?: number;
   /** Server mode: total row count across all pages, combined with `pageSize` to compute `totalPages` unless `totalPages` is given directly. */
   totalRows?: number;
@@ -126,7 +134,6 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
 const emit = defineEmits<{
   "update:sort": [value: DataTableSortState | null];
   "update:page": [value: number];
-  "update:pageSize": [value: number];
   "update:selected": [value: Array<string | number>];
   "update:globalFilter": [value: string];
   "update:columnFilters": [value: Record<string, string>];
@@ -153,27 +160,22 @@ function getRowKey(row: T, index: number): string | number {
   return typeof value === "string" || typeof value === "number" ? value : index;
 }
 
-function defaultCompare(column: DataTableColumn<T>) {
-  return (a: T, b: T) => {
-    const av = cellValue(column, a);
-    const bv = cellValue(column, b);
-    if (typeof av === "number" && typeof bv === "number") return av - bv;
-    if (av instanceof Date && bv instanceof Date) return av.getTime() - bv.getTime();
-    return String(av ?? "").localeCompare(String(bv ?? ""), undefined, { numeric: true, sensitivity: "base" });
-  };
-}
-
 const { announce } = useLiveAnnouncer();
 
-const filterableColumns = computed(() => props.columns.filter((c) => c.filterable));
-
-function filterTypeFor(column: DataTableColumn<T>): DataTableFilterType {
-  return column.filterType ?? (column.filterOptions ? "select" : "text");
-}
-
-const hasActiveFilters = computed(() => {
-  if (props.globalFilter.trim() !== "") return true;
-  return Object.values(props.columnFilters).some((value) => value !== "");
+const {
+  filterableColumns,
+  filterTypeFor,
+  hasActiveFilters,
+  columnFilterValue,
+  setColumnFilter,
+  globalFilterId,
+  columnFilterId,
+  announceResultCount,
+} = useTableFilters({
+  columns: () => props.columns,
+  globalFilter: () => props.globalFilter,
+  columnFilters: () => props.columnFilters,
+  emitColumnFilters: (next) => emit("update:columnFilters", next),
 });
 
 // Filtering runs ahead of sorting, which runs ahead of pagination, so the
@@ -212,43 +214,17 @@ const noResultsFromFilter = computed(
   () => props.rows.length > 0 && hasActiveFilters.value && filteredRows.value.length === 0,
 );
 
-function columnFilterValue(column: DataTableColumn<T>): string {
-  return props.columnFilters[column.key] ?? "";
-}
-
-function setColumnFilter(column: DataTableColumn<T>, value: string) {
-  const next = { ...props.columnFilters };
-  if (value === "") {
-    delete next[column.key];
-  } else {
-    next[column.key] = value;
-  }
-  emit("update:columnFilters", next);
-}
-
-const filterIdBase = useId();
-const globalFilterId = computed(() => `${filterIdBase}-global-filter`);
-function columnFilterId(column: DataTableColumn<T>): string {
-  return `${filterIdBase}-filter-${column.key}`;
-}
-
-let filterAnnounceTimer: ReturnType<typeof setTimeout> | undefined;
-
 watch(
   () => [props.globalFilter, props.columnFilters, filteredRows.value.length] as const,
   () => {
-    if (props.manualFilter || !hasActiveFilters.value) return;
-    if (filterAnnounceTimer) clearTimeout(filterAnnounceTimer);
-    filterAnnounceTimer = setTimeout(() => {
-      const count = filteredRows.value.length;
-      announce(`${count} ${count === 1 ? "result matches" : "results match"} your filters`);
-    }, 400);
+    if (!props.manualFilter) announceResultCount(filteredRows.value.length);
   },
 );
 
-onUnmounted(() => {
-  if (filterAnnounceTimer) clearTimeout(filterAnnounceTimer);
-});
+const { toggleSort, ariaSortFor } = useTableSort<DataTableColumn<T>>(
+  () => props.sort,
+  (next) => emit("update:sort", next),
+);
 
 const sortedRows = computed(() => {
   const source = filteredRows.value;
@@ -256,30 +232,10 @@ const sortedRows = computed(() => {
   const sort = props.sort;
   const column = props.columns.find((c) => c.key === sort.key);
   if (!column) return source;
-  const compare = column.sortFn ?? defaultCompare(column);
+  const compare = column.sortFn ?? defaultCompare<T>((row) => cellValue(column, row));
   const factor = sort.direction === "asc" ? 1 : -1;
   return [...source].sort((a, b) => compare(a, b) * factor);
 });
-
-function toggleSort(column: DataTableColumn<T>) {
-  if (!column.sortable) return;
-  const current = props.sort;
-  let next: DataTableSortState | null;
-  if (!current || current.key !== column.key) {
-    next = { key: column.key, direction: "asc" };
-  } else if (current.direction === "asc") {
-    next = { key: column.key, direction: "desc" };
-  } else {
-    next = null;
-  }
-  emit("update:sort", next);
-}
-
-function ariaSortFor(column: DataTableColumn<T>): "ascending" | "descending" | "none" | undefined {
-  if (!column.sortable) return undefined;
-  if (props.sort?.key !== column.key) return "none";
-  return props.sort.direction === "asc" ? "ascending" : "descending";
-}
 
 const totalPagesComputed = computed(() => {
   if (props.paginationMode === "server") {
@@ -426,44 +382,17 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
 
 <template>
   <div :class="rootClass">
-    <div v-if="filterableColumns.length > 0" class="stance-datatable__filters">
-      <div class="stance-datatable__global-filter">
-        <label :for="globalFilterId" class="stance-datatable__visually-hidden">Search</label>
-        <Input
-          :id="globalFilterId"
-          :model-value="props.globalFilter"
-          placeholder="Search…"
-          @update:model-value="(v) => emit('update:globalFilter', v)"
-        />
-      </div>
-
-      <component
-        :is="filterableColumns.length > 4 ? 'details' : 'div'"
-        class="stance-datatable__column-filters"
-      >
-        <summary v-if="filterableColumns.length > 4" class="stance-datatable__filters-summary">Filters</summary>
-        <div class="stance-datatable__column-filters-body">
-          <div v-for="column in filterableColumns" :key="column.key" class="stance-datatable__column-filter">
-            <label :for="columnFilterId(column)">{{ column.header }}</label>
-            <Select
-              v-if="filterTypeFor(column) === 'select'"
-              :id="columnFilterId(column)"
-              :model-value="columnFilterValue(column)"
-              @update:model-value="(v) => setColumnFilter(column, v)"
-            >
-              <option value="">All</option>
-              <option v-for="opt in column.filterOptions" :key="opt" :value="opt">{{ opt }}</option>
-            </Select>
-            <Input
-              v-else
-              :id="columnFilterId(column)"
-              :model-value="columnFilterValue(column)"
-              @update:model-value="(v) => setColumnFilter(column, v)"
-            />
-          </div>
-        </div>
-      </component>
-    </div>
+    <TableFilterToolbar
+      v-if="filterableColumns.length > 0"
+      :columns="filterableColumns"
+      :global-filter="props.globalFilter"
+      :global-filter-id="globalFilterId"
+      :column-filter-id="columnFilterId"
+      :column-filter-value="columnFilterValue"
+      :filter-type-for="filterTypeFor"
+      @update:global-filter="(v) => emit('update:globalFilter', v)"
+      @column-filter="(column, v) => setColumnFilter(column, v)"
+    />
 
     <DataTablePagination
       v-if="paginationMode !== 'none' && paginationPosition === 'top'"
@@ -476,7 +405,7 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
 
     <div class="stance-datatable__scroll">
       <table class="stance-datatable__table" role="table">
-        <caption v-if="caption" class="stance-datatable__caption">{{ caption }}</caption>
+        <caption v-if="caption" class="stance-visually-hidden">{{ caption }}</caption>
         <thead role="rowgroup">
           <tr role="row">
             <th v-if="selectionMode !== 'none'" scope="col" role="columnheader" class="stance-datatable__select-cell">
@@ -486,9 +415,9 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
                 :indeterminate="someRowsSelected"
                 @update:model-value="setAllRowsSelected"
               >
-                <span class="stance-datatable__visually-hidden">Select all rows</span>
+                <span class="stance-visually-hidden">Select all rows</span>
               </Checkbox>
-              <span v-else class="stance-datatable__visually-hidden">Select</span>
+              <span v-else class="stance-visually-hidden">Select</span>
             </th>
             <th
               v-for="column in columns"
@@ -498,38 +427,9 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
               :aria-sort="ariaSortFor(column)"
               :data-align="column.align ?? 'start'"
             >
-              <button
-                v-if="column.sortable"
-                type="button"
-                class="stance-datatable__sort-button"
-                @click="toggleSort(column)"
-              >
-                <span>{{ column.header }}</span>
-                <svg
-                  class="stance-datatable__sort-icon"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  aria-hidden="true"
-                  :data-direction="ariaSortFor(column)"
-                >
-                  <path
-                    v-if="ariaSortFor(column) === 'ascending'"
-                    d="M10 5l5 6H5z"
-                    fill="currentColor"
-                  />
-                  <path
-                    v-else-if="ariaSortFor(column) === 'descending'"
-                    d="M10 15l-5-6h10z"
-                    fill="currentColor"
-                  />
-                  <path
-                    v-else
-                    d="M10 4l4 5H6zM10 16l-4-5h8z"
-                    fill="currentColor"
-                    opacity="0.5"
-                  />
-                </svg>
-              </button>
+              <SortHeaderButton v-if="column.sortable" :sort="ariaSortFor(column)" @click="toggleSort(column)">
+                {{ column.header }}
+              </SortHeaderButton>
               <span v-else>{{ column.header }}</span>
             </th>
           </tr>
@@ -557,10 +457,10 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
                 :model-value="isRowSelected(row, rowIndex)"
                 @update:model-value="(checked) => setRowSelected(row, rowIndex, checked)"
               >
-                <span class="stance-datatable__visually-hidden">Select row</span>
+                <span class="stance-visually-hidden">Select row</span>
               </Checkbox>
               <Radio v-else :value="String(getRowKey(row, rowIndex))">
-                <span class="stance-datatable__visually-hidden">Select row</span>
+                <span class="stance-visually-hidden">Select row</span>
               </Radio>
             </td>
             <td
@@ -608,100 +508,10 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
   font-size: var(--stance-text-sm, 0.875rem);
 }
 
-:where(.stance-datatable__caption),
-:where(.stance-datatable__visually-hidden) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 :where(.stance-datatable__select-cell) {
   width: 1%;
   white-space: nowrap;
   text-align: center;
-}
-
-/*
- * Filter controls live in a toolbar above the <table> rather than embedded
- * in the header row itself — the collapsed narrow view (below) makes the
- * real <thead> visually-hidden, and filters need to stay usable there, not
- * disappear along with it.
- */
-:where(.stance-datatable__filters) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--stance-spacing-md, 0.75rem);
-  padding-bottom: var(--stance-spacing-md, 0.75rem);
-}
-
-:where(.stance-datatable__global-filter) {
-  flex: 1 1 16rem;
-  min-width: 12rem;
-}
-
-:where(.stance-datatable__column-filters) {
-  display: contents;
-}
-
-:where(.stance-datatable__column-filters-body) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--stance-spacing-md, 0.75rem);
-}
-
-:where(.stance-datatable__column-filter) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stance-spacing-xs, 0.25rem);
-  min-width: 9rem;
-  font-size: var(--stance-text-sm, 0.875rem);
-}
-
-:where(.stance-datatable__column-filter label) {
-  color: var(--stance-color-muted-foreground);
-  font-weight: var(--stance-font-weight-medium, 500);
-}
-
-:where(.stance-datatable__filters-summary) {
-  display: inline-flex;
-  align-items: center;
-  height: 2.25rem;
-  padding: 0 var(--stance-spacing-md, 0.75rem);
-  border: 1px solid var(--stance-color-border);
-  border-radius: var(--stance-radius-sm, 0.25rem);
-  color: var(--stance-color-foreground);
-  font-size: var(--stance-text-sm, 0.875rem);
-  cursor: pointer;
-  list-style: none;
-}
-
-:where(.stance-datatable__filters-summary::-webkit-details-marker) {
-  display: none;
-}
-
-:where(.stance-datatable__filters-summary:hover) {
-  background: var(--stance-color-muted);
-}
-
-:where(.stance-datatable__filters-summary:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-:where(details.stance-datatable__column-filters) {
-  display: block;
-}
-
-:where(details.stance-datatable__column-filters .stance-datatable__column-filters-body) {
-  margin-top: var(--stance-spacing-md, 0.75rem);
 }
 
 :where(.stance-datatable__table th) {
@@ -728,31 +538,6 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
 }
 :where(.stance-datatable__table [data-align="end"]) {
   text-align: end;
-}
-
-:where(.stance-datatable__sort-button) {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--stance-spacing-xs, 0.25rem);
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  font-weight: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-:where(.stance-datatable__sort-button:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-:where(.stance-datatable__sort-icon) {
-  width: 0.875em;
-  height: 0.875em;
-  flex-shrink: 0;
 }
 
 :where(.stance-datatable__status-cell) {

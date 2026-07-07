@@ -79,8 +79,8 @@ const rootClass = computed(() => cn("stance-card", props.class));
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   text-align: start;
   transition:
-    background-color 0.15s ease,
-    box-shadow 0.15s ease;
+    background-color var(--stance-motion-duration, 0.15s) ease,
+    box-shadow var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-card[data-variant="elevated"]) {

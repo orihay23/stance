@@ -26,6 +26,7 @@ const rootClass = computed(() => cn("stance-accordion-content", props.class));
   <div
     v-show="isOpen"
     :id="`${context?.accordionId}-panel-${item?.value}`"
+    role="region"
     :aria-labelledby="`${context?.accordionId}-header-${item?.value}`"
     :class="rootClass"
   >

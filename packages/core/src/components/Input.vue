@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useId } from "vue";
 import { cn } from "../utils/cn";
+import { useErrorSlot } from "../composables/useErrorSlot";
 
 defineOptions({ inheritAttrs: false });
 
@@ -49,9 +50,11 @@ const slots = defineSlots<{
 
 const generatedId = useId();
 const inputId = computed(() => props.id ?? generatedId);
-const errorId = computed(() => `${inputId.value}-error`);
-const showError = computed(() => props.invalid && Boolean(slots.error));
-const describedBy = computed(() => (showError.value ? errorId.value : undefined));
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => inputId.value,
+  () => props.invalid,
+  () => Boolean(slots.error),
+);
 
 const wrapperClass = computed(() => cn("stance-input-wrapper", props.class));
 
@@ -108,8 +111,8 @@ function onInput(event: Event) {
   padding-inline: var(--stance-spacing-sm, 0.5rem);
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   transition:
-    border-color 0.15s ease,
-    outline-color 0.15s ease;
+    border-color var(--stance-motion-duration, 0.15s) ease,
+    outline-color var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-input-wrapper:focus-within) {

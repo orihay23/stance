@@ -53,6 +53,7 @@ function onChange() {
       :value="value"
       :checked="checked"
       :disabled="isDisabled"
+      :required="context?.required.value || undefined"
       :aria-describedby="context?.describedBy.value"
       @change="onChange"
     />
@@ -89,8 +90,8 @@ function onChange() {
   color: var(--stance-color-foreground);
   user-select: none;
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
+    background-color var(--stance-motion-duration, 0.15s) ease,
+    color var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-toggle-group-item[data-disabled] .stance-toggle-group-item__label) {

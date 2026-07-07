@@ -91,9 +91,6 @@ function renderHarness(
             onPage?.(v);
           },
           pageSize: pageSize.value,
-          "onUpdate:pageSize": (v: number) => {
-            pageSize.value = v;
-          },
           selected: selected.value,
           "onUpdate:selected": (v: Array<string | number>) => {
             selected.value = v;
@@ -600,7 +597,7 @@ describe("DataTable", () => {
         { key: "extra2", header: "Extra 2", filterable: true, accessor: () => "" },
       ];
       const { container } = renderHarness({ columns: manyFilterableColumns });
-      expect(container.querySelector("details.stance-datatable__column-filters")).toBeInTheDocument();
+      expect(container.querySelector("details.stance-table-column-filters")).toBeInTheDocument();
       expect(screen.getByText("Filters").tagName).toBe("SUMMARY");
     });
 

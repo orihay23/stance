@@ -46,7 +46,7 @@ describe("Badge", () => {
 
   it("without a label, renders only the visible slot content (no hidden text, nothing aria-hidden)", () => {
     const { container } = render(Badge, { slots: { default: "New" } });
-    expect(container.querySelector(".stance-badge__visually-hidden")).not.toBeInTheDocument();
+    expect(container.querySelector(".stance-visually-hidden")).not.toBeInTheDocument();
     expect(screen.getByText("New")).not.toHaveAttribute("aria-hidden");
   });
 

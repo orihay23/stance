@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useId } from "vue";
 import { cn } from "../utils/cn";
+import { useErrorSlot } from "../composables/useErrorSlot";
 
 defineOptions({ inheritAttrs: false });
 
@@ -40,9 +41,11 @@ const slots = defineSlots<{
 
 const generatedId = useId();
 const switchId = computed(() => props.id ?? generatedId);
-const errorId = computed(() => `${switchId.value}-error`);
-const showError = computed(() => props.invalid && Boolean(slots.error));
-const describedBy = computed(() => (showError.value ? errorId.value : undefined));
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => switchId.value,
+  () => props.invalid,
+  () => Boolean(slots.error),
+);
 
 const rootClass = computed(() => cn("stance-switch", props.class));
 
@@ -101,8 +104,8 @@ function onChange(event: Event) {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-  width: 2.5rem;
-  height: 1.25rem;
+  width: var(--stance-control-switch-width, 2.5rem);
+  height: var(--stance-control-box-size, 1.25rem);
   margin-top: 0.125rem;
 }
 
@@ -124,8 +127,8 @@ function onChange(event: Event) {
   border-radius: var(--stance-radius-full, 9999px);
   background: var(--stance-color-border);
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    background-color var(--stance-motion-duration, 0.15s) ease,
+    border-color var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-switch__input:focus-visible ~ .stance-switch__track) {
@@ -156,11 +159,11 @@ function onChange(event: Event) {
   border-radius: var(--stance-radius-full, 9999px);
   background: var(--stance-color-background);
   box-shadow: var(--stance-shadow-md);
-  transition: transform 0.15s ease;
+  transition: transform var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-switch__input:checked ~ .stance-switch__track .stance-switch__thumb) {
-  transform: translateX(1.25rem);
+  transform: translateX(var(--stance-control-switch-thumb-travel, 1.25rem));
 }
 
 :where(.stance-switch__label) {

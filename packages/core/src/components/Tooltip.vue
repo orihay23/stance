@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { Placement } from "@floating-ui/vue";
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
-import { computed, onBeforeUnmount, ref, useId, useTemplateRef, watch, watchEffect } from "vue";
+import { computed, onBeforeUnmount, ref, useId, useTemplateRef, watchEffect } from "vue";
 import { cn } from "../utils/cn";
 import { getOverlayRoot } from "../utils/dom";
-import { detectThemeContext } from "../utils/theme-context";
 import { useDismissable } from "../composables/useDismissable";
+import { useFloatingOverlay } from "../composables/useFloatingOverlay";
+import { useOverlayThemeContext } from "../composables/useOverlayThemeContext";
 
 export interface TooltipProps {
   /** Tooltip text. Ignored if the `content` slot is given (for richer, still non-interactive content). */
@@ -89,6 +89,13 @@ function hide() {
   }, props.closeDelay);
 }
 
+// Cancels a pending hide without re-triggering openDelay — used when the
+// pointer moves from the trigger onto the (now hoverable) content bubble,
+// per WCAG 1.4.13: hover-triggered content must itself be hoverable.
+function cancelHide() {
+  clearTimeout(hideTimer);
+}
+
 onBeforeUnmount(() => {
   clearTimeout(showTimer);
   clearTimeout(hideTimer);
@@ -104,17 +111,13 @@ useDismissable({
   onDismiss: hide,
 });
 
-const { floatingStyles } = useFloating(triggerRef, contentRef, {
+const { floatingStyles } = useFloatingOverlay(triggerRef, contentRef, {
   open,
   placement: computed(() => props.placement),
-  middleware: computed(() => [offset(props.offset), flip(), shift({ padding: 8 })]),
-  whileElementsMounted: autoUpdate,
+  offset: computed(() => props.offset),
 });
 
-const themeContext = ref(detectThemeContext(null));
-watch(open, (isOpen) => {
-  if (isOpen) themeContext.value = detectThemeContext(triggerRef.value);
-});
+const themeContext = useOverlayThemeContext(open, () => triggerRef.value);
 
 const contentClass = computed(() => cn("stance-tooltip__content", props.class));
 </script>
@@ -142,6 +145,8 @@ const contentClass = computed(() => cn("stance-tooltip__content", props.class));
       :class="[contentClass, { dark: themeContext.dark }]"
       :style="floatingStyles"
       :data-theme="themeContext.theme ?? undefined"
+      @mouseenter="cancelHide"
+      @mouseleave="hide"
     >
       <slot name="content">{{ content }}</slot>
     </div>
@@ -162,6 +167,5 @@ const contentClass = computed(() => cn("stance-tooltip__content", props.class));
   padding: var(--stance-spacing-xs, 0.25rem) var(--stance-spacing-sm, 0.5rem);
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   font-size: var(--stance-text-sm, 0.875rem);
-  pointer-events: none;
 }
 </style>

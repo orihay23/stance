@@ -94,7 +94,7 @@ const triggerClass = computed(() => cn("stance-accordion-trigger", props.class))
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  transition: transform 0.15s ease;
+  transition: transform var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-accordion-trigger[data-open] .stance-accordion-trigger__icon) {

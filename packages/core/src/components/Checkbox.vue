@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useId, useTemplateRef, watchEffect } from "vue";
 import { cn } from "../utils/cn";
+import { useErrorSlot } from "../composables/useErrorSlot";
 
 defineOptions({ inheritAttrs: false });
 
@@ -48,9 +49,11 @@ const slots = defineSlots<{
 
 const generatedId = useId();
 const checkboxId = computed(() => props.id ?? generatedId);
-const errorId = computed(() => `${checkboxId.value}-error`);
-const showError = computed(() => props.invalid && Boolean(slots.error));
-const describedBy = computed(() => (showError.value ? errorId.value : undefined));
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => checkboxId.value,
+  () => props.invalid,
+  () => Boolean(slots.error),
+);
 
 const rootClass = computed(() => cn("stance-checkbox", props.class));
 
@@ -126,8 +129,8 @@ function onChange(event: Event) {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--stance-control-box-size, 1.25rem);
+  height: var(--stance-control-box-size, 1.25rem);
   /* Optically centers the box against the label's first line of text at
      typical font-size/line-height combinations. */
   margin-top: 0.125rem;
@@ -153,8 +156,8 @@ function onChange(event: Event) {
   background: var(--stance-color-background);
   color: var(--stance-color-primary-foreground);
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    background-color var(--stance-motion-duration, 0.15s) ease,
+    border-color var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-checkbox__input:focus-visible ~ .stance-checkbox__box) {

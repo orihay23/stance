@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { ButtonSize, ButtonVariant } from "./Button.vue";
-import { computed, onBeforeUnmount, useTemplateRef, watchEffect } from "vue";
+import { computed, useTemplateRef } from "vue";
 import { cn } from "../utils/cn";
 import { usePopoverContext } from "../composables/usePopover";
+import { useOverlayTriggerRef } from "../composables/useOverlayTriggerRef";
 
 export interface PopoverTriggerProps {
   /** Visual style — reuses Button's variants so the trigger looks native to the rest of the library. @default "secondary" */
@@ -28,13 +29,7 @@ defineSlots<{
 const context = usePopoverContext("PopoverTrigger");
 const buttonRef = useTemplateRef<HTMLButtonElement>("buttonRef");
 
-watchEffect(() => {
-  if (context) context.triggerRef.value = buttonRef.value;
-});
-
-onBeforeUnmount(() => {
-  if (context && context.triggerRef.value === buttonRef.value) context.triggerRef.value = null;
-});
+useOverlayTriggerRef(context?.triggerRef, buttonRef);
 
 function onClick() {
   context?.setOpen(!context.open.value);
@@ -52,7 +47,7 @@ const rootClass = computed(() => cn("stance-button", props.class));
     :disabled="disabled"
     :data-variant="variant"
     :data-size="size"
-    aria-haspopup="dialog"
+    :aria-haspopup="context?.modal.value ? 'dialog' : true"
     :aria-expanded="context?.open.value ?? false"
     :aria-controls="context?.open.value ? context?.contentId : undefined"
     @click="onClick"

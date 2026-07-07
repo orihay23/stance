@@ -87,8 +87,8 @@ function onChange() {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--stance-control-box-size, 1.25rem);
+  height: var(--stance-control-box-size, 1.25rem);
   margin-top: 0.125rem;
 }
 
@@ -111,8 +111,8 @@ function onChange() {
   border-radius: var(--stance-radius-full, 9999px);
   background: var(--stance-color-background);
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    background-color var(--stance-motion-duration, 0.15s) ease,
+    border-color var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-radio__input:focus-visible ~ .stance-radio__box) {

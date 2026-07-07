@@ -9,8 +9,7 @@ function getRegion(politeness: Politeness): HTMLElement {
     region.setAttribute("aria-live", politeness);
     region.setAttribute("aria-atomic", "true");
     region.setAttribute("data-stance-live-region", politeness);
-    region.style.cssText =
-      "position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;";
+    region.className = "stance-visually-hidden";
     document.body.appendChild(region);
     regions.set(politeness, region);
   }

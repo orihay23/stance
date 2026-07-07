@@ -2,6 +2,7 @@
 import { computed, provide, useId } from "vue";
 import { cn } from "../utils/cn";
 import { RADIO_GROUP_KEY } from "../composables/useRadioGroup";
+import { useErrorSlot } from "../composables/useErrorSlot";
 
 export interface RadioGroupProps {
   /** v-model selected value. */
@@ -43,9 +44,11 @@ const baseId = useId();
 const generatedName = useId();
 const groupName = computed(() => props.name ?? generatedName);
 const legendId = computed(() => `${baseId}-legend`);
-const errorId = computed(() => `${baseId}-error`);
-const showError = computed(() => props.invalid && Boolean(slots.error));
-const describedBy = computed(() => (showError.value ? errorId.value : undefined));
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => baseId,
+  () => props.invalid,
+  () => Boolean(slots.error),
+);
 
 const disabled = computed(() => props.disabled);
 const required = computed(() => props.required);

@@ -85,6 +85,14 @@ describe("ToggleGroup", () => {
     }
   });
 
+  it("sets aria-required on the group and every segment when required", () => {
+    renderGroup({ required: true });
+    expect(screen.getByRole("radiogroup")).toHaveAttribute("aria-required", "true");
+    for (const item of screen.getAllByRole("radio")) {
+      expect(item).toBeRequired();
+    }
+  });
+
   it("sets aria-invalid, without a dangling aria-describedby if there's no error slot", () => {
     renderGroup({ invalid: true });
     const group = screen.getByRole("radiogroup");

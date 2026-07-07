@@ -1,13 +1,14 @@
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
-import { computed, nextTick, onUnmounted, provide, ref, useId, watch } from "vue";
+import { computed, nextTick, ref, provide, useId, watch } from "vue";
 import { cn } from "../utils/cn";
 import { collectExpandableKeys, filterTree, flattenVisibleTree, sortTree, type FlattenedTreeRow } from "../utils/tree";
-import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
 import { RADIO_GROUP_KEY } from "../composables/useRadioGroup";
+import { defaultCompare, useTableSort } from "../composables/useTableSort";
+import { useTableFilters } from "../composables/useTableFilters";
+import SortHeaderButton from "./SortHeaderButton.vue";
+import TableFilterToolbar from "./TableFilterToolbar.vue";
 import Checkbox from "./Checkbox.vue";
 import Radio from "./Radio.vue";
-import Input from "./Input.vue";
-import Select from "./Select.vue";
 
 /**
  * `TreeTableColumn` is intentionally its own type rather than a reuse of
@@ -109,27 +110,20 @@ function getRowKey(row: T, index: number): string | number {
   return typeof value === "string" || typeof value === "number" ? value : index;
 }
 
-function defaultCompare(column: TreeTableColumn<T>) {
-  return (a: T, b: T) => {
-    const av = cellValue(column, a);
-    const bv = cellValue(column, b);
-    if (typeof av === "number" && typeof bv === "number") return av - bv;
-    if (av instanceof Date && bv instanceof Date) return av.getTime() - bv.getTime();
-    return String(av ?? "").localeCompare(String(bv ?? ""), undefined, { numeric: true, sensitivity: "base" });
-  };
-}
-
-const { announce } = useLiveAnnouncer();
-
-const filterableColumns = computed(() => props.columns.filter((c) => c.filterable));
-
-function filterTypeFor(column: TreeTableColumn<T>): TreeTableFilterType {
-  return column.filterType ?? (column.filterOptions ? "select" : "text");
-}
-
-const hasActiveFilters = computed(() => {
-  if (props.globalFilter.trim() !== "") return true;
-  return Object.values(props.columnFilters).some((value) => value !== "");
+const {
+  filterableColumns,
+  filterTypeFor,
+  hasActiveFilters,
+  columnFilterValue,
+  setColumnFilter,
+  globalFilterId,
+  columnFilterId,
+  announceResultCount,
+} = useTableFilters({
+  columns: () => props.columns,
+  globalFilter: () => props.globalFilter,
+  columnFilters: () => props.columnFilters,
+  emitColumnFilters: (next) => emit("update:columnFilters", next),
 });
 
 function rowMatchesFilters(row: T): boolean {
@@ -148,26 +142,6 @@ function rowMatchesFilters(row: T): boolean {
   });
 }
 
-function columnFilterValue(column: TreeTableColumn<T>): string {
-  return props.columnFilters[column.key] ?? "";
-}
-
-function setColumnFilter(column: TreeTableColumn<T>, value: string) {
-  const next = { ...props.columnFilters };
-  if (value === "") {
-    delete next[column.key];
-  } else {
-    next[column.key] = value;
-  }
-  emit("update:columnFilters", next);
-}
-
-const filterIdBase = useId();
-const globalFilterId = computed(() => `${filterIdBase}-global-filter`);
-function columnFilterId(column: TreeTableColumn<T>): string {
-  return `${filterIdBase}-filter-${column.key}`;
-}
-
 // Ancestor-preserving: a matching descendant keeps its whole ancestor chain
 // visible, so the result reads as a tree, not a disconnected leaf list.
 const filteredTree = computed(() => {
@@ -177,23 +151,15 @@ const filteredTree = computed(() => {
 
 const noResultsFromFilter = computed(() => props.rows.length > 0 && hasActiveFilters.value && filteredTree.value.length === 0);
 
-let filterAnnounceTimer: ReturnType<typeof setTimeout> | undefined;
-
 watch(
   () => [props.globalFilter, props.columnFilters, filteredTree.value.length] as const,
-  () => {
-    if (!hasActiveFilters.value) return;
-    if (filterAnnounceTimer) clearTimeout(filterAnnounceTimer);
-    filterAnnounceTimer = setTimeout(() => {
-      const count = filteredTree.value.length;
-      announce(`${count} ${count === 1 ? "result matches" : "results match"} your filters`);
-    }, 400);
-  },
+  () => announceResultCount(filteredTree.value.length),
 );
 
-onUnmounted(() => {
-  if (filterAnnounceTimer) clearTimeout(filterAnnounceTimer);
-});
+const { toggleSort, ariaSortFor } = useTableSort<TreeTableColumn<T>>(
+  () => props.sort,
+  (next) => emit("update:sort", next),
+);
 
 // Sorts within each sibling group independently — hierarchy is never
 // flattened or reordered across levels (see design-docs/treetable.md §1).
@@ -202,30 +168,10 @@ const sortedTree = computed(() => {
   const sort = props.sort;
   const column = props.columns.find((c) => c.key === sort.key);
   if (!column) return filteredTree.value;
-  const compare = column.sortFn ?? defaultCompare(column);
+  const compare = column.sortFn ?? defaultCompare<T>((row) => cellValue(column, row));
   const factor = sort.direction === "asc" ? 1 : -1;
   return sortTree(filteredTree.value, (a, b) => compare(a, b) * factor, childrenKey.value);
 });
-
-function toggleSort(column: TreeTableColumn<T>) {
-  if (!column.sortable) return;
-  const current = props.sort;
-  let next: TreeTableSortState | null;
-  if (!current || current.key !== column.key) {
-    next = { key: column.key, direction: "asc" };
-  } else if (current.direction === "asc") {
-    next = { key: column.key, direction: "desc" };
-  } else {
-    next = null;
-  }
-  emit("update:sort", next);
-}
-
-function ariaSortFor(column: TreeTableColumn<T>): "ascending" | "descending" | "none" | undefined {
-  if (!column.sortable) return undefined;
-  if (props.sort?.key !== column.key) return "none";
-  return props.sort.direction === "asc" ? "ascending" : "descending";
-}
 
 const expandedSet = computed(() => new Set(props.expanded));
 
@@ -428,45 +374,21 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
 
 <template>
   <div :class="rootClass">
-    <div v-if="filterableColumns.length > 0" class="stance-treetable__filters">
-      <div class="stance-treetable__global-filter">
-        <label :for="globalFilterId" class="stance-treetable__visually-hidden">Search</label>
-        <Input
-          :id="globalFilterId"
-          :model-value="props.globalFilter"
-          placeholder="Search…"
-          @update:model-value="(v) => emit('update:globalFilter', v)"
-        />
-      </div>
-
-      <component :is="filterableColumns.length > 4 ? 'details' : 'div'" class="stance-treetable__column-filters">
-        <summary v-if="filterableColumns.length > 4" class="stance-treetable__filters-summary">Filters</summary>
-        <div class="stance-treetable__column-filters-body">
-          <div v-for="column in filterableColumns" :key="column.key" class="stance-treetable__column-filter">
-            <label :for="columnFilterId(column)">{{ column.header }}</label>
-            <Select
-              v-if="filterTypeFor(column) === 'select'"
-              :id="columnFilterId(column)"
-              :model-value="columnFilterValue(column)"
-              @update:model-value="(v) => setColumnFilter(column, v)"
-            >
-              <option value="">All</option>
-              <option v-for="opt in column.filterOptions" :key="opt" :value="opt">{{ opt }}</option>
-            </Select>
-            <Input
-              v-else
-              :id="columnFilterId(column)"
-              :model-value="columnFilterValue(column)"
-              @update:model-value="(v) => setColumnFilter(column, v)"
-            />
-          </div>
-        </div>
-      </component>
-    </div>
+    <TableFilterToolbar
+      v-if="filterableColumns.length > 0"
+      :columns="filterableColumns"
+      :global-filter="props.globalFilter"
+      :global-filter-id="globalFilterId"
+      :column-filter-id="columnFilterId"
+      :column-filter-value="columnFilterValue"
+      :filter-type-for="filterTypeFor"
+      @update:global-filter="(v) => emit('update:globalFilter', v)"
+      @column-filter="(column, v) => setColumnFilter(column, v)"
+    />
 
     <div class="stance-treetable__scroll">
       <table class="stance-treetable__table" role="treegrid">
-        <caption v-if="caption" class="stance-treetable__caption">{{ caption }}</caption>
+        <caption v-if="caption" class="stance-visually-hidden">{{ caption }}</caption>
         <thead role="rowgroup">
           <tr role="row">
             <th v-if="selectionMode !== 'none'" scope="col" role="columnheader" class="stance-treetable__select-cell">
@@ -476,9 +398,9 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
                 :indeterminate="someRowsSelected"
                 @update:model-value="setAllRowsSelected"
               >
-                <span class="stance-treetable__visually-hidden">Select all rows</span>
+                <span class="stance-visually-hidden">Select all rows</span>
               </Checkbox>
-              <span v-else class="stance-treetable__visually-hidden">Select</span>
+              <span v-else class="stance-visually-hidden">Select</span>
             </th>
             <th
               v-for="column in columns"
@@ -488,14 +410,9 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
               :aria-sort="ariaSortFor(column)"
               :data-align="column.align ?? 'start'"
             >
-              <button v-if="column.sortable" type="button" class="stance-treetable__sort-button" @click="toggleSort(column)">
-                <span>{{ column.header }}</span>
-                <svg class="stance-treetable__sort-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" :data-direction="ariaSortFor(column)">
-                  <path v-if="ariaSortFor(column) === 'ascending'" d="M10 5l5 6H5z" fill="currentColor" />
-                  <path v-else-if="ariaSortFor(column) === 'descending'" d="M10 15l-5-6h10z" fill="currentColor" />
-                  <path v-else d="M10 4l4 5H6zM10 16l-4-5h8z" fill="currentColor" opacity="0.5" />
-                </svg>
-              </button>
+              <SortHeaderButton v-if="column.sortable" :sort="ariaSortFor(column)" @click="toggleSort(column)">
+                {{ column.header }}
+              </SortHeaderButton>
               <span v-else>{{ column.header }}</span>
             </th>
           </tr>
@@ -534,10 +451,10 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
                 :model-value="isRowSelected(rowMeta.key)"
                 @update:model-value="(checked) => setRowSelected(rowMeta.key, checked)"
               >
-                <span class="stance-treetable__visually-hidden">Select row</span>
+                <span class="stance-visually-hidden">Select row</span>
               </Checkbox>
               <Radio v-else :value="String(rowMeta.key)">
-                <span class="stance-treetable__visually-hidden">Select row</span>
+                <span class="stance-visually-hidden">Select row</span>
               </Radio>
             </td>
             <td
@@ -546,6 +463,7 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
               :ref="(el) => setCellRef(rowMeta.key, colIndex, el as Element | null)"
               role="gridcell"
               :tabindex="rowMeta.key === activeKey && colIndex === activeColIndex ? 0 : -1"
+              :aria-expanded="colIndex === 0 && rowMeta.hasChildren ? rowMeta.isExpanded : undefined"
               :data-label="column.header"
               :data-align="column.align ?? 'start'"
               @keydown="onCellKeydown($event, rowMeta, colIndex)"
@@ -616,94 +534,10 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
   font-size: var(--stance-text-sm, 0.875rem);
 }
 
-:where(.stance-treetable__caption),
-:where(.stance-treetable__visually-hidden) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 :where(.stance-treetable__select-cell) {
   width: 1%;
   white-space: nowrap;
   text-align: center;
-}
-
-:where(.stance-treetable__filters) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--stance-spacing-md, 0.75rem);
-  padding-bottom: var(--stance-spacing-md, 0.75rem);
-}
-
-:where(.stance-treetable__global-filter) {
-  flex: 1 1 16rem;
-  min-width: 12rem;
-}
-
-:where(.stance-treetable__column-filters) {
-  display: contents;
-}
-
-:where(.stance-treetable__column-filters-body) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--stance-spacing-md, 0.75rem);
-}
-
-:where(.stance-treetable__column-filter) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stance-spacing-xs, 0.25rem);
-  min-width: 9rem;
-  font-size: var(--stance-text-sm, 0.875rem);
-}
-
-:where(.stance-treetable__column-filter label) {
-  color: var(--stance-color-muted-foreground);
-  font-weight: var(--stance-font-weight-medium, 500);
-}
-
-:where(.stance-treetable__filters-summary) {
-  display: inline-flex;
-  align-items: center;
-  height: 2.25rem;
-  padding: 0 var(--stance-spacing-md, 0.75rem);
-  border: 1px solid var(--stance-color-border);
-  border-radius: var(--stance-radius-sm, 0.25rem);
-  color: var(--stance-color-foreground);
-  font-size: var(--stance-text-sm, 0.875rem);
-  cursor: pointer;
-  list-style: none;
-}
-
-:where(.stance-treetable__filters-summary::-webkit-details-marker) {
-  display: none;
-}
-
-:where(.stance-treetable__filters-summary:hover) {
-  background: var(--stance-color-muted);
-}
-
-:where(.stance-treetable__filters-summary:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-:where(details.stance-treetable__column-filters) {
-  display: block;
-}
-
-:where(details.stance-treetable__column-filters .stance-treetable__column-filters-body) {
-  margin-top: var(--stance-spacing-md, 0.75rem);
 }
 
 :where(.stance-treetable__table th) {
@@ -765,7 +599,7 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
 :where(.stance-treetable__disclosure svg) {
   width: 0.875rem;
   height: 0.875rem;
-  transition: transform 0.15s ease;
+  transition: transform var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-treetable__disclosure svg[data-expanded="true"]) {
@@ -781,31 +615,6 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
   width: 1.25rem;
   height: 1.25rem;
   flex: 0 0 auto;
-}
-
-:where(.stance-treetable__sort-button) {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--stance-spacing-xs, 0.25rem);
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  font-weight: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-:where(.stance-treetable__sort-button:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-:where(.stance-treetable__sort-icon) {
-  width: 0.875em;
-  height: 0.875em;
-  flex-shrink: 0;
 }
 
 :where(.stance-treetable__status-cell) {

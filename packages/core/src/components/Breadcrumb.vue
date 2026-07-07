@@ -4,6 +4,7 @@ import { cn } from "../utils/cn";
 import DropdownMenu from "./DropdownMenu.vue";
 import DropdownMenuTrigger from "./DropdownMenuTrigger.vue";
 import DropdownMenuContent from "./DropdownMenuContent.vue";
+import DropdownMenuItem from "./DropdownMenuItem.vue";
 
 export interface BreadcrumbItem {
   label: string;
@@ -51,20 +52,13 @@ const rootClass = computed(() => cn("stance-breadcrumb-container", props.class))
         </svg>
         <DropdownMenu v-model="ellipsisOpen">
           <DropdownMenuTrigger variant="ghost" size="sm" class="stance-breadcrumb__ellipsis-trigger">
-            <span class="stance-breadcrumb__visually-hidden">Show {{ middleItems.length }} hidden items</span>
+            <span class="stance-visually-hidden">Show {{ middleItems.length }} hidden items</span>
             <span aria-hidden="true">…</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <a
-              v-for="item in middleItems"
-              :key="item.label"
-              role="menuitem"
-              tabindex="-1"
-              class="stance-dropdown-menu__item"
-              :href="item.href"
-            >
+            <DropdownMenuItem v-for="(item, index) in middleItems" :key="index" :href="item.href">
               {{ item.label }}
-            </a>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </li>
@@ -180,15 +174,4 @@ const rootClass = computed(() => cn("stance-breadcrumb-container", props.class))
   }
 }
 
-:where(.stance-breadcrumb__visually-hidden) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
 </style>
