@@ -1,0 +1,31 @@
+/**
+ * The stance wordmark/icon PNGs are flat exports with a baked-in cream
+ * background (no alpha channel) — they can't be color-adjusted per
+ * light/dark mode with CSS filters. Instead of fighting that, every place
+ * the logo appears gets wrapped in a small light "chip" (padding + the
+ * image's own cream background color + rounded corners) so it reads as a
+ * deliberate card floating on the page in both modes, rather than an
+ * image with visibly mismatched edges in dark mode.
+ */
+:root {
+  --stance-logo-chip-bg: #f5f3ef;
+}
+
+.VPNavBarTitle .logo,
+.VPHomeHero .image-container,
+.stance-logo-chip {
+  background-color: var(--stance-logo-chip-bg);
+  border-radius: 8px;
+}
+
+.VPNavBarTitle .logo {
+  padding: 2px;
+}
+
+.VPHomeHero .image-container {
+  padding: 1.5rem;
+}
+
+.VPHomeHero .image-bg {
+  display: none;
+}

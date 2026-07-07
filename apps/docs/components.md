@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { Card, Grid, Badge } from "@stance/core";
 
 // Defined in .vitepress/config.ts (vite.define) — the single source of
 // truth for where the Histoire build lives, so this doesn't re-derive it
@@ -172,22 +173,14 @@ examples. Each entry links to the component's stories (light/dark, states,
 responsive behavior) and, where relevant, the sub-components it's used
 alongside.
 
-<table>
-  <thead>
-    <tr>
-      <th>Component</th>
-      <th>Summary</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr v-for="group in groups" :key="group.storyId">
-      <td>
-        <a :href="storyUrl(group.storyId)" target="_blank" rel="noreferrer">{{ group.name }}</a>
-        <span v-if="group.includes.length"> ({{ group.includes.join(", ") }})</span>
-      </td>
-      <td>{{ group.summary }}</td>
-    </tr>
-  </tbody>
-</table>
+<Grid :columns="{ base: 1, sm: 2, lg: 3 }" gap="md">
+  <Card v-for="group in groups" :key="group.storyId">
+    <h3>
+      <a :href="storyUrl(group.storyId)" target="_blank" rel="noreferrer">{{ group.name }}</a>
+    </h3>
+    <p>{{ group.summary }}</p>
+    <Badge v-for="sub in group.includes" :key="sub" variant="neutral">{{ sub }}</Badge>
+  </Card>
+</Grid>
 
 This completes the initial component list from CLAUDE.md.

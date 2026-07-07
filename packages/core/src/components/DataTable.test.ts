@@ -131,6 +131,20 @@ describe("DataTable", () => {
     expect(screen.getAllByRole("cell")).toHaveLength(9);
   });
 
+  it("warns in dev mode when rowKey resolves to a non-primitive and falls back to the array index", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderHarness({ rowKey: "missingField" as unknown as keyof Person });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("falling back to its array index"));
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn when rowKey resolves to a real primitive on every row", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderHarness();
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it("gives sortable columns a real <button> in the header, not a bare click handler", () => {
     renderHarness();
     const nameHeader = screen.getByRole("columnheader", { name: /Name/ });

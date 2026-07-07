@@ -139,7 +139,7 @@ const contentClass = computed(() => cn("stance-dropdown-menu__content", props.cl
 </script>
 
 <template>
-  <Teleport :to="overlayRoot">
+  <Teleport v-if="overlayRoot" :to="overlayRoot">
     <div
       v-if="open"
       ref="contentRef"

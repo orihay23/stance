@@ -13,8 +13,13 @@ built so consumers can override styling via Tailwind without specificity fights.
 - **Theming via CSS custom properties**, one token set per theme, swapped by a
   root-level `data-theme="..."` attribute (and `class="dark"` for color mode).
   Components consume `var(--component-token, fallback)` — never hardcoded colors.
-- **Tailwind-friendly**: components accept a `class`/`ui` prop that merges (not
+- **Tailwind-friendly**: components accept a `class` prop that merges (not
   replaces) with internal classes, using `tailwind-merge` to dedupe conflicts.
+  (A per-part `ui` prop for compound components — e.g. distinctly targeting
+  DataTable's header vs. row vs. cell — was considered but never built across
+  the 25 shipped components; `class` alone already delivers the "override
+  without specificity fights" story via `:where()`-wrapped internals, so a
+  real per-part API is future work, not a documented guarantee today.)
 - **Accessibility target: WCAG 2.1 AA / Section 508.** Every interactive component
   needs correct ARIA roles/states, full keyboard operability, and visible focus
   rings that survive theme overrides.
@@ -73,3 +78,13 @@ right (theming, a11y, tests, responsive) before batch-producing the rest.
 - Docs/dev playground: Histoire (`apps/playground`), stories live at
   `src/**/*.story.vue`.
 - Commit messages: [fill in]
+- Model-naming convention (`modelValue` vs. a named `v-model`): a component's
+  single primary piece of state is the default `modelValue` (Accordion's open
+  item(s), Tabs' active tab). A component with no single primary state, or
+  where the primary state isn't the thing being modeled, uses a named
+  `v-model` instead (TreeTable's `v-model:expanded` — expansion isn't
+  TreeTable's "value" the way the active tab is Tabs' "value"; DataTable/
+  TreeTable have no default model at all, only named ones for
+  sort/page/selected/etc.). This is deliberate, not inconsistent — apply the
+  same reasoning to new components rather than defaulting every piece of
+  state to a named model.

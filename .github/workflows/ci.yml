@@ -61,3 +61,27 @@ jobs:
           name: visual-test-results
           path: apps/visual-tests/test-results/
           retention-days: 14
+
+  docs-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # apps/docs depends on @stance/core through its published entry
+      # point (dist/), same as Histoire — has to be built first. This also
+      # catches the class of bug the docs site exists to dogfood: any
+      # component that isn't actually safe to prerender under Vue SSR (the
+      # entire portal-based set — Dialog, Popover, Tooltip, Dropdown Menu,
+      # DatePicker, Toast — is exercised here) fails this build, not just a
+      # runtime error some consumer discovers later.
+      - name: Build @stance/core
+        run: pnpm --filter @stance/core build
+
+      - name: Build VitePress site
+        run: pnpm --filter @stance/docs docs:build

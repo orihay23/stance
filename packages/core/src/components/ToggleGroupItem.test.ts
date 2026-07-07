@@ -1,9 +1,21 @@
 import { h } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
+import { compileTheme, neutral } from "@stance/themes";
 import ToggleGroup from "./ToggleGroup.vue";
 import ToggleGroupItem from "./ToggleGroupItem.vue";
 import toggleGroupItemSource from "./ToggleGroupItem.vue?raw";
+import { runAxe } from "../../tests/axe-matcher";
+
+const themes = [neutral];
+const modes = ["light", "dark"] as const;
+
+function withThemeStyle(theme: (typeof themes)[number]) {
+  const style = document.createElement("style");
+  style.textContent = compileTheme(theme);
+  document.head.appendChild(style);
+  return () => style.remove();
+}
 
 function renderInGroup(itemProps: Record<string, unknown> = {}, groupProps: Record<string, unknown> = {}) {
   return render(ToggleGroup, {
@@ -98,5 +110,18 @@ describe("ToggleGroupItem", () => {
   it("wraps default styles in :where() to keep specificity at zero", () => {
     const styleBlock = toggleGroupItemSource.slice(toggleGroupItemSource.indexOf("<style"));
     expect(styleBlock).not.toMatch(/^\.stance-toggle-group-item/m);
+  });
+
+  describe.each(themes)("axe: $name theme", (theme) => {
+    it.each(modes)("no violations in %s mode", async (mode) => {
+      const cleanup = withThemeStyle(theme);
+      const { container } = renderInGroup({}, { modelValue: "a" });
+      container.setAttribute("data-theme", theme.name);
+      if (mode === "dark") container.classList.add("dark");
+
+      const results = await runAxe(container);
+      expect(results).toHaveNoViolations();
+      cleanup();
+    });
   });
 });

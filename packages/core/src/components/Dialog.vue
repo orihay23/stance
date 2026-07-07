@@ -91,7 +91,7 @@ const panelClass = computed(() => cn("stance-dialog__panel", props.class));
 </script>
 
 <template>
-  <Teleport :to="overlayRoot">
+  <Teleport v-if="overlayRoot" :to="overlayRoot">
     <div
       v-if="isOpen"
       class="stance-dialog__backdrop"

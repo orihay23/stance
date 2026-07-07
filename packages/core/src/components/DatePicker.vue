@@ -407,7 +407,7 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
       </button>
     </div>
 
-    <Teleport :to="overlayRoot">
+    <Teleport v-if="overlayRoot" :to="overlayRoot">
       <div
         v-if="open"
         ref="dialogRef"

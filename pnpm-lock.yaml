@@ -9,6 +9,16 @@ importers:
   .: {}
 
   apps/docs:
+    dependencies:
+      '@stance/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@stance/themes':
+        specifier: workspace:*
+        version: link:../../packages/themes
+      vue:
+        specifier: ^3.5.13
+        version: 3.5.39(typescript@5.9.3)
     devDependencies:
       vitepress:
         specifier: ^1.6.4

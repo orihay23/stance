@@ -16,15 +16,18 @@ import { popBackgroundInert, pushBackgroundInert } from "../utils/inert-backgrou
  */
 export function useModalBackground(
   open: Ref<boolean> | ComputedRef<boolean>,
-  overlayRoot: HTMLElement,
+  overlayRoot: HTMLElement | undefined,
   active: Ref<boolean> | ComputedRef<boolean> | boolean = true,
 ): void {
   const isActive = () => unref(active);
 
   watch(open, (isOpen) => {
     if (!isActive()) return;
-    if (isOpen) pushBackgroundInert(overlayRoot);
-    else popBackgroundInert();
+    // overlayRoot is only undefined during SSR (see getOverlayRoot), where
+    // `open` can never actually become true — real client renders always
+    // have it by the time this watcher can fire.
+    if (isOpen && overlayRoot) pushBackgroundInert(overlayRoot);
+    else if (!isOpen) popBackgroundInert();
   });
 
   onBeforeUnmount(() => {
