@@ -1,13 +1,13 @@
 import { h } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { compileTheme, neutral } from "@stance/themes";
+import { allThemes, compileTheme } from "@stance/themes";
 import RadioGroup from "./RadioGroup.vue";
 import Radio from "./Radio.vue";
 import radioSource from "./Radio.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

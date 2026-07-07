@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { ProgressBar } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const lightValue = ref(40);
 const darkValue = ref(65);
@@ -24,7 +14,7 @@ const darkValue = ref(65);
     <Variant title="Light + Dark">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -51,7 +41,7 @@ const darkValue = ref(65);
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -80,7 +70,7 @@ const darkValue = ref(65);
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] space-y-4 border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] space-y-4 border p-4" :data-theme="storyTheme">
         <ProgressBar :value="72" label="Storage used" />
         <ProgressBar indeterminate label="Syncing" />
       </div>

@@ -1,19 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import { Avatar, type AvatarSize } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const sizes: AvatarSize[] = ["sm", "md", "lg", "xl"];
 </script>
@@ -25,7 +14,7 @@ const sizes: AvatarSize[] = ["sm", "md", "lg", "xl"];
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',

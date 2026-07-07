@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Splitter, SplitterPane } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const horizontalSizes = ref([30, 70]);
 const verticalSizes = ref([40, 60]);
@@ -35,7 +25,7 @@ const paneStyle = {
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -63,7 +53,7 @@ const paneStyle = {
     </Variant>
 
     <Variant title="Vertical orientation">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <h3 class="mb-2 text-sm font-medium opacity-70">
           Focus the divider and use ArrowUp/ArrowDown to resize
         </h3>
@@ -83,7 +73,7 @@ const paneStyle = {
     </Variant>
 
     <Variant title="3+ panes">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <h3 class="mb-2 text-sm font-medium opacity-70">Each divider only resizes its own adjacent pair</h3>
         <Splitter v-model="threePaneSizes" :style="{ height: '220px', border: '1px solid var(--stance-color-border)' }">
           <SplitterPane>
@@ -100,7 +90,7 @@ const paneStyle = {
     </Variant>
 
     <Variant title="Min/max constraints">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <h3 class="mb-2 text-sm font-medium opacity-70">
           Left pane is clamped to 20%–60% — try arrowing past those bounds
         </h3>

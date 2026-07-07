@@ -1,19 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import { Breadcrumb, type BreadcrumbItem } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const items: BreadcrumbItem[] = [
   { label: "Home", href: "/" },
@@ -31,7 +20,7 @@ const items: BreadcrumbItem[] = [
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -60,7 +49,7 @@ const items: BreadcrumbItem[] = [
     </Variant>
 
     <Variant title="Narrow container (responsive check — collapses to '…')">
-      <div class="space-y-8 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-8 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <div v-for="width in [500, 350, 220]" :key="width">
           <h3 class="mb-2 text-sm font-medium opacity-70">{{ width }}px container</h3>
           <div :style="{ width: `${width}px`, border: '1px dashed var(--stance-color-border)', padding: '0.5rem' }">

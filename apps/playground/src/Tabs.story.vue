@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Tab, TabList, TabPanel, Tabs } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const lightActive = ref("account");
 const darkActive = ref("account");
@@ -26,7 +16,7 @@ const narrowActive = ref("account");
     <Variant title="Light + Dark">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-4 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -50,7 +40,7 @@ const narrowActive = ref("account");
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-4 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -76,7 +66,7 @@ const narrowActive = ref("account");
     </Variant>
 
     <Variant title="Vertical orientation">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <Tabs v-model="verticalActive" orientation="vertical">
           <TabList>
             <Tab value="account">Account</Tab>
@@ -91,7 +81,7 @@ const narrowActive = ref("account");
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] border p-4" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="mx-auto max-w-[240px] border p-4" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <Tabs v-model="narrowActive">
           <TabList>
             <Tab value="account">Account</Tab>

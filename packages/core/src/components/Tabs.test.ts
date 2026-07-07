@@ -19,7 +19,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import Tabs, { type TabsProps } from "./Tabs.vue";
 import TabList from "./TabList.vue";
@@ -28,7 +28,7 @@ import TabPanel from "./TabPanel.vue";
 import tabSource from "./Tab.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

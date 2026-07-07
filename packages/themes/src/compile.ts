@@ -101,6 +101,6 @@ export function compileTheme(theme: Theme): string {
 }
 
 /** Compiles multiple themes into one stylesheet, in the given order. */
-export function compileThemes(themes: Theme[]): string {
+export function compileThemes(themes: readonly Theme[]): string {
   return themes.map(compileTheme).join("\n\n");
 }

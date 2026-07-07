@@ -15,13 +15,13 @@
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import Card, { type CardVariant } from "./Card.vue";
 import cardSource from "./Card.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

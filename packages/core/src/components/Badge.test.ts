@@ -9,13 +9,13 @@
  */
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes, neutral } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import Badge, { type BadgeVariant } from "./Badge.vue";
 import badgeSource from "./Badge.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

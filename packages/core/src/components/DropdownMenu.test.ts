@@ -21,7 +21,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import DropdownMenu, { type DropdownMenuProps } from "./DropdownMenu.vue";
 import DropdownMenuTrigger from "./DropdownMenuTrigger.vue";
@@ -31,7 +31,7 @@ import DropdownMenuSeparator from "./DropdownMenuSeparator.vue";
 import dropdownMenuContentSource from "./DropdownMenuContent.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

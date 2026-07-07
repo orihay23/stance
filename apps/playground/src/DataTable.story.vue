@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { DataTable, type DataTableColumn, type DataTableSortState } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 interface Person {
   name: string;
@@ -109,7 +99,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     <Variant title="Light + Dark">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -132,7 +122,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -157,7 +147,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Empty and loading states">
-      <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2" data-theme="neutral">
+      <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2" :data-theme="storyTheme">
         <section
           class="space-y-2"
           :style="{ color: 'var(--stance-color-foreground)' }"
@@ -178,7 +168,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Responsive (container-query card collapse)">
-      <div class="space-y-8 p-6" data-theme="neutral">
+      <div class="space-y-8 p-6" :data-theme="storyTheme">
         <div>
           <h3 class="mb-2 text-sm font-medium opacity-70">700px container (table view)</h3>
           <div style="width: 700px" :style="{ color: 'var(--stance-color-foreground)' }">
@@ -203,7 +193,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Pagination (client mode)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-4 text-sm opacity-70">
           DataTable holds all 25 rows and slices/sorts them itself based on page/pageSize.
         </p>
@@ -220,7 +210,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Pagination (server mode, simulated)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-4 text-sm opacity-70">
           Only the current page's 5 rows are ever passed in — as if fetched per page from an API —
           and DataTable just renders the nav and reports back the requested page.
@@ -239,7 +229,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Pagination in a narrow container">
-      <div class="p-6" data-theme="neutral">
+      <div class="p-6" :data-theme="storyTheme">
         <div style="width: 280px" :style="{ color: 'var(--stance-color-foreground)' }">
           <DataTable
             v-model:page="narrowPage"
@@ -254,7 +244,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Row selection (multiple)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-4 text-sm opacity-70">
           Selected: {{ multipleSelected.length === 0 ? "none" : multipleSelected.join(", ") }}
         </p>
@@ -269,7 +259,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Row selection (single)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-4 text-sm opacity-70">
           Selected: {{ singleSelected.length === 0 ? "none" : singleSelected.join(", ") }}
         </p>
@@ -284,7 +274,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Row selection in a narrow container">
-      <div class="p-6" data-theme="neutral">
+      <div class="p-6" :data-theme="storyTheme">
         <div style="width: 280px" :style="{ color: 'var(--stance-color-foreground)' }">
           <DataTable
             v-model:selected="narrowSelected"
@@ -298,7 +288,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Filtering (global search + per-column)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-4 text-sm opacity-70">
           Global search matches Name/Role/Email (filterable columns). Role has a select-from-values
           filter (inferred from filterOptions); Name/Email get free-text "contains" inputs.
@@ -318,7 +308,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Filtering (Filters disclosure past 4 filterable columns)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-4 text-sm opacity-70">
           5 filterable columns here — per-column filters collapse behind a "Filters" disclosure
           instead of crowding the toolbar.
@@ -334,7 +324,7 @@ const manyFilterByColumn = ref<Record<string, string>>({});
     </Variant>
 
     <Variant title="Pagination position and alignment">
-      <div class="space-y-8 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-8 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <div>
           <h3 class="mb-2 text-sm font-medium opacity-70">position="top", align="center"</h3>
           <DataTable

@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { DatePicker, type DatePickerRangeValue } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const singleDate = ref<Date | undefined>(undefined);
 const singleDateDark = ref<Date | undefined>(undefined);
@@ -33,7 +23,7 @@ const narrowDate = ref<Date | undefined>(undefined);
     <Variant title="Light + Dark (single date)">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-4 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -48,7 +38,7 @@ const narrowDate = ref<Date | undefined>(undefined);
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-4 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -65,7 +55,7 @@ const narrowDate = ref<Date | undefined>(undefined);
     </Variant>
 
     <Variant title="Range mode">
-      <div class="space-y-4 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-4 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <label class="block text-sm font-medium" for="date-range">Trip dates</label>
         <DatePicker id="date-range" v-model="rangeDate" mode="range" />
         <p class="text-sm opacity-70">
@@ -75,21 +65,21 @@ const narrowDate = ref<Date | undefined>(undefined);
     </Variant>
 
     <Variant title="Min/max constraints">
-      <div class="space-y-4 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-4 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <label class="block text-sm font-medium" for="date-minmax">Booking date (5th–25th of this month only)</label>
         <DatePicker id="date-minmax" v-model="minMaxDate" :min="min" :max="max" />
       </div>
     </Variant>
 
     <Variant title="Locale (de-DE, Monday-start week)">
-      <div class="space-y-4 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-4 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <label class="block text-sm font-medium" for="date-locale">Datum</label>
         <DatePicker id="date-locale" v-model="localeDate" locale="de-DE" />
       </div>
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="space-y-8 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-8 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <div v-for="width in [320, 260]" :key="width">
           <h3 class="mb-2 text-sm font-medium opacity-70">{{ width }}px container</h3>
           <div :style="{ width: `${width}px`, border: '1px dashed var(--stance-color-border)', padding: '0.5rem' }">

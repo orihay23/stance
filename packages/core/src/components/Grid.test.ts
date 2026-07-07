@@ -19,13 +19,13 @@
  */
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import Grid, { type GridGap, type GridResponsiveMode } from "./Grid.vue";
 import gridSource from "./Grid.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {
