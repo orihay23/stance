@@ -2,6 +2,7 @@
 import { computed, provide, useId } from "vue";
 import { cn } from "../utils/cn";
 import { TOGGLE_GROUP_KEY } from "../composables/useToggleGroup";
+import { useErrorSlot } from "../composables/useErrorSlot";
 
 /**
  * Single-select only for now (mutually-exclusive options, visually a row of
@@ -16,6 +17,7 @@ export interface ToggleGroupProps {
   /** Shared `name` for the native radio inputs. Auto-generated via `useId()` if omitted. */
   name?: string;
   disabled?: boolean;
+  required?: boolean;
   /**
    * Marks the whole group invalid: sets `aria-invalid`, and — when the
    * `error` slot has content — wires `aria-describedby` to it
@@ -28,6 +30,7 @@ export interface ToggleGroupProps {
 
 const props = withDefaults(defineProps<ToggleGroupProps>(), {
   disabled: false,
+  required: false,
   invalid: false,
 });
 
@@ -48,11 +51,14 @@ const baseId = useId();
 const generatedName = useId();
 const groupName = computed(() => props.name ?? generatedName);
 const legendId = computed(() => `${baseId}-legend`);
-const errorId = computed(() => `${baseId}-error`);
-const showError = computed(() => props.invalid && Boolean(slots.error));
-const describedBy = computed(() => (showError.value ? errorId.value : undefined));
+const { errorId, showError, describedBy } = useErrorSlot(
+  () => baseId,
+  () => props.invalid,
+  () => Boolean(slots.error),
+);
 
 const disabled = computed(() => props.disabled);
+const required = computed(() => props.required);
 const invalid = computed(() => props.invalid);
 const modelValue = computed(() => props.modelValue);
 
@@ -60,6 +66,7 @@ provide(TOGGLE_GROUP_KEY, {
   name: groupName,
   modelValue,
   disabled,
+  required,
   invalid,
   describedBy,
   updateValue: (value: string) => emit("update:modelValue", value),
@@ -75,6 +82,7 @@ const rootClass = computed(() => cn("stance-toggle-group", props.class));
     :aria-labelledby="legendId"
     :aria-describedby="describedBy"
     :aria-invalid="invalid || undefined"
+    :aria-required="required || undefined"
   >
     <div :id="legendId" class="stance-toggle-group__legend">
       <slot name="legend" />
@@ -108,8 +116,8 @@ const rootClass = computed(() => cn("stance-toggle-group", props.class));
   width: fit-content;
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);
-  padding: 0.125rem;
-  gap: 0.125rem;
+  padding: var(--stance-spacing-2xs, 0.125rem);
+  gap: var(--stance-spacing-2xs, 0.125rem);
 }
 
 :where(.stance-toggle-group-error) {

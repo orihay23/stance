@@ -27,3 +27,22 @@
   z-index: 50;
   pointer-events: none;
 }
+
+/*
+ * Shared visually-hidden utility (screen-reader-only text): visible to
+ * assistive tech, clipped to nothing on screen. Used by several components
+ * (Badge, Breadcrumb, DataTable, TreeTable) and by utils/live-region.ts's
+ * dynamically-created aria-live region — kept here instead of duplicated
+ * per component.
+ */
+:where(.stance-visually-hidden) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

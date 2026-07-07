@@ -106,9 +106,9 @@ const rootClass = computed(() => cn("stance-button", props.class));
   font-weight: var(--stance-font-weight-medium, 500);
   border-radius: var(--stance-radius-md, 0.5rem);
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
+    background-color var(--stance-motion-duration, 0.15s) ease,
+    color var(--stance-motion-duration, 0.15s) ease,
+    box-shadow var(--stance-motion-duration, 0.15s) ease;
 }
 
 :where(.stance-button:disabled) {
@@ -126,32 +126,32 @@ const rootClass = computed(() => cn("stance-button", props.class));
   gap: var(--stance-spacing-xs, 0.25rem);
   padding: var(--stance-spacing-xs, 0.25rem) var(--stance-spacing-sm, 0.5rem);
   font-size: var(--stance-text-sm, 0.875rem);
-  min-height: 2rem;
+  min-height: var(--stance-control-height-sm, 2rem);
 }
 :where(.stance-button[data-size="md"]) {
   gap: var(--stance-spacing-sm, 0.5rem);
   padding: var(--stance-spacing-sm, 0.5rem) var(--stance-spacing-md, 0.75rem);
   font-size: var(--stance-text-base, 1rem);
-  min-height: 2.5rem;
+  min-height: var(--stance-control-height-md, 2.5rem);
 }
 :where(.stance-button[data-size="lg"]) {
   gap: var(--stance-spacing-sm, 0.5rem);
   padding: var(--stance-spacing-md, 0.75rem) var(--stance-spacing-lg, 1rem);
   font-size: var(--stance-text-lg, 1.125rem);
-  min-height: 3rem;
+  min-height: var(--stance-control-height-lg, 3rem);
 }
 
 /* Icon-only: square hit target, no horizontal label padding */
 :where(.stance-button[data-icon-only][data-size="sm"]) {
-  width: 2rem;
+  width: var(--stance-control-height-sm, 2rem);
   padding: var(--stance-spacing-xs, 0.25rem);
 }
 :where(.stance-button[data-icon-only][data-size="md"]) {
-  width: 2.5rem;
+  width: var(--stance-control-height-md, 2.5rem);
   padding: var(--stance-spacing-sm, 0.5rem);
 }
 :where(.stance-button[data-icon-only][data-size="lg"]) {
-  width: 3rem;
+  width: var(--stance-control-height-lg, 3rem);
   padding: var(--stance-spacing-md, 0.75rem);
 }
 

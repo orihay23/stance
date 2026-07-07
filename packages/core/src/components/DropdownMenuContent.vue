@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
-import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from "vue";
+import { computed, onBeforeUnmount, useTemplateRef } from "vue";
 import { cn } from "../utils/cn";
 import { getOverlayRoot } from "../utils/dom";
-import { detectThemeContext } from "../utils/theme-context";
 import { useDismissable } from "../composables/useDismissable";
-import { useFocusTrap } from "../composables/useFocusTrap";
 import { useDropdownMenuContext } from "../composables/useDropdownMenu";
+import { useFloatingOverlay } from "../composables/useFloatingOverlay";
+import { useFocusTrap } from "../composables/useFocusTrap";
+import { useOverlayThemeContext } from "../composables/useOverlayThemeContext";
 
 export interface DropdownMenuContentProps {
   /** Extra classes merged with internal classes via `tailwind-merge`. */
@@ -123,25 +123,17 @@ onBeforeUnmount(() => {
   clearTimeout(typeaheadTimer);
 });
 
-const { floatingStyles } = useFloating(
+const { floatingStyles } = useFloatingOverlay(
   computed(() => context?.triggerRef.value ?? null),
   contentRef,
   {
     open,
     placement: computed(() => context?.placement.value ?? "bottom-start"),
-    middleware: computed(() => [
-      offset(context?.offset.value ?? 4),
-      flip(),
-      shift({ padding: 8 }),
-    ]),
-    whileElementsMounted: autoUpdate,
+    offset: computed(() => context?.offset.value ?? 4),
   },
 );
 
-const themeContext = ref(detectThemeContext(null));
-watch(open, (isOpen) => {
-  if (isOpen) themeContext.value = detectThemeContext(context?.triggerRef.value ?? document.activeElement);
-});
+const themeContext = useOverlayThemeContext(open, () => context?.triggerRef.value ?? document.activeElement);
 
 const contentClass = computed(() => cn("stance-dropdown-menu__content", props.class));
 </script>

@@ -204,6 +204,49 @@ describe("DropdownMenu", () => {
     expect(screen.getByRole("menu")).toBeInTheDocument();
   });
 
+  it("with href, renders an <a> and activates via click, Enter, and Space alike", async () => {
+    const onSelect = vi.fn();
+    render(
+      defineComponent({
+        setup() {
+          const open = ref(false);
+          return () =>
+            h(DropdownMenu, { modelValue: open.value, "onUpdate:modelValue": (v: boolean) => (open.value = v) }, {
+              default: () => [
+                h(DropdownMenuTrigger, null, { default: () => "Actions" }),
+                h(DropdownMenuContent, null, {
+                  default: () => [
+                    h(DropdownMenuItem, { href: "/settings", onSelect: () => onSelect("Settings") }, { default: () => "Settings" }),
+                  ],
+                }),
+              ],
+            });
+        },
+      }),
+    );
+    const trigger = screen.getByRole("button", { name: "Actions" });
+    await fireEvent.click(trigger);
+    await nextTick();
+
+    const link = screen.getByRole("menuitem", { name: "Settings" });
+    expect(link.tagName).toBe("A");
+    expect(link).toHaveAttribute("href", "/settings");
+
+    await fireEvent.keyDown(link, { key: " " });
+    await nextTick();
+    expect(onSelect).toHaveBeenCalledWith("Settings");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("with href and disabled, omits the href attribute so it can't be followed by mouse", () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      h(DropdownMenuItem, { href: "/settings", disabled: true }, { default: () => "Settings" }),
+    );
+    expect(screen.getByRole("menuitem", { name: "Settings" })).not.toHaveAttribute("href");
+    errorSpy.mockRestore();
+  });
+
   it("closes on Escape and returns focus to the trigger", async () => {
     renderHarness();
     const trigger = screen.getByRole("button", { name: "Actions" });

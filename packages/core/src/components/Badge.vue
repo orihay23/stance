@@ -33,7 +33,7 @@ const rootClass = computed(() => cn("stance-badge", props.class));
 
 <template>
   <span :class="rootClass" :data-variant="variant">
-    <span v-if="label" class="stance-badge__visually-hidden">{{ label }}</span>
+    <span v-if="label" class="stance-visually-hidden">{{ label }}</span>
     <span :aria-hidden="label ? true : undefined">
       <slot />
     </span>
@@ -49,7 +49,7 @@ const rootClass = computed(() => cn("stance-badge", props.class));
   border-radius: var(--stance-radius-full, 9999px);
   font-size: var(--stance-text-xs, 0.75rem);
   font-weight: var(--stance-font-weight-medium, 500);
-  line-height: 1.25;
+  line-height: var(--stance-leading-tight, 1.25);
   white-space: nowrap;
 }
 
@@ -76,17 +76,5 @@ const rootClass = computed(() => cn("stance-badge", props.class));
 :where(.stance-badge[data-variant="destructive"]) {
   background: var(--stance-color-destructive);
   color: var(--stance-color-destructive-foreground);
-}
-
-:where(.stance-badge__visually-hidden) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 </style>

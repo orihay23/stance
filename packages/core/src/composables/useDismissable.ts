@@ -12,13 +12,11 @@ export interface UseDismissableOptions {
   closeOnEscape?: Ref<boolean> | ComputedRef<boolean>;
   /** @default true */
   closeOnOutsideClick?: Ref<boolean> | ComputedRef<boolean>;
-  /** Relevant for Popover/Tooltip anchored to a trigger that can scroll away; not typically used by Dialog. @default false */
-  closeOnScroll?: Ref<boolean> | ComputedRef<boolean>;
 }
 
 /**
- * Shared Escape/click-outside/scroll dismiss behavior for Dialog, Popover,
- * Tooltip, and Dropdown Menu, so each component doesn't reimplement it.
+ * Shared Escape/click-outside dismiss behavior for Dialog, Popover, Tooltip,
+ * and Dropdown Menu, so each component doesn't reimplement it.
  */
 export function useDismissable(options: UseDismissableOptions): void {
   const { active, onDismiss, containers } = options;
@@ -40,12 +38,6 @@ export function useDismissable(options: UseDismissableOptions): void {
     }
   }
 
-  function onScroll() {
-    if (options.closeOnScroll?.value ?? false) {
-      onDismiss();
-    }
-  }
-
   watch(
     active,
     async (isActive) => {
@@ -56,11 +48,9 @@ export function useDismissable(options: UseDismissableOptions): void {
         await nextTick();
         document.addEventListener("keydown", onKeydown);
         document.addEventListener("pointerdown", onPointerDown, true);
-        document.addEventListener("scroll", onScroll, true);
       } else {
         document.removeEventListener("keydown", onKeydown);
         document.removeEventListener("pointerdown", onPointerDown, true);
-        document.removeEventListener("scroll", onScroll, true);
       }
     },
     { immediate: true },

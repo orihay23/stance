@@ -12,6 +12,7 @@ export interface ToggleGroupContext {
   name: Ref<string>;
   modelValue: Ref<string | undefined>;
   disabled: Ref<boolean>;
+  required: Ref<boolean>;
   invalid: Ref<boolean>;
   describedBy: Ref<string | undefined>;
   updateValue: (value: string) => void;

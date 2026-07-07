@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { ButtonSize, ButtonVariant } from "./Button.vue";
-import { computed, onBeforeUnmount, useTemplateRef, watchEffect } from "vue";
+import { computed, useTemplateRef } from "vue";
 import { cn } from "../utils/cn";
 import { useDropdownMenuContext } from "../composables/useDropdownMenu";
+import { useOverlayTriggerRef } from "../composables/useOverlayTriggerRef";
 
 export interface DropdownMenuTriggerProps {
   /** Visual style — reuses Button's variants. @default "secondary" */
@@ -27,13 +28,7 @@ defineSlots<{
 const context = useDropdownMenuContext("DropdownMenuTrigger");
 const buttonRef = useTemplateRef<HTMLButtonElement>("buttonRef");
 
-watchEffect(() => {
-  if (context) context.triggerRef.value = buttonRef.value;
-});
-
-onBeforeUnmount(() => {
-  if (context && context.triggerRef.value === buttonRef.value) context.triggerRef.value = null;
-});
+useOverlayTriggerRef(context?.triggerRef, buttonRef);
 
 // A native <button> already fires "click" for a real pointer click AND for
 // Enter/Space activation, so this alone covers those three inputs without

@@ -5,6 +5,13 @@ import { useDropdownMenuContext } from "../composables/useDropdownMenu";
 
 export interface DropdownMenuItemProps {
   disabled?: boolean;
+  /**
+   * Renders as an `<a>` instead of a `<div>` — for menu items that navigate
+   * (e.g. Breadcrumb's collapsed-items menu) rather than just performing an
+   * action. Omitted (or when `disabled`) when `disabled` is true, so a
+   * disabled item can't still be followed by mouse.
+   */
+  href?: string | undefined;
   /** Style as a destructive action (e.g. "Delete"). @default "default" */
   variant?: "default" | "destructive";
   /** Extra classes merged with internal classes via `tailwind-merge`. */
@@ -33,9 +40,17 @@ function activate() {
 }
 
 function onKeydown(event: KeyboardEvent) {
+  // A focused <a href> already synthesizes its own click on Enter (which
+  // @click below handles) — handling Enter here too would double-fire.
+  // Space isn't natively supported by links, so it's always handled here.
+  if (event.key === "Enter" && props.href) return;
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
-    activate();
+    if (props.href) {
+      (event.currentTarget as HTMLElement).click();
+    } else {
+      activate();
+    }
   }
 }
 
@@ -48,18 +63,20 @@ const itemClass = computed(() => cn("stance-dropdown-menu__item", props.class));
 </script>
 
 <template>
-  <div
+  <component
+    :is="href ? 'a' : 'div'"
     role="menuitem"
     tabindex="-1"
     :class="itemClass"
     :data-variant="variant"
+    :href="disabled ? undefined : href"
     :aria-disabled="disabled || undefined"
     @click="activate"
     @keydown="onKeydown"
     @mouseenter="onMouseenter"
   >
     <slot />
-  </div>
+  </component>
 </template>
 
 <style>
