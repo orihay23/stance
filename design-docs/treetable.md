@@ -123,3 +123,14 @@ for "expand" on the same element, which is a real source of confusion.
 - The tree's own expand/collapse toggle (children visibility) remains the
   only "expand" concept that affects what rows exist at all; the details
   disclosure only affects how much of one row's own data is shown.
+
+  **v1 status**: not built. The shipped `@container` narrow-width block
+  stacks every column in the card unconditionally, same as DataTable, rather
+  than adding the "show details" disclosure described above. Accepted as a
+  deliberate v1 cut rather than real follow-up work — the risk this section
+  called out (a competing "expand" affordance next to the tree's own
+  expand/collapse) is exactly the kind of interaction-model risk worth
+  getting right rather than shipping quickly, and no current consumer
+  (including this library's own docs site) has hit a many-column TreeTable
+  narrow enough for it to matter yet. Revisit if a real use case surfaces
+  rows with enough columns that the unconditional stack becomes unwieldy.

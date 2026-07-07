@@ -1,4 +1,11 @@
+<script setup lang="ts">
+import { Badge } from "@stance/core";
+</script>
+
 # Accessibility
+
+<Badge variant="success">WCAG 2.1 AA</Badge>
+<Badge variant="success">Section 508</Badge>
 
 Accessibility is a target every component is built against, not a pass
 applied afterward: **WCAG 2.1 AA / Section 508**. A component isn't
@@ -55,4 +62,12 @@ so keyboard users can never tab "behind" a modal into the page underneath.
 - **Screen readers**: state that changes without a visible page navigation —
   a filtered result count, a new pagination page, a toast appearing — is
   announced through a shared visually-hidden `aria-live` region, not just
-  updated silently in the DOM.
+  updated silently in the DOM. Sort changes are the deliberate exception:
+  DataTable/TreeTable update `aria-sort` on the column header rather than
+  firing a separate live-region announcement. This follows the [WAI-ARIA
+  Authoring Practices sortable-table
+  pattern](https://www.w3.org/WAI/ARIA/apg/patterns/table/) — a screen
+  reader announces a column header's `aria-sort` change on its own because
+  the change happens on the same element that has (or had) focus, the same
+  way `aria-expanded`/`aria-pressed` changes are announced without a
+  separate live region.

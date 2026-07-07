@@ -112,6 +112,20 @@ describe("TreeTable", () => {
     expect(screen.queryByText("index.ts")).not.toBeInTheDocument();
   });
 
+  it("warns in dev mode when rowKey resolves to a non-primitive and falls back to the sibling-group index", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderHarness({ rowKey: "missingField" as unknown as keyof FileNode });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("falling back to its index within its sibling group"));
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn when rowKey resolves to a real primitive on every row", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderHarness();
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it("a row with children has aria-expanded=false and a leaf has none", () => {
     renderHarness();
     const rows = screen.getAllByRole("row");

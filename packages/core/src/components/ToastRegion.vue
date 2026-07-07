@@ -33,7 +33,7 @@ const rootClass = computed(() => cn("stance-toast-region", props.class));
 
 <template>
   <span ref="anchorRef" aria-hidden="true" style="display: none" />
-  <Teleport :to="overlayRoot">
+  <Teleport v-if="overlayRoot" :to="overlayRoot">
     <div
       v-if="toasts.length > 0"
       role="region"

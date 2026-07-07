@@ -107,7 +107,13 @@ function cellValue(column: TreeTableColumn<T>, row: T): unknown {
 function getRowKey(row: T, index: number): string | number {
   if (typeof props.rowKey === "function") return props.rowKey(row);
   const value = row[props.rowKey];
-  return typeof value === "string" || typeof value === "number" ? value : index;
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (import.meta.env.DEV) {
+    console.warn(
+      `[stance/TreeTable] rowKey "${String(props.rowKey)}" is missing or non-primitive on a row — falling back to its index within its sibling group, which is not stable across sorting/filtering and can collide with another sibling group's index. Pass a rowKey that resolves to a unique string/number per row.`,
+    );
+  }
+  return index;
 }
 
 const {

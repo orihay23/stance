@@ -136,7 +136,7 @@ const contentClass = computed(() => cn("stance-tooltip__content", props.class));
     <slot />
   </span>
 
-  <Teleport :to="overlayRoot">
+  <Teleport v-if="overlayRoot" :to="overlayRoot">
     <div
       v-if="open"
       ref="contentRef"

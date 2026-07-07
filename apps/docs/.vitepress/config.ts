@@ -21,6 +21,18 @@ export default defineConfig({
   title: "stance",
   description: "An opinionated, accessible, themeable Vue 3 component library.",
   base,
+  head: [
+    ["link", { rel: "icon", type: "image/png", href: `${base}logo-icon.png` }],
+    [
+      // Sets data-theme before first paint, the same anti-FOUC technique
+      // VitePress itself uses for its own dark-mode class — lets our
+      // [data-theme="neutral"].dark selector "just work" against
+      // VitePress's existing .dark toggle with no changes to that toggle.
+      "script",
+      {},
+      `(function(){document.documentElement.setAttribute("data-theme","neutral");})();`,
+    ],
+  ],
   // Left off deliberately: extension-less URLs need the host to serve
   // page.html for a request to /page, and plain (non-Jekyll) GitHub Pages
   // doesn't reliably do that without extra rewrite config. Keeping the
@@ -36,6 +48,7 @@ export default defineConfig({
     },
   },
   themeConfig: {
+    logo: { src: "/logo-icon.png", alt: "stance logo" },
     nav: [
       { text: "Getting Started", link: "/getting-started" },
       { text: "Theming", link: "/theming" },
