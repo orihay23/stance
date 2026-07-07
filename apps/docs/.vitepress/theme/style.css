@@ -29,3 +29,18 @@
 .VPHomeHero .image-bg {
   display: none;
 }
+
+/*
+ * VitePress's default hero layout gives .image a negative margin on
+ * narrow viewports (bleeding it up behind the nav bar and pulling the
+ * following heading up into it) — intended for a transparent illustration
+ * that can visually sit "behind" the translucent nav. Our logo chip is an
+ * opaque rounded rect, so that bleed shows as a real overlap with both the
+ * nav bar and the heading/tagline below it. Neutralize it below the
+ * desktop (960px) breakpoint where the image still stacks above the text.
+ */
+@media (max-width: 959px) {
+  .VPHero.has-image .image {
+    margin: 24px auto 32px;
+  }
+}
