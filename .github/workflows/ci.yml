@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  visual-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Visual tests hit the built Histoire output, not the dev server, so
+      # both @stance/core (which Histoire imports through dist/) and the
+      # Histoire build itself have to exist before Playwright runs.
+      - name: Build @stance/core
+        run: pnpm --filter @stance/core build
+
+      - name: Build Histoire stories
+        run: pnpm --filter @stance/playground story:build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @stance/visual-tests exec playwright install --with-deps chromium
+
+      - name: Run visual regression tests
+        run: pnpm --filter @stance/visual-tests test
+
+      # Diff/actual/expected images and the trace viewer report, so a failing
+      # PR can be diagnosed without re-running locally.
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/visual-tests/playwright-report/
+          retention-days: 14
+
+      - name: Upload test-results (diffs)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-test-results
+          path: apps/visual-tests/test-results/
+          retention-days: 14

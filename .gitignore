@@ -3,3 +3,7 @@ dist/
 .vitepress/cache/
 *.log
 .DS_Store
+.histoire/
+apps/visual-tests/test-results/
+apps/visual-tests/playwright-report/
+apps/visual-tests/blob-report/
