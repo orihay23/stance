@@ -1,19 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import { Button, Tooltip } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 </script>
 
 <template>
@@ -23,7 +12,7 @@ onUnmounted(() => {
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -80,7 +69,7 @@ onUnmounted(() => {
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] space-y-4 border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] space-y-4 border p-4" :data-theme="storyTheme">
         <Tooltip content="This tooltip stays anchored and readable even in a narrow container.">
           <Button class="w-full">Hover or focus me</Button>
         </Tooltip>

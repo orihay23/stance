@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const lightSingle = ref("shipping");
 const darkSingle = ref("shipping");
@@ -26,7 +16,7 @@ const narrowSingle = ref("shipping");
     <Variant title="Light + Dark (single-open)">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -52,7 +42,7 @@ const narrowSingle = ref("shipping");
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -80,7 +70,7 @@ const narrowSingle = ref("shipping");
     </Variant>
 
     <Variant title="Multiple-open mode">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <Accordion v-model="multiple" type="multiple">
           <AccordionItem value="shipping">
             <AccordionHeader>Shipping</AccordionHeader>
@@ -99,7 +89,7 @@ const narrowSingle = ref("shipping");
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] border p-4" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="mx-auto max-w-[240px] border p-4" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <Accordion v-model="narrowSingle">
           <AccordionItem value="shipping">
             <AccordionHeader>Shipping</AccordionHeader>

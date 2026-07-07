@@ -10,4 +10,4 @@ export type {
 } from "./types";
 
 export { compileTheme, compileThemes } from "./compile";
-export { neutral } from "./themes/neutral";
+export { allThemes, neutral } from "./themes";

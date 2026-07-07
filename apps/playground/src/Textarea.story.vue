@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Textarea } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const bio = ref("");
 const autoGrowValue = ref("");
@@ -27,7 +17,7 @@ const invalidBio = ref("");
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -78,7 +68,7 @@ const invalidBio = ref("");
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] space-y-3 border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] space-y-3 border p-4" :data-theme="storyTheme">
         <Textarea aria-label="Fixed narrow" placeholder="Fixed height in a narrow column" />
         <Textarea aria-label="Auto-grow narrow" auto-grow :max-rows="5" placeholder="Auto-grow in a narrow column" />
       </div>

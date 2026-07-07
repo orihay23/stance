@@ -1,19 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import { Button, ToastRegion, useToast } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const { show } = useToast();
 </script>
@@ -21,7 +10,7 @@ const { show } = useToast();
 <template>
   <Story title="Toast">
     <Variant title="Light + Dark (shared region)">
-      <div data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <!--
           One ToastRegion, mounted once (as it would be in a real app, near
           the root) — triggers from both the light and dark sections below
@@ -108,7 +97,7 @@ const { show } = useToast();
     </Variant>
 
     <Variant title="Duration and manual dismiss">
-      <div class="space-y-4 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-4 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <ToastRegion />
         <p class="text-sm opacity-70">
           Hover or focus a toast to pause its auto-dismiss timer — it resumes from where it left off, not from the start.

@@ -17,7 +17,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import DataTable, {
   type DataTableColumn,
@@ -30,7 +30,7 @@ import { announce } from "../utils/live-region";
 
 vi.mock("../utils/live-region", () => ({ announce: vi.fn() }));
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

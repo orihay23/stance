@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { TreeTable, type TreeTableColumn, type TreeTableSortState } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 interface FileNode {
   /** Full path — used as `row-key`. Plain `name` isn't unique on its own: this tree has two "package.json" files at different levels. */
@@ -100,7 +90,7 @@ const narrowExpanded = ref<Array<string | number>>(["packages"]);
     <Variant title="Light + Dark">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-4 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -113,7 +103,7 @@ const narrowExpanded = ref<Array<string | number>>(["packages"]);
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-4 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -128,7 +118,7 @@ const narrowExpanded = ref<Array<string | number>>(["packages"]);
     </Variant>
 
     <Variant title="Row selection">
-      <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <div>
           <h3 class="mb-2 text-sm font-medium opacity-70">Multiple (checkboxes)</h3>
           <TreeTable
@@ -157,7 +147,7 @@ const narrowExpanded = ref<Array<string | number>>(["packages"]);
     </Variant>
 
     <Variant title="Sort + filter (ancestor-preserving)">
-      <div class="p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="mb-2 text-sm opacity-70">
           Try filtering for "neutral" — the matching file keeps its folder ancestors visible
           instead of reading as a disconnected list, and stays expanded regardless of collapse
@@ -176,7 +166,7 @@ const narrowExpanded = ref<Array<string | number>>(["packages"]);
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="space-y-8 p-6" data-theme="neutral" :style="{ color: 'var(--stance-color-foreground)' }">
+      <div class="space-y-8 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <div v-for="width in [400, 300]" :key="width">
           <h3 class="mb-2 text-sm font-medium opacity-70">{{ width }}px container</h3>
           <div :style="{ width: `${width}px`, border: '1px dashed var(--stance-color-border)', padding: '0.5rem' }">

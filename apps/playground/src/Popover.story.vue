@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 // Independent refs per section (not shared across a v-for loop) — sharing a
 // single ref across the Light/Dark sections was the exact bug that made
@@ -32,7 +22,7 @@ const darkTopOpen = ref(false);
     <Variant title="Light + Dark">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -78,7 +68,7 @@ const darkTopOpen = ref(false);
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -126,7 +116,7 @@ const darkTopOpen = ref(false);
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] space-y-4 border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] space-y-4 border p-4" :data-theme="storyTheme">
         <Popover v-model="lightInfoOpen">
           <PopoverTrigger class="w-full">Show info</PopoverTrigger>
           <PopoverContent>

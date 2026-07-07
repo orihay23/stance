@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { ToggleGroup, ToggleGroupItem } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const view = ref("list");
 const invalidView = ref<string | undefined>(undefined);
@@ -26,7 +16,7 @@ const invalidView = ref<string | undefined>(undefined);
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -79,7 +69,7 @@ const invalidView = ref<string | undefined>(undefined);
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] border p-4" :data-theme="storyTheme">
         <ToggleGroup model-value="grid">
           <template #legend>Choose a view with a fairly long legend that has to wrap</template>
           <ToggleGroupItem value="list">List</ToggleGroupItem>

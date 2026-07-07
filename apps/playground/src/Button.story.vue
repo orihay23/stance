@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Button, type ButtonSize, type ButtonVariant } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const variants: ButtonVariant[] = ["primary", "secondary", "ghost", "destructive"];
 const sizes: ButtonSize[] = ["sm", "md", "lg"];
@@ -28,7 +18,7 @@ const clickCount = ref(0);
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -92,7 +82,7 @@ const clickCount = ref(0);
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] space-y-4 border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] space-y-4 border p-4" :data-theme="storyTheme">
         <Button class="w-full">Full-width primary</Button>
         <div class="flex flex-wrap gap-2">
           <Button v-for="variant in variants" :key="variant" :variant="variant" size="sm">

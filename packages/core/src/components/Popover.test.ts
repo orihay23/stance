@@ -20,7 +20,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes, neutral } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import Popover, { type PopoverProps } from "./Popover.vue";
 import PopoverTrigger from "./PopoverTrigger.vue";
@@ -28,7 +28,7 @@ import PopoverContent from "./PopoverContent.vue";
 import popoverContentSource from "./PopoverContent.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

@@ -20,13 +20,13 @@ import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { nextTick } from "vue";
 import { describe, expect, it } from "vitest";
-import { neutral } from "@stance/themes";
+import { allThemes, neutral } from "@stance/themes";
 import { compileTheme } from "@stance/themes";
 import Checkbox from "./Checkbox.vue";
 import checkboxSource from "./Checkbox.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
-const themes = [neutral];
+const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 function withThemeStyle(theme: (typeof themes)[number]) {

@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Switch } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const airplaneMode = ref(false);
 const invalidSwitch = ref(false);
@@ -26,7 +16,7 @@ const invalidSwitch = ref(false);
         <section
           v-for="mode in ['light', 'dark']"
           :key="mode"
-          data-theme="neutral"
+          :data-theme="storyTheme"
           :class="['space-y-6 rounded-lg border p-6', mode === 'dark' && 'dark']"
           :style="{
             background: 'var(--stance-color-background)',
@@ -64,7 +54,7 @@ const invalidSwitch = ref(false);
     </Variant>
 
     <Variant title="Narrow container (responsive check)">
-      <div class="mx-auto max-w-[240px] space-y-3 border p-4" data-theme="neutral">
+      <div class="mx-auto max-w-[240px] space-y-3 border p-4" :data-theme="storyTheme">
         <Switch>A switch with a fairly long label that has to wrap onto multiple lines</Switch>
         <Switch model-value>On, in a narrow column</Switch>
       </div>

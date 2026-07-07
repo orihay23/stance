@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { Button, Dialog } from "@stance/core";
-import { compileTheme, neutral } from "@stance/themes";
+import { useStoryTheme } from "./useStoryTheme";
 
-let styleEl: HTMLStyleElement | null = null;
-
-onMounted(() => {
-  styleEl = document.createElement("style");
-  styleEl.textContent = compileTheme(neutral);
-  document.head.appendChild(styleEl);
-});
-
-onUnmounted(() => {
-  styleEl?.remove();
-});
+const { storyTheme, themes } = useStoryTheme();
 
 const lightBasicOpen = ref(false);
 const lightAlertOpen = ref(false);
@@ -29,7 +19,7 @@ const darkNoOutsideCloseOpen = ref(false);
     <Variant title="Light + Dark">
       <div class="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
@@ -84,7 +74,7 @@ const darkNoOutsideCloseOpen = ref(false);
         </section>
 
         <section
-          data-theme="neutral"
+          :data-theme="storyTheme"
           class="dark space-y-6 rounded-lg border p-6"
           :style="{
             background: 'var(--stance-color-background)',
