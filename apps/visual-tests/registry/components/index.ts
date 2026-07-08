@@ -4,6 +4,7 @@ import { avatar } from "./avatar";
 import { badge } from "./badge";
 import { breadcrumb } from "./breadcrumb";
 import { button } from "./button";
+import { calendar } from "./calendar";
 import { card } from "./card";
 import { checkbox } from "./checkbox";
 import { datatable } from "./datatable";
@@ -35,6 +36,7 @@ export const components: ComponentSpec[] = [
   badge,
   breadcrumb,
   button,
+  calendar,
   card,
   checkbox,
   datatable,

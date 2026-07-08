@@ -157,6 +157,12 @@ const groups = ref([
     summary: "Draggable and keyboard-resizable panes (2+), horizontal or vertical, with per-pane min/max and v-model persisted sizes.",
   },
   {
+    storyId: "src-calendar-story-vue",
+    name: "Calendar",
+    includes: [],
+    summary: "Standalone inline WAI-ARIA grid calendar — single-date or range selection, full keyboard support, locale-aware. DatePicker composes this internally for its popover.",
+  },
+  {
     storyId: "src-datepicker-story-vue",
     name: "DatePicker",
     includes: [],

@@ -129,6 +129,9 @@ export type { SplitterOrientation, SplitterProps } from "./components/Splitter.v
 export { default as SplitterPane } from "./components/SplitterPane.vue";
 export type { SplitterPaneProps } from "./components/SplitterPane.vue";
 
+export { default as Calendar } from "./components/Calendar.vue";
+export type { CalendarMode, CalendarProps, CalendarRangeValue } from "./components/Calendar.vue";
+
 export { default as DatePicker } from "./components/DatePicker.vue";
 export type { DatePickerMode, DatePickerProps, DatePickerRangeValue } from "./components/DatePicker.vue";
 

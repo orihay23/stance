@@ -28,6 +28,18 @@ export function addDays(date: Date, amount: number): Date {
   return next;
 }
 
+/** Shared by Calendar (grid cell disabling) and DatePicker (typed-input validation) so the two never disagree about which dates are selectable. */
+export function isDateDisabled(
+  date: Date,
+  min: Date | undefined,
+  max: Date | undefined,
+  disabledDates: ((date: Date) => boolean) | undefined,
+): boolean {
+  if (min && isBefore(date, min)) return true;
+  if (max && isAfter(date, max)) return true;
+  return disabledDates?.(date) ?? false;
+}
+
 export function addMonths(date: Date, amount: number): Date {
   const next = new Date(date);
   const day = next.getDate();

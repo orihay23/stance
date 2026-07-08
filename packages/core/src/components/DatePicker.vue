@@ -1,31 +1,15 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useId, useTemplateRef, watch } from "vue";
+import { computed, ref, useId, useTemplateRef, watch } from "vue";
 import { cn } from "../utils/cn";
 import { getOverlayRoot } from "../utils/dom";
-import {
-  addDays,
-  addMonths,
-  clampDate,
-  endOfWeek,
-  formatDate,
-  getFirstDayOfWeekForLocale,
-  getLocaleMonthLabel,
-  getLocaleWeekdayNames,
-  getMonthGrid,
-  isAfter,
-  isBefore,
-  isSameDay,
-  parseDate,
-  startOfWeek,
-  type Weekday,
-} from "../utils/date";
+import { clampDate, formatDate, getLocaleMonthLabel, isDateDisabled, parseDate, type Weekday } from "../utils/date";
 import { useDismissable } from "../composables/useDismissable";
 import { useErrorSlot } from "../composables/useErrorSlot";
 import { useFloatingOverlay } from "../composables/useFloatingOverlay";
 import { useFocusTrap } from "../composables/useFocusTrap";
-import { useLiveAnnouncer } from "../composables/useLiveAnnouncer";
 import { useModalBackground } from "../composables/useModalBackground";
 import { useOverlayThemeContext } from "../composables/useOverlayThemeContext";
+import Calendar from "./Calendar.vue";
 
 // The template now has two root nodes (the field/calendar wrapper and the
 // conditional error <p>) once the error slot is added, so Vue disables
@@ -82,15 +66,12 @@ const slots = defineSlots<{
   error?(): unknown;
 }>();
 
-const { announce } = useLiveAnnouncer();
-
 const baseId = useId();
 const inputId = computed(() => props.id ?? `${baseId}-input`);
 const dialogId = `${baseId}-dialog`;
 
 const open = ref(false);
 const focusedDate = ref(clampDate(new Date(), props.min, props.max));
-const pendingRangeStart = ref<Date | undefined>(undefined);
 const inputText = ref("");
 const hasParseError = ref(false);
 
@@ -104,7 +85,8 @@ const fieldRef = useTemplateRef<HTMLElement>("fieldRef");
 const inputRef = useTemplateRef<HTMLInputElement>("inputRef");
 const triggerRef = useTemplateRef<HTMLButtonElement>("triggerRef");
 const dialogRef = useTemplateRef<HTMLElement>("dialogRef");
-const activeCellRef = ref<HTMLElement | null>(null);
+const calendarRef = useTemplateRef<InstanceType<typeof Calendar>>("calendarRef");
+const initialFocusEl = computed(() => calendarRef.value?.getFocusedCellElement() ?? null);
 
 const singleValue = computed(() => (props.mode === "single" ? (props.modelValue as Date | undefined) : undefined));
 const rangeValue = computed(() =>
@@ -129,153 +111,20 @@ const rangeDisplayText = computed(() => {
 
 const fieldValue = computed(() => (props.mode === "single" ? inputText.value : rangeDisplayText.value));
 
-const effectiveFirstDayOfWeek = computed(
-  () => props.firstDayOfWeek ?? getFirstDayOfWeekForLocale(props.locale),
-);
-const viewYear = computed(() => focusedDate.value.getFullYear());
-const viewMonth = computed(() => focusedDate.value.getMonth());
-const weeks = computed(() => getMonthGrid(viewYear.value, viewMonth.value, effectiveFirstDayOfWeek.value));
-const weekdayLabels = computed(() => getLocaleWeekdayNames(props.locale, effectiveFirstDayOfWeek.value));
-const monthLabel = computed(() => getLocaleMonthLabel(props.locale, viewYear.value, viewMonth.value));
-
-const prevMonthDate = computed(() => addMonths(focusedDate.value, -1));
-const nextMonthDate = computed(() => addMonths(focusedDate.value, 1));
-const prevMonthLabel = computed(() => getLocaleMonthLabel(props.locale, prevMonthDate.value.getFullYear(), prevMonthDate.value.getMonth()));
-const nextMonthLabel = computed(() => getLocaleMonthLabel(props.locale, nextMonthDate.value.getFullYear(), nextMonthDate.value.getMonth()));
-
-const isPrevMonthDisabled = computed(() => {
-  if (!props.min) return false;
-  return isBefore(new Date(viewYear.value, viewMonth.value, 0), props.min);
-});
-const isNextMonthDisabled = computed(() => {
-  if (!props.max) return false;
-  return isAfter(new Date(viewYear.value, viewMonth.value + 1, 1), props.max);
-});
+// Only for the outer dialog's own aria-label ("Choose date, {month}") — the
+// grid's own aria-label is Calendar's concern now.
+const monthLabel = computed(() => getLocaleMonthLabel(props.locale, focusedDate.value.getFullYear(), focusedDate.value.getMonth()));
 
 function isDisabledDate(date: Date): boolean {
-  if (props.min && isBefore(date, props.min)) return true;
-  if (props.max && isAfter(date, props.max)) return true;
-  return props.disabledDates?.(date) ?? false;
+  return isDateDisabled(date, props.min, props.max, props.disabledDates);
 }
 
-function isSelected(date: Date): boolean {
-  if (props.mode === "single") return singleValue.value ? isSameDay(date, singleValue.value) : false;
-  const value = rangeValue.value;
-  return Boolean(value && ((value.start && isSameDay(date, value.start)) || (value.end && isSameDay(date, value.end))));
-}
-
-function currentRangeBounds(): { start: Date; end: Date } | undefined {
-  const value = rangeValue.value;
-  if (value?.start && value?.end) return { start: value.start, end: value.end };
-  if (pendingRangeStart.value) {
-    const a = pendingRangeStart.value;
-    const b = focusedDate.value;
-    return isBefore(b, a) ? { start: b, end: a } : { start: a, end: b };
-  }
-  return undefined;
-}
-
-function isInRange(date: Date): boolean {
-  if (props.mode !== "range") return false;
-  const bounds = currentRangeBounds();
-  if (!bounds) return false;
-  return !isBefore(date, bounds.start) && !isAfter(date, bounds.end);
-}
-
-function isToday(date: Date): boolean {
-  return isSameDay(date, new Date());
-}
-
-function isOutsideMonth(date: Date): boolean {
-  return date.getMonth() !== viewMonth.value;
-}
-
-function moveFocus(date: Date) {
-  focusedDate.value = date;
-  nextTick(() => activeCellRef.value?.focus());
-}
-
-function setActiveCellRef(day: Date, el: Element | null) {
-  if (isSameDay(day, focusedDate.value)) {
-    activeCellRef.value = el as HTMLElement | null;
-  }
-}
-
-function prevMonth() {
-  if (isPrevMonthDisabled.value) return;
-  moveFocus(prevMonthDate.value);
-}
-
-function nextMonth() {
-  if (isNextMonthDisabled.value) return;
-  moveFocus(nextMonthDate.value);
-}
-
-function selectDay(date: Date) {
-  if (props.disabled || isDisabledDate(date)) return;
-
-  if (props.mode === "single") {
-    emit("update:modelValue", date);
-    closeCalendar();
-    return;
-  }
-
-  if (!pendingRangeStart.value) {
-    pendingRangeStart.value = date;
-    emit("update:modelValue", { start: date });
-    announce(`Start date selected: ${formatDate(date, props.locale)}. Choose the end date.`);
-    return;
-  }
-
-  const a = pendingRangeStart.value;
-  const [start, end] = isBefore(date, a) ? [date, a] : [a, date];
-  pendingRangeStart.value = undefined;
-  emit("update:modelValue", { start, end });
-  announce(`Date range selected: ${formatDate(start, props.locale)} to ${formatDate(end, props.locale)}.`);
-  closeCalendar();
-}
-
-function onGridKeydown(event: KeyboardEvent) {
-  const current = focusedDate.value;
-  switch (event.key) {
-    case "ArrowRight":
-      event.preventDefault();
-      moveFocus(addDays(current, 1));
-      break;
-    case "ArrowLeft":
-      event.preventDefault();
-      moveFocus(addDays(current, -1));
-      break;
-    case "ArrowDown":
-      event.preventDefault();
-      moveFocus(addDays(current, 7));
-      break;
-    case "ArrowUp":
-      event.preventDefault();
-      moveFocus(addDays(current, -7));
-      break;
-    case "PageDown":
-      event.preventDefault();
-      moveFocus(addMonths(current, event.shiftKey ? 12 : 1));
-      break;
-    case "PageUp":
-      event.preventDefault();
-      moveFocus(addMonths(current, event.shiftKey ? -12 : -1));
-      break;
-    case "Home":
-      event.preventDefault();
-      moveFocus(startOfWeek(current, effectiveFirstDayOfWeek.value));
-      break;
-    case "End":
-      event.preventDefault();
-      moveFocus(endOfWeek(current, effectiveFirstDayOfWeek.value));
-      break;
-    case "Enter":
-    case " ":
-      event.preventDefault();
-      selectDay(current);
-      break;
-  }
+function onCalendarModelUpdate(value: Date | DatePickerRangeValue | undefined) {
+  emit("update:modelValue", value);
+  // Single mode always completes a selection in one click; range mode only
+  // completes once `end` is set — mirrors the pre-extraction selectDay().
+  const isComplete = props.mode === "single" || Boolean((value as DatePickerRangeValue | undefined)?.end);
+  if (isComplete) closeCalendar();
 }
 
 function openCalendar() {
@@ -352,7 +201,7 @@ useModalBackground(open, overlayRoot);
 useFocusTrap({
   container: dialogRef,
   active: open,
-  initialFocus: activeCellRef,
+  initialFocus: initialFocusEl,
 });
 
 useDismissable({
@@ -420,66 +269,19 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
         :style="floatingStyles"
         tabindex="-1"
       >
-        <div class="stance-date-picker__nav">
-          <button
-            type="button"
-            class="stance-date-picker__nav-button"
-            :disabled="isPrevMonthDisabled"
-            :aria-label="`Previous month, ${prevMonthLabel}`"
-            @click="prevMonth"
-          >
-            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M10 3l-5 5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <span class="stance-date-picker__month-label">{{ monthLabel }}</span>
-          <button
-            type="button"
-            class="stance-date-picker__nav-button"
-            :disabled="isNextMonthDisabled"
-            :aria-label="`Next month, ${nextMonthLabel}`"
-            @click="nextMonth"
-          >
-            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-        </div>
-
-        <div role="grid" :aria-label="monthLabel" class="stance-date-picker__grid" @keydown="onGridKeydown">
-          <div role="row" class="stance-date-picker__row stance-date-picker__row--header">
-            <span
-              v-for="weekday in weekdayLabels"
-              :key="weekday.full"
-              role="columnheader"
-              :aria-label="weekday.full"
-              class="stance-date-picker__weekday"
-            >
-              {{ weekday.short }}
-            </span>
-          </div>
-          <div v-for="(week, weekIndex) in weeks" :key="weekIndex" role="row" class="stance-date-picker__row">
-            <div
-              v-for="day in week"
-              :key="day.getTime()"
-              :ref="(el) => setActiveCellRef(day, el as Element | null)"
-              role="gridcell"
-              class="stance-date-picker__cell"
-              :tabindex="isSameDay(day, focusedDate) ? 0 : -1"
-              :aria-selected="isSelected(day)"
-              :aria-current="isToday(day) ? 'date' : undefined"
-              :aria-disabled="isDisabledDate(day) || undefined"
-              :data-outside-month="isOutsideMonth(day) || undefined"
-              :data-in-range="isInRange(day) || undefined"
-              :data-selected="isSelected(day) || undefined"
-              :data-today="isToday(day) || undefined"
-              @click="selectDay(day)"
-              @focus="focusedDate = day"
-            >
-              {{ day.getDate() }}
-            </div>
-          </div>
-        </div>
+        <Calendar
+          ref="calendarRef"
+          :model-value="modelValue"
+          v-model:focused-date="focusedDate"
+          :mode="mode"
+          :min="min"
+          :max="max"
+          :disabled-dates="disabledDates"
+          :locale="locale"
+          :first-day-of-week="firstDayOfWeek"
+          :disabled="disabled"
+          @update:model-value="onCalendarModelUpdate"
+        />
       </div>
     </Teleport>
   </div>
@@ -491,8 +293,6 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
 
 <style>
 :where(.stance-date-picker) {
-  container-type: inline-size;
-  container-name: stance-date-picker;
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   color: var(--stance-color-foreground);
 }
@@ -579,150 +379,14 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
   cursor: not-allowed;
 }
 
+/* Chrome-free positioning wrapper — Calendar itself owns the visible card
+   look (background/border/radius/shadow/width) so it's identical whether
+   it's embedded here or used standalone on a page. */
 :where(.stance-date-picker__dialog) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stance-spacing-sm, 0.5rem);
-  width: 18rem;
-  max-width: calc(100vw - 1rem);
-  background: var(--stance-color-background);
-  border: 1px solid var(--stance-color-border);
-  border-radius: var(--stance-radius-lg, 0.75rem);
-  box-shadow: var(--stance-shadow-lg);
-  padding: var(--stance-spacing-md, 0.75rem);
-  font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
-  color: var(--stance-color-foreground);
   pointer-events: auto;
 }
 
 :where(.stance-date-picker__dialog:focus-visible) {
   outline: none;
-}
-
-:where(.stance-date-picker__nav) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-:where(.stance-date-picker__month-label) {
-  font-weight: var(--stance-font-weight-semibold, 600);
-  font-size: var(--stance-text-sm, 0.875rem);
-}
-
-:where(.stance-date-picker__nav-button) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  border-radius: var(--stance-radius-sm, 0.25rem);
-  background: none;
-  color: var(--stance-color-foreground);
-  cursor: pointer;
-}
-
-:where(.stance-date-picker__nav-button svg) {
-  width: 1rem;
-  height: 1rem;
-}
-
-:where(.stance-date-picker__nav-button:hover) {
-  background: var(--stance-color-muted);
-}
-
-:where(.stance-date-picker__nav-button:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-:where(.stance-date-picker__nav-button:disabled) {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-:where(.stance-date-picker__grid) {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-:where(.stance-date-picker__row) {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-
-:where(.stance-date-picker__weekday) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.75rem;
-  font-size: var(--stance-text-xs, 0.75rem);
-  color: var(--stance-color-muted-foreground);
-}
-
-:where(.stance-date-picker__cell) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 2rem;
-  border-radius: var(--stance-radius-sm, 0.25rem);
-  font-size: var(--stance-text-sm, 0.875rem);
-  cursor: pointer;
-  user-select: none;
-}
-
-:where(.stance-date-picker__cell[data-outside-month]) {
-  color: var(--stance-color-muted-foreground);
-  opacity: 0.6;
-}
-
-:where(.stance-date-picker__cell[data-today]) {
-  font-weight: var(--stance-font-weight-semibold, 600);
-  box-shadow: inset 0 0 0 1px var(--stance-color-border);
-}
-
-:where(.stance-date-picker__cell:hover) {
-  background: var(--stance-color-muted);
-}
-
-:where(.stance-date-picker__cell[data-in-range]) {
-  background: color-mix(in oklch, var(--stance-color-primary) 16%, transparent);
-  border-radius: 0;
-}
-
-:where(.stance-date-picker__cell[data-selected]) {
-  background: var(--stance-color-primary);
-  color: var(--stance-color-primary-foreground);
-  opacity: 1;
-}
-
-:where(.stance-date-picker__cell[aria-disabled="true"]) {
-  color: var(--stance-color-muted-foreground);
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-:where(.stance-date-picker__cell:focus-visible) {
-  outline: 2px solid var(--stance-color-ring, currentColor);
-  outline-offset: 2px;
-}
-
-/* Below this container width, tighten spacing/typography so a single-month
-   view still fits without overflowing — this component never assumes room
-   for a two-month side-by-side layout in the first place. */
-@container stance-date-picker (max-width: 18rem) {
-  :where(.stance-date-picker__dialog) {
-    width: 100%;
-    padding: var(--stance-spacing-sm, 0.5rem);
-  }
-
-  :where(.stance-date-picker__cell),
-  :where(.stance-date-picker__weekday) {
-    height: 1.75rem;
-    font-size: var(--stance-text-xs, 0.75rem);
-  }
 }
 </style>
