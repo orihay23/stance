@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, useId } from "vue";
 import { cn } from "../utils/cn";
+import { useDragValue } from "../composables/useDragValue";
 import { useSplitterContext } from "../composables/useSplitter";
 
 export interface SplitterPaneProps {
@@ -38,49 +39,34 @@ const orientation = computed(() => context?.orientation.value ?? "horizontal");
 
 let lastPointerPos = 0;
 
-function onDividerPointerDown(event: PointerEvent) {
-  (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-  lastPointerPos = orientation.value === "horizontal" ? event.clientX : event.clientY;
-  window.addEventListener("pointermove", onDividerPointerMove);
-  window.addEventListener("pointerup", onDividerPointerUp);
-}
-
-function onDividerPointerMove(event: PointerEvent) {
-  if (!context?.containerRef.value) return;
-  const rect = context.containerRef.value.getBoundingClientRect();
-  const totalPx = orientation.value === "horizontal" ? rect.width : rect.height;
-  if (totalPx <= 0) return;
-  const currentPos = orientation.value === "horizontal" ? event.clientX : event.clientY;
-  const deltaPx = currentPos - lastPointerPos;
-  lastPointerPos = currentPos;
-  context.resizePair(index.value, (deltaPx / totalPx) * 100);
-}
-
-function onDividerPointerUp() {
-  window.removeEventListener("pointermove", onDividerPointerMove);
-  window.removeEventListener("pointerup", onDividerPointerUp);
-}
-
-function onDividerKeydown(event: KeyboardEvent) {
-  if (!context) return;
-  const step = context.step.value;
-  const horizontal = orientation.value === "horizontal";
-  const growKey = horizontal ? "ArrowRight" : "ArrowDown";
-  const shrinkKey = horizontal ? "ArrowLeft" : "ArrowUp";
-  if (event.key === growKey) {
-    event.preventDefault();
-    context.resizePair(index.value, step);
-  } else if (event.key === shrinkKey) {
-    event.preventDefault();
-    context.resizePair(index.value, -step);
-  } else if (event.key === "Home") {
-    event.preventDefault();
-    context.resizePair(index.value, Number.NEGATIVE_INFINITY);
-  } else if (event.key === "End") {
-    event.preventDefault();
-    context.resizePair(index.value, Number.POSITIVE_INFINITY);
-  }
-}
+const { onPointerDown: onDividerPointerDown, onKeydown: onDividerKeydown } = useDragValue({
+  orientation,
+  onDragStart(event) {
+    lastPointerPos = orientation.value === "horizontal" ? event.clientX : event.clientY;
+  },
+  onDragMove(event) {
+    if (!context?.containerRef.value) return;
+    const rect = context.containerRef.value.getBoundingClientRect();
+    const totalPx = orientation.value === "horizontal" ? rect.width : rect.height;
+    if (totalPx <= 0) return;
+    const currentPos = orientation.value === "horizontal" ? event.clientX : event.clientY;
+    const deltaPx = currentPos - lastPointerPos;
+    lastPointerPos = currentPos;
+    context.resizePair(index.value, (deltaPx / totalPx) * 100);
+  },
+  onStepPositive() {
+    context?.resizePair(index.value, context.step.value);
+  },
+  onStepNegative() {
+    context?.resizePair(index.value, -(context?.step.value ?? 0));
+  },
+  onJumpToMin() {
+    context?.resizePair(index.value, Number.NEGATIVE_INFINITY);
+  },
+  onJumpToMax() {
+    context?.resizePair(index.value, Number.POSITIVE_INFINITY);
+  },
+});
 
 const dividerValueNow = computed(() => Math.round(context?.sizes.value[index.value - 1] ?? 0));
 const paneClass = computed(() => cn("stance-splitter-pane", props.class));

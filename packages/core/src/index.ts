@@ -8,6 +8,9 @@ export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button
 export { default as Input } from "./components/Input.vue";
 export type { InputProps, InputType } from "./components/Input.vue";
 
+export { default as NumberField } from "./components/NumberField.vue";
+export type { NumberFieldProps } from "./components/NumberField.vue";
+
 export { default as Checkbox } from "./components/Checkbox.vue";
 export type { CheckboxProps } from "./components/Checkbox.vue";
 
@@ -62,6 +65,12 @@ export type { DropdownMenuItemProps } from "./components/DropdownMenuItem.vue";
 export { default as DropdownMenuSeparator } from "./components/DropdownMenuSeparator.vue";
 export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSeparator.vue";
 
+export { default as Separator } from "./components/Separator.vue";
+export type { SeparatorProps } from "./components/Separator.vue";
+
+export { default as Skeleton } from "./components/Skeleton.vue";
+export type { SkeletonProps } from "./components/Skeleton.vue";
+
 export { default as DataTable } from "./components/DataTable.vue";
 export type {
   DataTableColumn,
@@ -99,6 +108,9 @@ export type { AccordionHeaderProps } from "./components/AccordionHeader.vue";
 export { default as AccordionContent } from "./components/AccordionContent.vue";
 export type { AccordionContentProps } from "./components/AccordionContent.vue";
 
+export { default as Collapsible } from "./components/Collapsible.vue";
+export type { CollapsibleProps } from "./components/Collapsible.vue";
+
 export { default as Toast } from "./components/Toast.vue";
 export type { ToastProps } from "./components/Toast.vue";
 
@@ -129,6 +141,9 @@ export type { SplitterOrientation, SplitterProps } from "./components/Splitter.v
 export { default as SplitterPane } from "./components/SplitterPane.vue";
 export type { SplitterPaneProps } from "./components/SplitterPane.vue";
 
+export { default as Slider } from "./components/Slider.vue";
+export type { SliderProps } from "./components/Slider.vue";
+
 export { default as Calendar } from "./components/Calendar.vue";
 export type { CalendarMode, CalendarProps, CalendarRangeValue } from "./components/Calendar.vue";
 
@@ -149,6 +164,9 @@ export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
 export { useDismissable } from "./composables/useDismissable";
 export type { UseDismissableOptions } from "./composables/useDismissable";
+
+export { useDragValue } from "./composables/useDragValue";
+export type { UseDragValueOptions, UseDragValueResult } from "./composables/useDragValue";
 
 export { usePopoverContext } from "./composables/usePopover";
 export type { PopoverContext } from "./composables/usePopover";

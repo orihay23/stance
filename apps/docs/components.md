@@ -25,6 +25,12 @@ const groups = ref([
     summary: "Text/email/password/number, prefix/suffix slots, invalid + error message state.",
   },
   {
+    storyId: "src-numberfield-story-vue",
+    name: "NumberField",
+    includes: [],
+    summary: "Text input + role=spinbutton (not native <input type=number> — supports locale formatting and aria-valuetext), increment/decrement buttons with press-and-hold repeat, locale-aware parsing.",
+  },
+  {
     storyId: "src-checkbox-story-vue",
     name: "Checkbox",
     includes: [],
@@ -85,6 +91,12 @@ const groups = ref([
     summary: "Anchored menu with roving arrow-key navigation, Home/End, and type-ahead-free item activation.",
   },
   {
+    storyId: "src-separator-story-vue",
+    name: "Separator",
+    includes: [],
+    summary: "Horizontal or vertical dividing rule; role=separator by default, or aria-hidden via a decorative prop. Also used internally by DropdownMenuSeparator.",
+  },
+  {
     storyId: "src-datatable-story-vue",
     name: "DataTable",
     includes: [],
@@ -109,6 +121,12 @@ const groups = ref([
     summary: "Single- or multiple-open mode, configurable heading level.",
   },
   {
+    storyId: "src-collapsible-story-vue",
+    name: "Collapsible",
+    includes: [],
+    summary: "APG Disclosure pattern — a single trigger and panel, no heading level and no region/group semantics (a lone Accordion item without the group context).",
+  },
+  {
     storyId: "src-toast-story-vue",
     name: "Toast",
     includes: ["ToastRegion"],
@@ -125,6 +143,12 @@ const groups = ref([
     name: "Grid",
     includes: [],
     summary: "Responsive column layout via container queries or viewport breakpoints; composes with Card.",
+  },
+  {
+    storyId: "src-skeleton-story-vue",
+    name: "Skeleton",
+    includes: [],
+    summary: "Purely presentational loading placeholder (pulse or shimmer), aria-hidden, respects prefers-reduced-motion. Consumer owns loading announcements.",
   },
   {
     storyId: "src-badge-story-vue",
@@ -155,6 +179,12 @@ const groups = ref([
     name: "Splitter",
     includes: ["SplitterPane"],
     summary: "Draggable and keyboard-resizable panes (2+), horizontal or vertical, with per-pane min/max and v-model persisted sizes.",
+  },
+  {
+    storyId: "src-slider-story-vue",
+    name: "Slider",
+    includes: [],
+    summary: "Draggable and keyboard-adjustable single-value slider, horizontal or vertical, with locale-aware aria-valuetext. Shares its pointer/keyboard drag plumbing with Splitter via useDragValue.",
   },
   {
     storyId: "src-calendar-story-vue",
