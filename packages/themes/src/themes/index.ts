@@ -1,7 +1,11 @@
 import type { Theme } from "../types";
 import { neutral } from "./neutral";
+import { serious } from "./serious";
+import { fun } from "./fun";
 
 export { neutral } from "./neutral";
+export { serious } from "./serious";
+export { fun } from "./fun";
 
 /**
  * Every first-party theme, in one place. Every consumer that needs "the
@@ -11,4 +15,4 @@ export { neutral } from "./neutral";
  * than maintaining its own copy, so adding a theme here is enough to cover
  * it everywhere automatically.
  */
-export const allThemes: readonly Theme[] = [neutral];
+export const allThemes: readonly Theme[] = [neutral, serious, fun];
