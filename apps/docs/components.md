@@ -187,6 +187,12 @@ const groups = ref([
     summary: "Draggable and keyboard-adjustable single-value slider, horizontal or vertical, with locale-aware aria-valuetext. Shares its pointer/keyboard drag plumbing with Splitter via useDragValue.",
   },
   {
+    storyId: "src-combobox-story-vue",
+    name: "Combobox",
+    includes: ["ComboboxInput", "ComboboxContent", "ComboboxOption"],
+    summary: "Filterable, keyboard-navigable single-select combobox (APG 1.2 aria-activedescendant pattern) — the text input keeps real DOM focus throughout. Async loading/empty/error states and multi-select with tags are follow-up phases; see design-docs/combobox.md.",
+  },
+  {
     storyId: "src-calendar-story-vue",
     name: "Calendar",
     includes: [],

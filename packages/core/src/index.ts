@@ -159,6 +159,18 @@ export type {
   TreeTableSortState,
 } from "./components/TreeTable.vue";
 
+export { default as Combobox } from "./components/Combobox.vue";
+export type { ComboboxProps } from "./components/Combobox.vue";
+
+export { default as ComboboxInput } from "./components/ComboboxInput.vue";
+export type { ComboboxInputProps } from "./components/ComboboxInput.vue";
+
+export { default as ComboboxContent } from "./components/ComboboxContent.vue";
+export type { ComboboxContentProps } from "./components/ComboboxContent.vue";
+
+export { default as ComboboxOption } from "./components/ComboboxOption.vue";
+export type { ComboboxOptionProps } from "./components/ComboboxOption.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -187,3 +199,9 @@ export type { DropdownMenuContext } from "./composables/useDropdownMenu";
 
 export { useSplitterContext } from "./composables/useSplitter";
 export type { SplitterContext, SplitterPaneConstraints } from "./composables/useSplitter";
+
+export { useActiveDescendant } from "./composables/useActiveDescendant";
+export type { UseActiveDescendantOptions, UseActiveDescendantResult } from "./composables/useActiveDescendant";
+
+export { useComboboxContext } from "./composables/useCombobox";
+export type { ComboboxContext, ComboboxOptionEntry } from "./composables/useCombobox";
