@@ -18,6 +18,7 @@ import { popover } from "./popover";
 import { progressbar } from "./progressbar";
 import { radiogroup } from "./radiogroup";
 import { select } from "./select";
+import { separator } from "./separator";
 import { splitter } from "./splitter";
 import { switchComponent } from "./switch";
 import { tabs } from "./tabs";
@@ -50,6 +51,7 @@ export const components: ComponentSpec[] = [
   progressbar,
   radiogroup,
   select,
+  separator,
   splitter,
   switchComponent,
   tabs,

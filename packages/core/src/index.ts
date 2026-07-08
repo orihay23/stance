@@ -62,6 +62,9 @@ export type { DropdownMenuItemProps } from "./components/DropdownMenuItem.vue";
 export { default as DropdownMenuSeparator } from "./components/DropdownMenuSeparator.vue";
 export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSeparator.vue";
 
+export { default as Separator } from "./components/Separator.vue";
+export type { SeparatorProps } from "./components/Separator.vue";
+
 export { default as DataTable } from "./components/DataTable.vue";
 export type {
   DataTableColumn,

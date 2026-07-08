@@ -85,6 +85,12 @@ const groups = ref([
     summary: "Anchored menu with roving arrow-key navigation, Home/End, and type-ahead-free item activation.",
   },
   {
+    storyId: "src-separator-story-vue",
+    name: "Separator",
+    includes: [],
+    summary: "Horizontal or vertical dividing rule; role=separator by default, or aria-hidden via a decorative prop. Also used internally by DropdownMenuSeparator.",
+  },
+  {
     storyId: "src-datatable-story-vue",
     name: "DataTable",
     includes: [],
