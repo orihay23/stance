@@ -14,6 +14,7 @@ import { dialog } from "./dialog";
 import { dropdownmenu } from "./dropdownmenu";
 import { grid } from "./grid";
 import { input } from "./input";
+import { numberfield } from "./numberfield";
 import { pagination } from "./pagination";
 import { popover } from "./popover";
 import { progressbar } from "./progressbar";
@@ -49,6 +50,7 @@ export const components: ComponentSpec[] = [
   dropdownmenu,
   grid,
   input,
+  numberfield,
   pagination,
   popover,
   progressbar,

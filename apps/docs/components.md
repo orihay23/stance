@@ -25,6 +25,12 @@ const groups = ref([
     summary: "Text/email/password/number, prefix/suffix slots, invalid + error message state.",
   },
   {
+    storyId: "src-numberfield-story-vue",
+    name: "NumberField",
+    includes: [],
+    summary: "Text input + role=spinbutton (not native <input type=number> — supports locale formatting and aria-valuetext), increment/decrement buttons with press-and-hold repeat, locale-aware parsing.",
+  },
+  {
     storyId: "src-checkbox-story-vue",
     name: "Checkbox",
     includes: [],

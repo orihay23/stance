@@ -48,6 +48,22 @@ Modal surfaces (Dialog) trap Tab within themselves while open — tabbing off
 the last focusable element wraps to the first, and back again in reverse —
 so keyboard users can never tab "behind" a modal into the page underneath.
 
+## Where this library departs from "use the native element"
+
+The library's default posture is to prefer real native elements
+(`<button>`, `<input>`, `<select>`) over reimplemented ARIA widgets — it's
+almost always the more robust choice. NumberField is a deliberate
+exception: it's a text `<input>` with `role="spinbutton"` and
+`inputmode="decimal"`, not a native `<input type="number">`. Native number
+inputs don't support locale-aware grouping/decimal formatting (they render
+digits verbatim, e.g. `1234.5` rather than `1,234.5` or `1.234,5`) and
+don't support `aria-valuetext`, so a screen reader announces the raw
+number rather than the formatted or unit-labeled value a sighted user
+sees (e.g. "$19.99" or "25%"). This matches the same choice Reka UI and
+Ark UI make for their NumberField primitives, for the same reason. Slider
+(Phase 11) has an identical native-`<input type="range">` limitation and
+will document the same departure when it ships.
+
 ## How this is verified
 
 - **Automated**: every component's test suite runs its rendered output
