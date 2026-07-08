@@ -105,6 +105,9 @@ export type { AccordionHeaderProps } from "./components/AccordionHeader.vue";
 export { default as AccordionContent } from "./components/AccordionContent.vue";
 export type { AccordionContentProps } from "./components/AccordionContent.vue";
 
+export { default as Collapsible } from "./components/Collapsible.vue";
+export type { CollapsibleProps } from "./components/Collapsible.vue";
+
 export { default as Toast } from "./components/Toast.vue";
 export type { ToastProps } from "./components/Toast.vue";
 

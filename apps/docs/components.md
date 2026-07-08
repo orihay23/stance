@@ -115,6 +115,12 @@ const groups = ref([
     summary: "Single- or multiple-open mode, configurable heading level.",
   },
   {
+    storyId: "src-collapsible-story-vue",
+    name: "Collapsible",
+    includes: [],
+    summary: "APG Disclosure pattern — a single trigger and panel, no heading level and no region/group semantics (a lone Accordion item without the group context).",
+  },
+  {
     storyId: "src-toast-story-vue",
     name: "Toast",
     includes: ["ToastRegion"],
