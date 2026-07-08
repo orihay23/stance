@@ -133,6 +133,12 @@ const groups = ref([
     summary: "Responsive column layout via container queries or viewport breakpoints; composes with Card.",
   },
   {
+    storyId: "src-skeleton-story-vue",
+    name: "Skeleton",
+    includes: [],
+    summary: "Purely presentational loading placeholder (pulse or shimmer), aria-hidden, respects prefers-reduced-motion. Consumer owns loading announcements.",
+  },
+  {
     storyId: "src-badge-story-vue",
     name: "Badge",
     includes: [],
