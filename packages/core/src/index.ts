@@ -72,6 +72,9 @@ export type {
   DataTableSortState,
 } from "./components/DataTable.vue";
 
+export { default as Pagination } from "./components/Pagination.vue";
+export type { PaginationProps } from "./components/Pagination.vue";
+
 export { default as Tabs } from "./components/Tabs.vue";
 export type { TabsProps } from "./components/Tabs.vue";
 

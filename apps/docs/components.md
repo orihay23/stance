@@ -91,6 +91,12 @@ const groups = ref([
     summary: "Sorting, client/server pagination, row selection (single/multiple), global + per-column filtering, container-query card collapse.",
   },
   {
+    storyId: "src-pagination-story-vue",
+    name: "Pagination",
+    includes: [],
+    summary: "Standalone page navigation with windowed ellipsis and an optional page-size picker; also used internally by DataTable.",
+  },
+  {
     storyId: "src-tabs-story-vue",
     name: "Tabs",
     includes: ["TabList", "Tab", "TabPanel"],

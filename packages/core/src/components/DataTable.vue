@@ -4,7 +4,7 @@ import { cn } from "../utils/cn";
 import { RADIO_GROUP_KEY } from "../composables/useRadioGroup";
 import { defaultCompare, useTableSort } from "../composables/useTableSort";
 import { useTableFilters } from "../composables/useTableFilters";
-import DataTablePagination from "./DataTablePagination.vue";
+import Pagination from "./Pagination.vue";
 import SortHeaderButton from "./SortHeaderButton.vue";
 import TableFilterToolbar from "./TableFilterToolbar.vue";
 import Checkbox from "./Checkbox.vue";
@@ -77,11 +77,17 @@ export interface DataTableProps<T extends Record<string, unknown> = Record<strin
   /**
    * Rows per page, combined with `page` to compute which rows to show in
    * client mode (and, in server mode, to compute `totalPages` from
-   * `totalRows`). A plain prop, not a v-model — DataTable has no page-size
-   * picker UI; the consumer owns this value entirely.
+   * `totalRows`).
+   *
+   * v-model:pageSize when `pageSizeOptions` is also given — DataTable then
+   * renders a page-size picker (via `Pagination`'s built-in `Select`) and
+   * emits `update:pageSize` on change. Without `pageSizeOptions`, this stays
+   * a plain prop with no picker UI, same as before.
    * @default 10
    */
   pageSize?: number;
+  /** Choices offered by the page-size picker. See `pageSize`'s doc for when the picker actually renders. */
+  pageSizeOptions?: number[];
   /** Server mode: total row count across all pages, combined with `pageSize` to compute `totalPages` unless `totalPages` is given directly. */
   totalRows?: number;
   /** Server mode: total page count, if already known server-side (overrides the totalRows/pageSize calculation). */
@@ -134,6 +140,7 @@ const props = withDefaults(defineProps<DataTableProps<T>>(), {
 const emit = defineEmits<{
   "update:sort": [value: DataTableSortState | null];
   "update:page": [value: number];
+  "update:pageSize": [value: number];
   "update:selected": [value: Array<string | number>];
   "update:globalFilter": [value: string];
   "update:columnFilters": [value: Record<string, string>];
@@ -301,22 +308,6 @@ function goToPage(target: number) {
   emit("update:page", clamped);
 }
 
-/** Windowed page numbers around the current page, with "ellipsis" markers for gaps. */
-const pageNumbers = computed<Array<number | "ellipsis">>(() => {
-  const total = totalPagesComputed.value;
-  const current = currentPage.value;
-  const delta = 1;
-  const left = Math.max(2, current - delta);
-  const right = Math.min(total - 1, current + delta);
-
-  const range: Array<number | "ellipsis"> = [1];
-  if (left > 2) range.push("ellipsis");
-  for (let i = left; i <= right; i++) range.push(i);
-  if (right < total - 1) range.push("ellipsis");
-  if (total > 1) range.push(total);
-  return range;
-});
-
 const selectedSet = computed(() => new Set(props.selected));
 
 function isRowSelected(row: T, index: number): boolean {
@@ -400,13 +391,15 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
       @column-filter="(column, v) => setColumnFilter(column, v)"
     />
 
-    <DataTablePagination
+    <Pagination
       v-if="paginationMode !== 'none' && paginationPosition === 'top'"
-      :current-page="currentPage"
+      :page="currentPage"
       :total-pages="totalPagesComputed"
-      :page-numbers="pageNumbers"
+      :page-size="pageSize"
+      :page-size-options="pageSizeOptions"
       :align="props.paginationAlign"
-      @go-to-page="goToPage"
+      @update:page="goToPage"
+      @update:page-size="emit('update:pageSize', $event)"
     />
 
     <div class="stance-datatable__scroll">
@@ -485,13 +478,15 @@ const rootClass = computed(() => cn("stance-datatable", props.class));
       </table>
     </div>
 
-    <DataTablePagination
+    <Pagination
       v-if="paginationMode !== 'none' && paginationPosition === 'bottom'"
-      :current-page="currentPage"
+      :page="currentPage"
       :total-pages="totalPagesComputed"
-      :page-numbers="pageNumbers"
+      :page-size="pageSize"
+      :page-size-options="pageSizeOptions"
       :align="props.paginationAlign"
-      @go-to-page="goToPage"
+      @update:page="goToPage"
+      @update:page-size="emit('update:pageSize', $event)"
     />
   </div>
 </template>

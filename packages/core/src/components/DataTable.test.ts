@@ -65,6 +65,7 @@ function renderHarness(
   onSelected?: (v: Array<string | number>) => void,
   onGlobalFilter?: (v: string) => void,
   onColumnFilters?: (v: Record<string, string>) => void,
+  onPageSize?: (v: number) => void,
 ) {
   const Harness = defineComponent({
     setup() {
@@ -91,6 +92,10 @@ function renderHarness(
             onPage?.(v);
           },
           pageSize: pageSize.value,
+          "onUpdate:pageSize": (v: number) => {
+            pageSize.value = v;
+            onPageSize?.(v);
+          },
           selected: selected.value,
           "onUpdate:selected": (v: Array<string | number>) => {
             selected.value = v;
@@ -405,6 +410,30 @@ describe("DataTable", () => {
       renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10, paginationAlign: "end" });
       await nextTick();
       expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveAttribute("data-align", "end");
+    });
+
+    it("renders no page-size picker when pageSizeOptions is omitted", async () => {
+      renderHarness({ rows: manyRows, paginationMode: "client", pageSize: 10 });
+      await nextTick();
+      expect(screen.queryByText("Rows per page")).not.toBeInTheDocument();
+    });
+
+    it("renders a page-size picker and emits update:pageSize (reusing the standalone Pagination component) when pageSizeOptions is given", async () => {
+      const onPageSize = vi.fn();
+      renderHarness(
+        { rows: manyRows, paginationMode: "client", pageSize: 10, pageSizeOptions: [10, 25, 50] },
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        onPageSize,
+      );
+      await nextTick();
+
+      const select = screen.getByLabelText("Rows per page");
+      await fireEvent.update(select, "25");
+      expect(onPageSize).toHaveBeenCalledWith(25);
     });
   });
 
