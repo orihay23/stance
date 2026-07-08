@@ -181,6 +181,12 @@ const groups = ref([
     summary: "Draggable and keyboard-resizable panes (2+), horizontal or vertical, with per-pane min/max and v-model persisted sizes.",
   },
   {
+    storyId: "src-slider-story-vue",
+    name: "Slider",
+    includes: [],
+    summary: "Draggable and keyboard-adjustable single-value slider, horizontal or vertical, with locale-aware aria-valuetext. Shares its pointer/keyboard drag plumbing with Splitter via useDragValue.",
+  },
+  {
     storyId: "src-calendar-story-vue",
     name: "Calendar",
     includes: [],

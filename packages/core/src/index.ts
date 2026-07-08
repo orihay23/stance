@@ -141,6 +141,9 @@ export type { SplitterOrientation, SplitterProps } from "./components/Splitter.v
 export { default as SplitterPane } from "./components/SplitterPane.vue";
 export type { SplitterPaneProps } from "./components/SplitterPane.vue";
 
+export { default as Slider } from "./components/Slider.vue";
+export type { SliderProps } from "./components/Slider.vue";
+
 export { default as Calendar } from "./components/Calendar.vue";
 export type { CalendarMode, CalendarProps, CalendarRangeValue } from "./components/Calendar.vue";
 
@@ -161,6 +164,9 @@ export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
 export { useDismissable } from "./composables/useDismissable";
 export type { UseDismissableOptions } from "./composables/useDismissable";
+
+export { useDragValue } from "./composables/useDragValue";
+export type { UseDragValueOptions, UseDragValueResult } from "./composables/useDragValue";
 
 export { usePopoverContext } from "./composables/usePopover";
 export type { PopoverContext } from "./composables/usePopover";

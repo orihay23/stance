@@ -22,6 +22,7 @@ import { radiogroup } from "./radiogroup";
 import { select } from "./select";
 import { separator } from "./separator";
 import { skeleton } from "./skeleton";
+import { slider } from "./slider";
 import { splitter } from "./splitter";
 import { switchComponent } from "./switch";
 import { tabs } from "./tabs";
@@ -58,6 +59,7 @@ export const components: ComponentSpec[] = [
   select,
   separator,
   skeleton,
+  slider,
   splitter,
   switchComponent,
   tabs,

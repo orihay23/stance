@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addStep, clampNumber, formatNumber, getDecimalSeparator, getGroupSeparator, parseNumber } from "./number";
+import {
+  addStep,
+  clampNumber,
+  formatNumber,
+  fractionToValue,
+  getDecimalSeparator,
+  getGroupSeparator,
+  parseNumber,
+  roundToStep,
+} from "./number";
 
 describe("number utils", () => {
   it("getDecimalSeparator/getGroupSeparator differ by locale", () => {
@@ -44,5 +53,35 @@ describe("number utils", () => {
   it("addStep avoids floating-point drift", () => {
     expect(addStep(0.1, 0.2)).toBe(0.3);
     expect(addStep(1, -0.1)).toBe(0.9);
+  });
+
+  it("roundToStep snaps to the nearest step above min", () => {
+    expect(roundToStep(7, 0, 5)).toBe(5);
+    expect(roundToStep(8, 0, 5)).toBe(10);
+    expect(roundToStep(23, 10, 5)).toBe(25);
+  });
+
+  it("roundToStep avoids floating-point drift with fractional steps", () => {
+    expect(roundToStep(0.3, 0, 0.1)).toBe(0.3);
+  });
+
+  it("roundToStep returns value unchanged for a non-positive step", () => {
+    expect(roundToStep(7.3, 0, 0)).toBe(7.3);
+  });
+
+  it("fractionToValue maps a 0-1 fraction to a step-snapped value in [min, max] — the math behind Slider's pointer-drag positioning", () => {
+    expect(fractionToValue(0, 0, 100, 10)).toBe(0);
+    expect(fractionToValue(1, 0, 100, 10)).toBe(100);
+    expect(fractionToValue(0.5, 0, 100, 10)).toBe(50);
+    expect(fractionToValue(0.6, 0, 100, 10)).toBe(60);
+  });
+
+  it("fractionToValue clamps a fraction outside [0, 1] rather than extrapolating past min/max", () => {
+    expect(fractionToValue(-0.5, 0, 100, 10)).toBe(0);
+    expect(fractionToValue(1.5, 0, 100, 10)).toBe(100);
+  });
+
+  it("fractionToValue never exceeds max even when max isn't itself a step multiple", () => {
+    expect(fractionToValue(1, 0, 97, 10)).toBe(97);
   });
 });

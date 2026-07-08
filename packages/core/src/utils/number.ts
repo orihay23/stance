@@ -46,3 +46,23 @@ export function clampNumber(value: number, min: number | undefined, max: number 
 export function addStep(value: number, delta: number): number {
   return Math.round((value + delta) * 1e10) / 1e10;
 }
+
+/** Snaps `value` to the nearest multiple of `step` above `min` (e.g. `roundToStep(7, 0, 5)` → 5, `roundToStep(8, 0, 5)` → 10). Used to snap a pointer-drag position to Slider's step grid. */
+export function roundToStep(value: number, min: number, step: number): number {
+  if (step <= 0) return value;
+  return addStep(min, Math.round((value - min) / step) * step);
+}
+
+/**
+ * Maps a 0–1 fraction along a track (e.g. `(pointerX - trackLeft) / trackWidth`)
+ * into a step-snapped value within `[min, max]` — the pure math behind
+ * Slider's pointer-drag positioning, pulled out so it's testable without a
+ * real PointerEvent (jsdom doesn't populate clientX/clientY from a
+ * synthetic event's init dict, so the DOM-level interaction can't be
+ * exercised directly in tests — see Slider.test.ts's manual checklist).
+ */
+export function fractionToValue(fraction: number, min: number, max: number, step: number): number {
+  const clampedFraction = Math.min(1, Math.max(0, fraction));
+  const raw = min + clampedFraction * (max - min);
+  return clampNumber(roundToStep(raw, min, step), min, max);
+}
