@@ -91,6 +91,12 @@ const groups = ref([
     summary: "Sorting, client/server pagination, row selection (single/multiple), global + per-column filtering, container-query card collapse.",
   },
   {
+    storyId: "src-pagination-story-vue",
+    name: "Pagination",
+    includes: [],
+    summary: "Standalone page navigation with windowed ellipsis and an optional page-size picker; also used internally by DataTable.",
+  },
+  {
     storyId: "src-tabs-story-vue",
     name: "Tabs",
     includes: ["TabList", "Tab", "TabPanel"],
@@ -149,6 +155,12 @@ const groups = ref([
     name: "Splitter",
     includes: ["SplitterPane"],
     summary: "Draggable and keyboard-resizable panes (2+), horizontal or vertical, with per-pane min/max and v-model persisted sizes.",
+  },
+  {
+    storyId: "src-calendar-story-vue",
+    name: "Calendar",
+    includes: [],
+    summary: "Standalone inline WAI-ARIA grid calendar — single-date or range selection, full keyboard support, locale-aware. DatePicker composes this internally for its popover.",
   },
   {
     storyId: "src-datepicker-story-vue",

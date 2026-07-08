@@ -4,6 +4,7 @@ import { avatar } from "./avatar";
 import { badge } from "./badge";
 import { breadcrumb } from "./breadcrumb";
 import { button } from "./button";
+import { calendar } from "./calendar";
 import { card } from "./card";
 import { checkbox } from "./checkbox";
 import { datatable } from "./datatable";
@@ -12,6 +13,7 @@ import { dialog } from "./dialog";
 import { dropdownmenu } from "./dropdownmenu";
 import { grid } from "./grid";
 import { input } from "./input";
+import { pagination } from "./pagination";
 import { popover } from "./popover";
 import { progressbar } from "./progressbar";
 import { radiogroup } from "./radiogroup";
@@ -34,6 +36,7 @@ export const components: ComponentSpec[] = [
   badge,
   breadcrumb,
   button,
+  calendar,
   card,
   checkbox,
   datatable,
@@ -42,6 +45,7 @@ export const components: ComponentSpec[] = [
   dropdownmenu,
   grid,
   input,
+  pagination,
   popover,
   progressbar,
   radiogroup,
