@@ -49,16 +49,6 @@ jobs:
       - name: Build Histoire stories
         run: pnpm --filter @stance/playground story:build
 
-      # Histoire is a client-side-routed SPA (story URLs like /story/<id>
-      # aren't real files) — deep-linking straight to one, as the
-      # Components doc page does, 404s on plain static hosting with no
-      # server-side rewrite. This is the standard workaround: GitHub Pages
-      # serves 404.html (if present) for any unmatched path, and since it's
-      # a copy of index.html, Histoire's own router then reads the
-      # (unchanged) URL and renders the right story.
-      - name: Add SPA-fallback 404 for Histoire deep links
-        run: cp apps/playground/.histoire/dist/index.html apps/playground/.histoire/dist/404.html
-
       - name: Build VitePress site
         run: pnpm --filter @stance/docs docs:build
 
