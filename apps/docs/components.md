@@ -7,8 +7,12 @@ import { Card, Grid, Badge } from "@stance/core";
 // via its own runtime check.
 declare const __COMPONENTS_BASE__: string;
 
+// Histoire runs in hash-routing mode (see histoire.config.ts) specifically
+// so these deep links survive GitHub Pages, which only serves a custom
+// 404.html at the site root — a "#/story/..." fragment is never sent to
+// the server at all, so there's nothing for it to 404 on.
 function storyUrl(storyId: string) {
-  return `${__COMPONENTS_BASE__}story/${storyId}`;
+  return `${__COMPONENTS_BASE__}#/story/${storyId}`;
 }
 
 const groups = ref([
