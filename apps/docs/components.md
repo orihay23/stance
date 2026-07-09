@@ -190,7 +190,13 @@ const groups = ref([
     storyId: "src-combobox-story-vue",
     name: "Combobox",
     includes: ["ComboboxInput", "ComboboxContent", "ComboboxOption"],
-    summary: "Filterable, keyboard-navigable combobox (APG 1.2 aria-activedescendant pattern) — the text input keeps real DOM focus throughout. Single- or multi-select via one `multiple` prop; multi-select renders removable tags (Backspace-on-empty removes the last one). Supports async loading/empty/error states (the consumer owns fetching/debouncing; Combobox just consumes the resulting state). A Command palette is a follow-up phase; see design-docs/combobox.md.",
+    summary: "Filterable, keyboard-navigable combobox (APG 1.2 aria-activedescendant pattern) — the text input keeps real DOM focus throughout. Single- or multi-select via one `multiple` prop; multi-select renders removable tags (Backspace-on-empty removes the last one). Supports async loading/empty/error states (the consumer owns fetching/debouncing; Combobox just consumes the resulting state). See design-docs/combobox.md.",
+  },
+  {
+    storyId: "src-commandpalette-story-vue",
+    name: "CommandPalette",
+    includes: ["CommandPaletteItem"],
+    summary: "Modal command menu (⌘K-style) — a search input plus a filterable action list, sharing its aria-activedescendant listbox machinery (useActiveDescendant) and dismiss/focus-trap/inert-background composables with Combobox and Dialog respectively, rather than composing either directly. Each item is its own action (@select), not a persisted value.",
   },
   {
     storyId: "src-calendar-story-vue",

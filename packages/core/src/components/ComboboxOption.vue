@@ -51,6 +51,19 @@ function onMouseenter() {
   context?.activeDescendant.setActive(optionId);
 }
 
+// Without this, the highlight set by onMouseenter is sticky: it survives
+// the mouse actually leaving the option (e.g. a keyboard user then moves
+// focus elsewhere, or the popup re-renders under a stationary cursor) since
+// nothing else clears it until another option is hovered or an arrow key
+// is pressed. Only clear if this option is still the active one, so a
+// keyboard nav that moved highlight elsewhere in the meantime isn't undone
+// by a stale mouseleave.
+function onMouseleave() {
+  if (context?.activeDescendant.activeId.value === optionId) {
+    context?.activeDescendant.setActive(null);
+  }
+}
+
 const optionClass = computed(() => cn("stance-combobox__option", props.class));
 </script>
 
@@ -66,6 +79,7 @@ const optionClass = computed(() => cn("stance-combobox__option", props.class));
     @mousedown.prevent
     @click="activate"
     @mouseenter="onMouseenter"
+    @mouseleave="onMouseleave"
   >
     <slot />
   </div>
