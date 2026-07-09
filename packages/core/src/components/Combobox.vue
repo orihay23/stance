@@ -61,8 +61,27 @@ const contentRef = ref<HTMLElement | null | undefined>(null);
 const optionsRegistry = reactive(new Map<string, ComboboxOptionEntry>());
 const optionIds = computed(() => Array.from(optionsRegistry.keys()));
 
+// Multi-select tags need a selected value's label even when its
+// ComboboxOption isn't currently mounted (options only exist in the DOM
+// while the popup is open) — this cache captures a value's label the
+// moment it's selected (see selectValue below) or, failing that, the
+// moment a matching option happens to register, and simply keeps it for
+// as long as the value stays selected. Stale entries for values
+// deselected from outside (a consumer mutating modelValue directly rather
+// than through selectValue) are harmless — tags only ever render for
+// values actually present in modelValue.
+const selectedLabels = reactive(new Map<string, string>());
+const selectedValues = computed(() => (Array.isArray(props.modelValue) ? props.modelValue : []));
+
+function tagLabel(value: string): string {
+  return selectedLabels.get(value) ?? value;
+}
+
 function registerOption(entry: ComboboxOptionEntry) {
   optionsRegistry.set(entry.id, entry);
+  if (props.multiple && selectedValues.value.includes(entry.value)) {
+    selectedLabels.set(entry.value, entry.label);
+  }
 }
 function unregisterOption(id: string) {
   optionsRegistry.delete(id);
@@ -82,9 +101,14 @@ function isSelected(value: string): boolean {
 
 function selectValue(value: string, label: string) {
   if (props.multiple) {
-    const current = Array.isArray(props.modelValue) ? props.modelValue : [];
+    const current = selectedValues.value;
     const wasSelected = current.includes(value);
     const next = wasSelected ? current.filter((v) => v !== value) : [...current, value];
+    if (wasSelected) {
+      selectedLabels.delete(value);
+    } else {
+      selectedLabels.set(value, label);
+    }
     emit("update:modelValue", next);
     emit("update:inputValue", "");
     announce(`${label} ${wasSelected ? "removed" : "added"}. ${next.length} selected.`);
@@ -138,6 +162,8 @@ provide(COMBOBOX_KEY, {
   disabled: computed(() => props.disabled),
   isSelected,
   selectValue,
+  selectedValues,
+  tagLabel,
   commitActive,
   registerOption,
   unregisterOption,

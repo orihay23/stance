@@ -7,6 +7,7 @@ export const combobox: ComponentSpec = {
     { variantTitle: "Light + Dark", captures: lightDarkCaptures() },
     { variantTitle: "Pre-selected value", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Disabled", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Multi-select with tags", captures: [{ name: "default", selector: "[data-theme]" }] },
     // Only the deterministic resting state (before typing) is captured —
     // the loading/error states are driven by a live setTimeout in the
     // story, and racing a screenshot against a timer is exactly the kind

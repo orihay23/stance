@@ -21,7 +21,7 @@
  *    aria-activedescendant, and selecting a multi-select option announces
  *    "X added/removed. N selected."
  */
-import { defineComponent, h, nextTick, reactive } from "vue";
+import { defineComponent, h, nextTick, reactive, ref } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
@@ -33,6 +33,7 @@ import ComboboxContent from "./ComboboxContent.vue";
 import ComboboxOption from "./ComboboxOption.vue";
 import comboboxContentSource from "./ComboboxContent.vue?raw";
 import comboboxOptionSource from "./ComboboxOption.vue?raw";
+import comboboxInputSource from "./ComboboxInput.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 
 const themes = allThemes;
@@ -261,6 +262,95 @@ describe("Combobox", () => {
     expect(screen.getByRole("option", { name: "Apple" })).toHaveAttribute("aria-selected", "false");
   });
 
+  it("multi-select: renders a removable tag for each selected value", async () => {
+    renderHarness({ multiple: true, modelValue: ["Apple", "Banana"] });
+    expect(screen.getByText("Apple")).toBeInTheDocument();
+    expect(screen.getByText("Banana")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Apple" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Banana" })).toBeInTheDocument();
+  });
+
+  it("multi-select: clicking a tag's remove button deselects it and refocuses the input", async () => {
+    renderHarness({ multiple: true, modelValue: ["Apple", "Banana"] });
+    const input = screen.getByRole("combobox") as HTMLInputElement;
+
+    await fireEvent.click(screen.getByRole("button", { name: "Remove Apple" }));
+    await nextTick();
+
+    expect(screen.queryByRole("button", { name: "Remove Apple" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Banana" })).toBeInTheDocument();
+    expect(document.activeElement).toBe(input);
+  });
+
+  it("multi-select: Backspace on an empty input removes the last tag; does nothing while the input has text", async () => {
+    renderHarness({ multiple: true, modelValue: ["Apple", "Banana"] });
+    const input = screen.getByRole("combobox") as HTMLInputElement;
+    input.focus();
+    await nextTick();
+
+    // Typed text present — Backspace edits the text, doesn't touch tags.
+    await fireEvent.update(input, "x");
+    await fireEvent.keyDown(input, { key: "Backspace" });
+    expect(screen.getByRole("button", { name: "Remove Apple" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove Banana" })).toBeInTheDocument();
+
+    await fireEvent.update(input, "");
+    await fireEvent.keyDown(input, { key: "Backspace" });
+    await nextTick();
+    expect(screen.getByRole("button", { name: "Remove Apple" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove Banana" })).not.toBeInTheDocument(); // removes the last tag
+  });
+
+  it("multi-select: a tag's label survives after the popup closes and its ComboboxOption unmounts", async () => {
+    const Harness = defineComponent({
+      setup() {
+        const selected = ref<string[]>(["us"]);
+        const query = ref("");
+        return () =>
+          h(
+            Combobox,
+            {
+              multiple: true,
+              modelValue: selected.value,
+              "onUpdate:modelValue": (v: string | string[] | undefined) => {
+                selected.value = Array.isArray(v) ? v : [];
+              },
+              inputValue: query.value,
+              "onUpdate:inputValue": (v: string) => {
+                query.value = v;
+              },
+            },
+            {
+              default: () => [
+                h(ComboboxInput, { "aria-label": "Country" }),
+                h(ComboboxContent, null, {
+                  default: () => [h(ComboboxOption, { value: "us", label: "United States" }, () => "United States")],
+                }),
+              ],
+            },
+          );
+      },
+    });
+    render(Harness);
+    const input = screen.getByRole("combobox");
+
+    // Open once so the "us" option registers and its real label gets cached
+    // (the tag itself is checked via its remove button's accessible name,
+    // since the option text and the tag text are both "United States" while
+    // the popup is open).
+    input.focus();
+    await nextTick();
+    await nextTick();
+    expect(screen.getByRole("button", { name: "Remove United States" })).toBeInTheDocument();
+
+    // ...then close (unmounting ComboboxOption) and confirm the tag still
+    // shows the cached label, not a fallback to the raw "us" value.
+    await fireEvent.keyDown(input, { key: "Escape" });
+    await nextTick();
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove United States" })).toBeInTheDocument();
+  });
+
   it("first Escape clears non-empty input text and keeps the popup open; a second Escape closes it", async () => {
     renderHarness();
     const input = screen.getByRole("combobox") as HTMLInputElement;
@@ -359,10 +449,11 @@ describe("Combobox", () => {
   it("never emits !important in Combobox's styles", () => {
     expect(comboboxContentSource).not.toContain("!important");
     expect(comboboxOptionSource).not.toContain("!important");
+    expect(comboboxInputSource).not.toContain("!important");
   });
 
   it("wraps Combobox's default styles in :where() to keep specificity at zero", () => {
-    for (const source of [comboboxContentSource, comboboxOptionSource]) {
+    for (const source of [comboboxContentSource, comboboxOptionSource, comboboxInputSource]) {
       const styleBlock = source.slice(source.indexOf("<style"));
       expect(styleBlock).not.toMatch(/^\.stance-combobox/m);
     }
@@ -385,5 +476,16 @@ describe("Combobox", () => {
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // A single targeted check, not the full 3-theme matrix above — this is
+  // about the tag markup itself (do the remove buttons have accessible
+  // names, is anything unlabeled), not color contrast per theme, which the
+  // base matrix already covers. Same scope choice DataTable's own axe
+  // tests make for pagination/selection/filtering.
+  it("axe: no violations with multi-select tags rendered", async () => {
+    const { container } = renderHarness({ multiple: true, modelValue: ["Apple", "Banana"] });
+    const results = await runAxe(container);
+    expect(results).toHaveNoViolations();
   });
 });

@@ -43,6 +43,10 @@ const disabledSelected = ref("Canada");
 const disabledQuery = ref("Canada");
 const disabledOptions = computed(() => filterCountries(disabledQuery.value));
 
+const multiSelected = ref<string[]>(["Canada", "Japan"]);
+const multiQuery = ref("");
+const multiOptions = computed(() => filterCountries(multiQuery.value));
+
 // Demonstrates C2's async contract for real: the consumer (this story) owns
 // the fetch/debounce entirely — Combobox only consumes the resulting
 // loading/error/results state via ComboboxContent's props. Typing "fail"
@@ -155,6 +159,21 @@ onUnmounted(() => clearTimeout(asyncTimer));
             </ComboboxOption>
           </ComboboxContent>
         </Combobox>
+      </div>
+    </Variant>
+
+    <Variant title="Multi-select with tags">
+      <div class="max-w-sm space-y-2 p-6" :data-theme="storyTheme">
+        <label for="combobox-multi" class="text-sm font-medium">Countries</label>
+        <Combobox v-model="multiSelected" v-model:input-value="multiQuery" multiple>
+          <ComboboxInput id="combobox-multi" placeholder="Search countries…" />
+          <ComboboxContent>
+            <ComboboxOption v-for="country in multiOptions" :key="country" :value="country">
+              {{ country }}
+            </ComboboxOption>
+          </ComboboxContent>
+        </Combobox>
+        <p class="text-sm opacity-70">Selected: {{ multiSelected.length ? multiSelected.join(", ") : "(none)" }}</p>
       </div>
     </Variant>
 
