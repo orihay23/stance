@@ -190,7 +190,7 @@ const groups = ref([
     storyId: "src-combobox-story-vue",
     name: "Combobox",
     includes: ["ComboboxInput", "ComboboxContent", "ComboboxOption"],
-    summary: "Filterable, keyboard-navigable single-select combobox (APG 1.2 aria-activedescendant pattern) — the text input keeps real DOM focus throughout. Async loading/empty/error states and multi-select with tags are follow-up phases; see design-docs/combobox.md.",
+    summary: "Filterable, keyboard-navigable single-select combobox (APG 1.2 aria-activedescendant pattern) — the text input keeps real DOM focus throughout. Supports async loading/empty/error states (the consumer owns fetching/debouncing; Combobox just consumes the resulting state). Multi-select with tags and a Command palette are follow-up phases; see design-docs/combobox.md.",
   },
   {
     storyId: "src-calendar-story-vue",

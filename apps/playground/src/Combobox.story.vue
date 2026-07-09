@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import { Combobox, ComboboxContent, ComboboxInput, ComboboxOption } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
@@ -42,6 +42,42 @@ const preselectedOptions = computed(() => filterCountries(preselectedQuery.value
 const disabledSelected = ref("Canada");
 const disabledQuery = ref("Canada");
 const disabledOptions = computed(() => filterCountries(disabledQuery.value));
+
+// Demonstrates C2's async contract for real: the consumer (this story) owns
+// the fetch/debounce entirely — Combobox only consumes the resulting
+// loading/error/results state via ComboboxContent's props. Typing "fail"
+// simulates a failed request, to show the error slot without needing a
+// real flaky network call. The 600ms delay is deliberately visible on
+// screen (not asserted on in the visual-test baseline, which only captures
+// this variant's deterministic resting state before any typing — a live
+// timer mid-flight isn't something a screenshot test should race against).
+const asyncSelected = ref<string>();
+const asyncQuery = ref("");
+const asyncLoading = ref(false);
+const asyncError = ref<string>();
+const asyncResults = ref<string[]>([]);
+let asyncTimer: ReturnType<typeof setTimeout> | undefined;
+
+watch(asyncQuery, (query) => {
+  clearTimeout(asyncTimer);
+  asyncError.value = undefined;
+  if (!query) {
+    asyncLoading.value = false;
+    asyncResults.value = [];
+    return;
+  }
+  asyncLoading.value = true;
+  asyncTimer = setTimeout(() => {
+    asyncLoading.value = false;
+    if (query.trim().toLowerCase() === "fail") {
+      asyncError.value = "Search failed. Please try again.";
+      asyncResults.value = [];
+      return;
+    }
+    asyncResults.value = filterCountries(query);
+  }, 600);
+});
+onUnmounted(() => clearTimeout(asyncTimer));
 </script>
 
 <template>
@@ -119,6 +155,25 @@ const disabledOptions = computed(() => filterCountries(disabledQuery.value));
             </ComboboxOption>
           </ComboboxContent>
         </Combobox>
+      </div>
+    </Variant>
+
+    <Variant title="Async search (simulated network)">
+      <div class="max-w-sm space-y-2 p-6" :data-theme="storyTheme">
+        <label for="combobox-async" class="text-sm font-medium">Country</label>
+        <Combobox v-model="asyncSelected" v-model:input-value="asyncQuery">
+          <ComboboxInput id="combobox-async" placeholder="Type to search…" />
+          <ComboboxContent :loading="asyncLoading" :error="asyncError">
+            <ComboboxOption v-for="country in asyncResults" :key="country" :value="country">
+              {{ country }}
+            </ComboboxOption>
+            <template #empty>Type at least one letter to search.</template>
+          </ComboboxContent>
+        </Combobox>
+        <p class="text-sm opacity-70">
+          Simulates a real network request (~600ms) — the story owns fetching/debouncing entirely, Combobox only
+          consumes the resulting loading/error/results state. Type "fail" to see the error state.
+        </p>
       </div>
     </Variant>
   </Story>

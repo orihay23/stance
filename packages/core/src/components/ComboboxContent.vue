@@ -91,7 +91,7 @@ const contentClass = computed(() => cn("stance-combobox__content", props.class))
       :style="contentStyle"
       :data-theme="themeContext.theme ?? undefined"
     >
-      <p v-if="error" class="stance-combobox__status" role="alert">
+      <p v-if="error" class="stance-combobox__status stance-combobox__status--error" role="alert">
         <slot name="error" :message="error">{{ error }}</slot>
       </p>
       <p v-else-if="loading" class="stance-combobox__status">
@@ -127,5 +127,9 @@ const contentClass = computed(() => cn("stance-combobox__content", props.class))
   padding: var(--stance-spacing-sm, 0.5rem);
   font-size: var(--stance-text-sm, 0.875rem);
   color: var(--stance-color-muted-foreground);
+}
+
+:where(.stance-combobox__status--error) {
+  color: var(--stance-color-destructive);
 }
 </style>

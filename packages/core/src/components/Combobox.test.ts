@@ -351,6 +351,7 @@ describe("Combobox", () => {
     await nextTick();
     await nextTick();
     expect(screen.getByRole("alert")).toHaveTextContent("Search failed");
+    expect(screen.getByRole("alert")).toHaveClass("stance-combobox__status--error");
     expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
   });
