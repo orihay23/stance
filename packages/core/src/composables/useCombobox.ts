@@ -20,6 +20,17 @@ export interface ComboboxContext {
   isSelected: (value: string) => boolean;
   /** Selects/toggles `value`. Single-select also closes the popup and fills the input with `label`; multi-select keeps the popup open and clears the input for the next filter term. */
   selectValue: (value: string, label: string) => void;
+  /** Multi-select only: the currently-selected values, in selection order — the source `ComboboxInput` renders tags from and walks for Backspace-removes-last-tag. */
+  selectedValues: ComputedRef<string[]>;
+  /**
+   * Resolves a selected value's display label for its tag, independent of
+   * whether that `ComboboxOption` is currently mounted (options only exist
+   * in the DOM while the popup is open — see the design doc, §3). Falls
+   * back to the raw value if it's never been seen (e.g. a pre-populated
+   * `modelValue` whose option hasn't rendered yet), the same graceful
+   * degradation `ComboboxOption` itself uses when no `label` prop is given.
+   */
+  tagLabel: (value: string) => string;
   /** Commits whichever option `activeDescendant.activeId` currently points at, if any (Enter key). No-op if nothing is highlighted or it's disabled. */
   commitActive: () => void;
   registerOption: (entry: ComboboxOptionEntry) => void;
