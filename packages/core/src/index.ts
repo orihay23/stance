@@ -171,6 +171,12 @@ export type { ComboboxContentProps } from "./components/ComboboxContent.vue";
 export { default as ComboboxOption } from "./components/ComboboxOption.vue";
 export type { ComboboxOptionProps } from "./components/ComboboxOption.vue";
 
+export { default as CommandPalette } from "./components/CommandPalette.vue";
+export type { CommandPaletteProps } from "./components/CommandPalette.vue";
+
+export { default as CommandPaletteItem } from "./components/CommandPaletteItem.vue";
+export type { CommandPaletteItemProps } from "./components/CommandPaletteItem.vue";
+
 export { useFocusTrap } from "./composables/useFocusTrap";
 export type { UseFocusTrapOptions } from "./composables/useFocusTrap";
 
@@ -205,3 +211,6 @@ export type { UseActiveDescendantOptions, UseActiveDescendantResult } from "./co
 
 export { useComboboxContext } from "./composables/useCombobox";
 export type { ComboboxContext, ComboboxOptionEntry } from "./composables/useCombobox";
+
+export { useCommandPaletteContext } from "./composables/useCommandPalette";
+export type { CommandPaletteContext, CommandPaletteItemEntry } from "./composables/useCommandPalette";

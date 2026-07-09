@@ -9,6 +9,7 @@ import { card } from "./card";
 import { checkbox } from "./checkbox";
 import { collapsible } from "./collapsible";
 import { combobox } from "./combobox";
+import { commandpalette } from "./commandpalette";
 import { datatable } from "./datatable";
 import { datepicker } from "./datepicker";
 import { dialog } from "./dialog";
@@ -47,6 +48,7 @@ export const components: ComponentSpec[] = [
   checkbox,
   collapsible,
   combobox,
+  commandpalette,
   datatable,
   datepicker,
   dialog,
