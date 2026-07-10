@@ -77,6 +77,12 @@ const groups = ref([
     summary: "Modal dialog with focus trapping, Escape-to-close, and alertdialog support.",
   },
   {
+    storyId: "src-sheet-story-vue",
+    name: "Sheet",
+    includes: [],
+    summary: "Edge-anchored Dialog variant (top/right/bottom/left) that slides in, sharing Dialog's focus-trap/dismiss/inert-background composables and WAI-ARIA dialog pattern. Respects prefers-reduced-motion. Does not implement gesture/swipe-to-dismiss or drag snap-points — a deliberate v1 scope cut.",
+  },
+  {
     storyId: "src-popover-story-vue",
     name: "Popover",
     includes: ["PopoverTrigger", "PopoverContent"],

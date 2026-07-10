@@ -38,6 +38,9 @@ export type { ToggleGroupItemProps } from "./components/ToggleGroupItem.vue";
 export { default as Dialog } from "./components/Dialog.vue";
 export type { DialogProps } from "./components/Dialog.vue";
 
+export { default as Sheet } from "./components/Sheet.vue";
+export type { SheetProps, SheetSide } from "./components/Sheet.vue";
+
 export { default as Popover } from "./components/Popover.vue";
 export type { PopoverProps } from "./components/Popover.vue";
 
