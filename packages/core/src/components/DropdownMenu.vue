@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Placement } from "@floating-ui/vue";
+import type { Placement, VirtualElement } from "@floating-ui/vue";
 import { computed, provide, ref, useId } from "vue";
 import { DROPDOWN_MENU_KEY } from "../composables/useDropdownMenu";
 
@@ -32,6 +32,7 @@ const open = computed(() => props.modelValue);
 const triggerRef = ref<HTMLElement | null | undefined>(null);
 const openedViaKeyboard = ref(false);
 const pendingFocus = ref<"first" | "last">("first");
+const virtualReference = ref<VirtualElement | null>(null);
 
 provide(DROPDOWN_MENU_KEY, {
   open,
@@ -43,6 +44,7 @@ provide(DROPDOWN_MENU_KEY, {
   offset: computed(() => props.offset),
   openedViaKeyboard,
   pendingFocus,
+  virtualReference,
 });
 </script>
 

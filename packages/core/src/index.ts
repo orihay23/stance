@@ -38,6 +38,9 @@ export type { ToggleGroupItemProps } from "./components/ToggleGroupItem.vue";
 export { default as Dialog } from "./components/Dialog.vue";
 export type { DialogProps } from "./components/Dialog.vue";
 
+export { default as Sheet } from "./components/Sheet.vue";
+export type { SheetProps, SheetSide } from "./components/Sheet.vue";
+
 export { default as Popover } from "./components/Popover.vue";
 export type { PopoverProps } from "./components/Popover.vue";
 
@@ -64,6 +67,12 @@ export type { DropdownMenuItemProps } from "./components/DropdownMenuItem.vue";
 
 export { default as DropdownMenuSeparator } from "./components/DropdownMenuSeparator.vue";
 export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSeparator.vue";
+
+export { default as DropdownMenuContextTrigger } from "./components/DropdownMenuContextTrigger.vue";
+export type {
+  DropdownMenuContextTriggerProps,
+  DropdownMenuContextTriggerSlotProps,
+} from "./components/DropdownMenuContextTrigger.vue";
 
 export { default as Separator } from "./components/Separator.vue";
 export type { SeparatorProps } from "./components/Separator.vue";
