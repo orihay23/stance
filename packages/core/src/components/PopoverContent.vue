@@ -86,14 +86,14 @@ const contentClass = computed(() => cn("stance-popover__content", props.class));
   flex-direction: column;
   gap: var(--stance-spacing-sm, 0.5rem);
   max-width: 20rem;
-  background: var(--stance-color-background);
+  background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);
   box-shadow: var(--stance-shadow-lg);
   padding: var(--stance-spacing-md, 0.75rem);
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   font-size: var(--stance-text-sm, 0.875rem);
-  color: var(--stance-color-foreground);
+  color: var(--stance-color-surface-foreground);
   pointer-events: auto;
 }
 

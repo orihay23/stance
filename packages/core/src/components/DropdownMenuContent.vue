@@ -163,7 +163,7 @@ const contentClass = computed(() => cn("stance-dropdown-menu__content", props.cl
   display: flex;
   flex-direction: column;
   min-width: 10rem;
-  background: var(--stance-color-background);
+  background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);
   box-shadow: var(--stance-shadow-lg);
