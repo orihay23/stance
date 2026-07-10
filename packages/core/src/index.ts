@@ -68,6 +68,12 @@ export type { DropdownMenuItemProps } from "./components/DropdownMenuItem.vue";
 export { default as DropdownMenuSeparator } from "./components/DropdownMenuSeparator.vue";
 export type { DropdownMenuSeparatorProps } from "./components/DropdownMenuSeparator.vue";
 
+export { default as DropdownMenuContextTrigger } from "./components/DropdownMenuContextTrigger.vue";
+export type {
+  DropdownMenuContextTriggerProps,
+  DropdownMenuContextTriggerSlotProps,
+} from "./components/DropdownMenuContextTrigger.vue";
+
 export { default as Separator } from "./components/Separator.vue";
 export type { SeparatorProps } from "./components/Separator.vue";
 

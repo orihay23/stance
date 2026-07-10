@@ -1,4 +1,4 @@
-import type { Placement } from "@floating-ui/vue";
+import type { Placement, VirtualElement } from "@floating-ui/vue";
 import type { ComputedRef, InjectionKey, Ref } from "vue";
 import { inject } from "vue";
 
@@ -14,6 +14,14 @@ export interface DropdownMenuContext {
   openedViaKeyboard: Ref<boolean>;
   /** Which item should receive focus the next time the menu opens. */
   pendingFocus: Ref<"first" | "last">;
+  /**
+   * Set by `<DropdownMenuContextTrigger>` to anchor the menu at pointer
+   * coordinates instead of `triggerRef`'s DOM element — a separate field
+   * rather than widening `triggerRef`'s type, so `useOverlayTriggerRef`
+   * (shared with Popover/Combobox) stays untouched. `DropdownMenuContent`
+   * prefers this over `triggerRef` when both are set.
+   */
+  virtualReference: Ref<VirtualElement | null>;
 }
 
 export const DROPDOWN_MENU_KEY: InjectionKey<DropdownMenuContext> = Symbol("DropdownMenu");

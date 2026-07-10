@@ -97,8 +97,8 @@ const groups = ref([
   {
     storyId: "src-dropdownmenu-story-vue",
     name: "DropdownMenu",
-    includes: ["DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuSeparator"],
-    summary: "Anchored menu with roving arrow-key navigation, Home/End, and type-ahead-free item activation.",
+    includes: ["DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuSeparator", "DropdownMenuContextTrigger"],
+    summary: "Anchored menu with roving arrow-key navigation, Home/End, and type-ahead. DropdownMenuContextTrigger adds a context-menu mode — a renderless scoped-slot trigger that anchors the same menu to pointer coordinates instead of a trigger element, opened by right-click or a ~700ms touch long-press, reusing DropdownMenu's existing keyboard/typeahead/dismiss logic unchanged. Submenus and checkbox/radio menu items aren't supported yet — a pre-existing DropdownMenu gap, not new scope here.",
   },
   {
     storyId: "src-separator-story-vue",

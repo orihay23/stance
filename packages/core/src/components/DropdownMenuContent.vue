@@ -124,7 +124,7 @@ onBeforeUnmount(() => {
 });
 
 const { floatingStyles } = useFloatingOverlay(
-  computed(() => context?.triggerRef.value ?? null),
+  computed(() => context?.virtualReference.value ?? context?.triggerRef.value ?? null),
   contentRef,
   {
     open,
