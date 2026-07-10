@@ -320,13 +320,13 @@ const rootClass = computed(() => cn("stance-calendar", props.class));
   gap: var(--stance-spacing-sm, 0.5rem);
   width: 18rem;
   max-width: calc(100vw - 1rem);
-  background: var(--stance-color-background);
+  background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-lg, 0.75rem);
   box-shadow: var(--stance-shadow-lg);
   padding: var(--stance-spacing-md, 0.75rem);
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
-  color: var(--stance-color-foreground);
+  color: var(--stance-color-surface-foreground);
 }
 
 :where(.stance-calendar__nav) {

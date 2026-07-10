@@ -113,7 +113,7 @@ const contentClass = computed(() => cn("stance-combobox__content", props.class))
   flex-direction: column;
   max-height: 16rem;
   overflow-y: auto;
-  background: var(--stance-color-background);
+  background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);
   box-shadow: var(--stance-shadow-lg);

@@ -235,12 +235,12 @@ const panelClass = computed(() => cn("stance-command-palette__panel", props.clas
   max-width: 36rem;
   max-height: min(28rem, calc(100vh - 16vh - 2rem));
   overflow: hidden;
-  background: var(--stance-color-background);
+  background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-lg, 0.75rem);
   box-shadow: var(--stance-shadow-lg);
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
-  color: var(--stance-color-foreground);
+  color: var(--stance-color-surface-foreground);
 }
 
 :where(.stance-command-palette__panel:focus-visible) {

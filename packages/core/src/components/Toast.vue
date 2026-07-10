@@ -73,13 +73,13 @@ const rootClass = computed(() => cn("stance-toast", props.class));
   gap: var(--stance-spacing-sm, 0.5rem);
   min-width: 18rem;
   max-width: 24rem;
-  background: var(--stance-color-background);
+  background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);
   box-shadow: var(--stance-shadow-lg);
   padding: var(--stance-spacing-md, 0.75rem);
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
-  color: var(--stance-color-foreground);
+  color: var(--stance-color-surface-foreground);
   pointer-events: auto;
 }
 
