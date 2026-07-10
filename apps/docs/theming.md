@@ -56,10 +56,11 @@ values expected to change with color mode. `radius`, `spacing`, and
 `typography` are a theme's "personality" — density, roundedness, type scale —
 and stay constant across light/dark; only the color mode swaps.
 
-`stance` ships one reference theme today, `neutral`, exported from
-`@stance/themes`. The token shape is designed for more distinct personalities
-(not just color swaps — varying radius/shadow/density too) to ship over
-time.
+`stance` ships four first-party themes — `neutral` (the reference theme),
+`serious`, `fun`, and `crisp` — all exported from `@stance/themes` via
+`allThemes`. The token shape is designed for distinct personalities (not
+just color swaps — varying radius/shadow/density too), which is exactly
+how those four differ from each other.
 
 ## Compiling and applying a theme
 
