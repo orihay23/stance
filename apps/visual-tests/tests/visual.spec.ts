@@ -4,8 +4,11 @@ import { components } from "../registry/components";
 import { resolveVariantId, storyIdFor } from "../registry/manifest";
 
 // Captures whose name starts with "light"/"dark" are the theme-comparison
-// matrix the Definition of Done means by "3 themes × light/dark = 6
-// combinations" — this covers both lightDarkCaptures()'s plain "light"/
+// matrix the Definition of Done means by "N themes × light/dark"
+// combinations (currently 4 themes × 2 modes = 8 — allThemes.length has
+// grown since this comment originally said "3 themes"; read the count from
+// allThemes rather than a hardcoded number, since it changes here for free
+// too) — this covers both lightDarkCaptures()'s plain "light"/
 // "dark" names and the hand-written registry entries that qualify further
 // (Dialog's "light-basic-open"/"light-alertdialog-open", Popover's
 // "light-info-open"/"light-modal-confirm-open", DropdownMenu's
@@ -18,9 +21,9 @@ import { resolveVariantId, storyIdFor } from "../registry/manifest";
 // checks, DataTable's extra pagination/selection/filtering demo variants,
 // Toast's type-named captures — see toast.ts's own comment on why it can't
 // demonstrate dark mode at all, let alone per-theme) stays single-theme —
-// multiplying those by 3 wouldn't test anything the light/dark matrix
-// doesn't already cover, and would triple the screenshot count for no
-// benefit.
+// multiplying those by every theme wouldn't test anything the light/dark
+// matrix doesn't already cover, and would multiply the screenshot count for
+// no benefit.
 const THEMED_CAPTURE_PATTERN = /^(light|dark)(-|$)/;
 
 for (const componentSpec of components) {
