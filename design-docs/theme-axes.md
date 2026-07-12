@@ -378,3 +378,36 @@ doc; D2 onward is comparatively mechanical once D1's shape is approved.
   CLAUDE.md conventions update recording the new `data-theme-palette`/
   `data-theme-density` attributes and `--stance-{category}-{token}` control
   additions.
+
+## D3 rollout status and a discovered follow-up (not yet actioned)
+
+D3's "Density" variant (curated matrix, §4) shipped for 26 of 35
+components — every component that renders inline. The remaining 9 —
+Combobox, CommandPalette, Dialog, DropdownMenu, Popover, Sheet, Toast,
+Tooltip, DatePicker — all teleport their open content to the shared
+overlay root (`getOverlayRoot()`), outside the DOM subtree of whatever
+section triggered them.
+
+Building their Density variant surfaced a real gap, not a wiring gap:
+`useOverlayThemeContext.ts`'s `detectThemeContext()` (in
+`packages/core/src/utils/theme-context.ts`) is the mechanism that lets
+teleported content inherit ambient theming — it walks up from the
+triggering element via `.closest("[data-theme]")` and re-applies
+`data-theme`/`.dark` onto the teleported node. It has no equivalent path
+for the new `data-theme-palette`/`data-theme-density` attributes. A
+teleported panel given only the new attributes on its trigger's ancestry
+(no legacy `data-theme`) would open with **undefined color custom
+properties** — `var(--stance-color-*)` has no fallback (§1 of this doc:
+"raw color tokens don't have inline fallback"), so the panel would render
+with broken/invisible coloring, not just a stale theme.
+
+Fixing this is real runtime-code work, not registry/story wiring: it means
+extending `ThemeContext`/`detectThemeContext()` to also detect
+`data-theme-palette`/`data-theme-density` (each independently, since they
+may sit at different ancestor levels — see §2's two-attribute rationale),
+and updating the ~9 components' templates that currently bind
+`:data-theme="themeContext.theme"` / `:class="{ dark: themeContext.dark }"`
+to also apply the palette/density equivalents. Deliberately not done in
+this pass — flagged here as a known, documented gap rather than silently
+left for someone to rediscover, pending a decision on priority relative to
+D4/D5.
