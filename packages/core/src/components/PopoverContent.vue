@@ -85,7 +85,7 @@ const contentClass = computed(() => cn("stance-popover__content", props.class));
   display: flex;
   flex-direction: column;
   gap: var(--stance-spacing-sm, 0.5rem);
-  max-width: 20rem;
+  max-width: var(--stance-control-popover-max-width, 20rem);
   background: var(--stance-color-surface);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);

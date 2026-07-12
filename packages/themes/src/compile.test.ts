@@ -178,6 +178,18 @@ function controlTokens(seed: string): ThemeControlTokens {
     heightSm: `${seed}-height-sm`,
     heightMd: `${seed}-height-md`,
     heightLg: `${seed}-height-lg`,
+    dialogMaxWidth: `${seed}-dialog-max-width`,
+    popoverMaxWidth: `${seed}-popover-max-width`,
+    tooltipMaxWidth: `${seed}-tooltip-max-width`,
+    toastMinWidth: `${seed}-toast-min-width`,
+    toastMaxWidth: `${seed}-toast-max-width`,
+    calendarWidth: `${seed}-calendar-width`,
+    calendarCellSize: `${seed}-calendar-cell-size`,
+    avatarSizeSm: `${seed}-avatar-size-sm`,
+    avatarSizeMd: `${seed}-avatar-size-md`,
+    avatarSizeLg: `${seed}-avatar-size-lg`,
+    avatarSizeXl: `${seed}-avatar-size-xl`,
+    progressBarTrackHeight: `${seed}-progress-bar-track-height`,
   };
 }
 
@@ -258,6 +270,18 @@ describe("compileDensity", () => {
     expect(lightBlock).toContain("--stance-font-sans: sans-stack;");
     expect(lightBlock).toContain("--stance-control-box-size: control-box-size;");
     expect(lightBlock).toContain("--stance-control-switch-width: control-switch-width;");
+    expect(lightBlock).toContain("--stance-control-dialog-max-width: control-dialog-max-width;");
+    expect(lightBlock).toContain("--stance-control-popover-max-width: control-popover-max-width;");
+    expect(lightBlock).toContain("--stance-control-tooltip-max-width: control-tooltip-max-width;");
+    expect(lightBlock).toContain("--stance-control-toast-min-width: control-toast-min-width;");
+    expect(lightBlock).toContain("--stance-control-toast-max-width: control-toast-max-width;");
+    expect(lightBlock).toContain("--stance-control-calendar-width: control-calendar-width;");
+    expect(lightBlock).toContain("--stance-control-calendar-cell-size: control-calendar-cell-size;");
+    expect(lightBlock).toContain("--stance-control-avatar-size-sm: control-avatar-size-sm;");
+    expect(lightBlock).toContain("--stance-control-avatar-size-md: control-avatar-size-md;");
+    expect(lightBlock).toContain("--stance-control-avatar-size-lg: control-avatar-size-lg;");
+    expect(lightBlock).toContain("--stance-control-avatar-size-xl: control-avatar-size-xl;");
+    expect(lightBlock).toContain("--stance-control-progress-bar-track-height: control-progress-bar-track-height;");
   });
 
   it("puts light-mode shadow in the base block, dark-mode shadow only in .dark", () => {

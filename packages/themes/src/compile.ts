@@ -107,6 +107,18 @@ function controlDeclarations(control: ThemeControlTokens): Declaration[] {
     [`${PREFIX}-control-height-sm`, control.heightSm],
     [`${PREFIX}-control-height-md`, control.heightMd],
     [`${PREFIX}-control-height-lg`, control.heightLg],
+    [`${PREFIX}-control-dialog-max-width`, control.dialogMaxWidth],
+    [`${PREFIX}-control-popover-max-width`, control.popoverMaxWidth],
+    [`${PREFIX}-control-tooltip-max-width`, control.tooltipMaxWidth],
+    [`${PREFIX}-control-toast-min-width`, control.toastMinWidth],
+    [`${PREFIX}-control-toast-max-width`, control.toastMaxWidth],
+    [`${PREFIX}-control-calendar-width`, control.calendarWidth],
+    [`${PREFIX}-control-calendar-cell-size`, control.calendarCellSize],
+    [`${PREFIX}-control-avatar-size-sm`, control.avatarSizeSm],
+    [`${PREFIX}-control-avatar-size-md`, control.avatarSizeMd],
+    [`${PREFIX}-control-avatar-size-lg`, control.avatarSizeLg],
+    [`${PREFIX}-control-avatar-size-xl`, control.avatarSizeXl],
+    [`${PREFIX}-control-progress-bar-track-height`, control.progressBarTrackHeight],
   ];
 }
 

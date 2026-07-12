@@ -10,7 +10,10 @@ import { serious as seriousTheme } from "../themes/serious";
  * `compact`-density Button/Checkbox/Radio/Switch actually reads as denser
  * once density becomes independently selectable, rather than staying
  * "regular"-sized regardless of the chosen density (the exact gap
- * consistency-audit-2026-07.md §2.10 originally flagged).
+ * consistency-audit-2026-07.md §2.10 originally flagged). The Phase 14/D2
+ * overlay-geometry fields below are scaled the same way — proportionally
+ * smaller than "regular", since these were previously plain hardcoded
+ * literals with no density behavior at all (theme-axes.md §5.1).
  */
 export const compact: DensityProfile = {
   name: "compact",
@@ -24,6 +27,18 @@ export const compact: DensityProfile = {
     heightSm: "1.75rem",
     heightMd: "2rem",
     heightLg: "2.5rem",
+    dialogMaxWidth: "28rem",
+    popoverMaxWidth: "16rem",
+    tooltipMaxWidth: "14rem",
+    toastMinWidth: "16rem",
+    toastMaxWidth: "20rem",
+    calendarWidth: "16rem",
+    calendarCellSize: "1.75rem",
+    avatarSizeSm: "1.5rem",
+    avatarSizeMd: "2rem",
+    avatarSizeLg: "3rem",
+    avatarSizeXl: "4rem",
+    progressBarTrackHeight: "0.375rem",
   },
   shadow: {
     light: seriousTheme.light.shadow,

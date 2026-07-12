@@ -85,23 +85,23 @@ const rootClass = computed(() => cn("stance-avatar", props.class));
 }
 
 :where(.stance-avatar[data-size="sm"]) {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--stance-control-avatar-size-sm, 1.75rem);
+  height: var(--stance-control-avatar-size-sm, 1.75rem);
   font-size: var(--stance-text-xs, 0.75rem);
 }
 :where(.stance-avatar[data-size="md"]) {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--stance-control-avatar-size-md, 2.5rem);
+  height: var(--stance-control-avatar-size-md, 2.5rem);
   font-size: var(--stance-text-sm, 0.875rem);
 }
 :where(.stance-avatar[data-size="lg"]) {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: var(--stance-control-avatar-size-lg, 3.5rem);
+  height: var(--stance-control-avatar-size-lg, 3.5rem);
   font-size: var(--stance-text-lg, 1.125rem);
 }
 :where(.stance-avatar[data-size="xl"]) {
-  width: 5rem;
-  height: 5rem;
+  width: var(--stance-control-avatar-size-xl, 5rem);
+  height: var(--stance-control-avatar-size-xl, 5rem);
   font-size: var(--stance-text-2xl, 1.5rem);
 }
 
