@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { allDensityProfiles } from "@stance/themes";
 
 export interface CaptureSpec {
   /** Suffix appended to the snapshot filename, e.g. "light", "dark", "narrow-400". */
@@ -63,6 +64,22 @@ export function lightDarkCaptures(): CaptureSpec[] {
 }
 
 /**
+ * One capture per density profile, scoped to `[data-theme-density="name"]`
+ * — the Phase 14/D3 counterpart of `lightDarkCaptures()` (theme-axes.md
+ * §4's curated matrix: showcase the default palette across every density
+ * profile, light mode only, rather than the full palette × density × mode
+ * combinatorial space). Reads from `allDensityProfiles` so a 5th density
+ * profile is covered automatically, the same way `lightDarkCaptures()`
+ * doesn't need to know theme names.
+ */
+export function densityCaptures(): CaptureSpec[] {
+  return allDensityProfiles.map((profile) => ({
+    name: profile.name,
+    selector: `[data-theme-density="${profile.name}"]`,
+  }));
+}
+
+/**
  * The common shape shared by most primitives: a "Light + Dark" variant (the
  * two standard section captures) and, for anything with responsive/collapse
  * behavior, a "Narrow container" variant (one capture, scoped to its single
@@ -70,13 +87,19 @@ export function lightDarkCaptures(): CaptureSpec[] {
  * Config-side generation for this repeated shape, rather than hand-writing
  * a near-identical file per component.
  */
-export function simpleComponent(component: string, options: { narrow?: boolean; narrowTitle?: string } = {}): ComponentSpec {
+export function simpleComponent(
+  component: string,
+  options: { narrow?: boolean; narrowTitle?: string; density?: boolean } = {},
+): ComponentSpec {
   const variants: VariantSpec[] = [{ variantTitle: "Light + Dark", captures: lightDarkCaptures() }];
   if (options.narrow) {
     variants.push({
       variantTitle: options.narrowTitle ?? "Narrow container (responsive check)",
       captures: [{ name: "default", selector: "[data-theme]" }],
     });
+  }
+  if (options.density) {
+    variants.push({ variantTitle: "Density", captures: densityCaptures() });
   }
   return { component, variants };
 }

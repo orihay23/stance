@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { allThemes } from "@stance/themes";
+import { allDensityProfiles, allThemes } from "@stance/themes";
 
 /**
  * Module-level (not per-story) so picking a theme in the global switcher
@@ -12,6 +12,20 @@ import { allThemes } from "@stance/themes";
 const initialName = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("theme") : null;
 export const storyTheme = ref(allThemes.find((t) => t.name === initialName)?.name ?? allThemes[0]!.name);
 
+/**
+ * Phase 14/D3's density-axis counterpart to `storyTheme` — see
+ * design-docs/theme-axes.md §6/D3. Existing stories' `data-theme` bindings
+ * are untouched (still the legacy bundled axis), so this doesn't affect
+ * anything already rendered; it's the axis new palette/density-aware story
+ * content (e.g. each component's "Density" variant) binds to via
+ * `data-theme-density`.
+ */
+const initialDensityName =
+  typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("density") : null;
+export const storyDensity = ref(
+  allDensityProfiles.find((d) => d.name === initialDensityName)?.name ?? allDensityProfiles[0]!.name,
+);
+
 export function useStoryTheme() {
-  return { storyTheme, themes: allThemes };
+  return { storyTheme, themes: allThemes, storyDensity, densityProfiles: allDensityProfiles };
 }

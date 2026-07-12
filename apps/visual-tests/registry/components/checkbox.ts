@@ -1,3 +1,3 @@
 import { simpleComponent } from "../types";
 
-export const checkbox = simpleComponent("Checkbox", { narrow: true });
+export const checkbox = simpleComponent("Checkbox", { narrow: true, density: true });
