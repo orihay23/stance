@@ -2,7 +2,7 @@
 import { Card, Grid } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const items = Array.from({ length: 6 }, (_, i) => i + 1);
 </script>
@@ -58,6 +58,27 @@ const items = Array.from({ length: 6 }, (_, i) => i + 1);
         <Grid responsive-mode="viewport" :columns="{ base: 1, lg: 4 }" gap="sm">
           <Card v-for="item in items" :key="item">Card {{ item }}</Card>
         </Grid>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Grid :columns="{ base: 2 }" gap="md">
+            <Card v-for="item in [1, 2]" :key="item">{{ item }}</Card>
+          </Grid>
+        </section>
       </div>
     </Variant>
 

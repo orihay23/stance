@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const treetable: ComponentSpec = {
   component: "TreeTable",
@@ -11,5 +11,6 @@ export const treetable: ComponentSpec = {
       captures: [{ name: "default", selector: "[data-theme]" }],
     },
     { variantTitle: "Narrow container (responsive check)", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

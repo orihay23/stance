@@ -3,7 +3,10 @@ import { ref } from "vue";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
+const densityOpenByProfile = ref<Record<string, string>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, "shipping"])),
+);
 
 const lightSingle = ref("shipping");
 const darkSingle = ref("shipping");
@@ -85,6 +88,34 @@ const narrowSingle = ref("shipping");
             <AccordionContent>Two-year limited warranty on manufacturing defects.</AccordionContent>
           </AccordionItem>
         </Accordion>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="mb-3 text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Accordion v-model="densityOpenByProfile[profile.name]">
+            <AccordionItem value="shipping">
+              <AccordionHeader>Shipping</AccordionHeader>
+              <AccordionContent>Orders ship within 2 business days.</AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="returns">
+              <AccordionHeader>Returns</AccordionHeader>
+              <AccordionContent>Accepted within 30 days of delivery.</AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
       </div>
     </Variant>
 

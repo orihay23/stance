@@ -3,7 +3,10 @@ import { ref } from "vue";
 import { NumberField } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
+const densityQuantityByProfile = ref<Record<string, number | undefined>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, 2])),
+);
 
 const quantity = ref<number | undefined>(2);
 const quantityDark = ref<number | undefined>(2);
@@ -70,6 +73,26 @@ const invalidValue = ref<number | undefined>(undefined);
           <label class="mb-1 block text-sm font-medium" for="price-de">Preis (de-DE)</label>
           <NumberField id="price-de" v-model="priceDe" :step="0.5" locale="de-DE" />
         </div>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <label class="block text-sm font-medium" :for="`quantity-${profile.name}`">Quantity</label>
+          <NumberField :id="`quantity-${profile.name}`" v-model="densityQuantityByProfile[profile.name]" :min="0" :max="10" />
+        </section>
       </div>
     </Variant>
 

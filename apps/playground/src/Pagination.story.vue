@@ -3,7 +3,8 @@ import { ref } from "vue";
 import { Pagination } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
+const densityPageByProfile = ref<Record<string, number>>(Object.fromEntries(densityProfiles.map((p) => [p.name, 4])));
 
 const page = ref(1);
 const pickerPage = ref(3);
@@ -56,6 +57,25 @@ const pickerPageSize = ref(10);
           :total-pages="12"
           :page-size-options="[10, 25, 50, 100]"
         />
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Pagination v-model:page="densityPageByProfile[profile.name]" :total-pages="12" />
+        </section>
       </div>
     </Variant>
 

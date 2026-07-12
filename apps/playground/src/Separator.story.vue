@@ -2,7 +2,7 @@
 import { Separator } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
 </script>
 
 <template>
@@ -40,6 +40,29 @@ const { storyTheme } = useStoryTheme();
               <Separator orientation="vertical" />
               <span class="text-sm">Changelog</span>
             </div>
+          </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <div class="space-y-3">
+            <p class="text-sm">Section one</p>
+            <Separator />
+            <p class="text-sm">Section two</p>
           </div>
         </section>
       </div>

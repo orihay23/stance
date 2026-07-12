@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { ProgressBar } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const lightValue = ref(40);
 const darkValue = ref(65);
@@ -65,6 +65,25 @@ const darkValue = ref(65);
             <h3 class="mb-2 text-sm font-medium opacity-70">Indeterminate</h3>
             <ProgressBar indeterminate label="Loading" />
           </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <ProgressBar :value="60" label="Upload progress" />
         </section>
       </div>
     </Variant>

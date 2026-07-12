@@ -3,7 +3,8 @@ import { ref } from "vue";
 import { Slider } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
+const densityVolumeByProfile = ref<Record<string, number>>(Object.fromEntries(densityProfiles.map((p) => [p.name, 40])));
 
 const volume = ref(40);
 const volumeDark = ref(40);
@@ -82,6 +83,26 @@ const disabledValue = ref(50);
       <div class="p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <label class="mb-2 block text-sm font-medium" for="rating">Rating ({{ rating }} of 1–5)</label>
         <Slider id="rating" v-model="rating" :min="1" :max="5" :step="1" />
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <label class="block text-sm font-medium" :for="`volume-${profile.name}`">Volume</label>
+          <Slider :id="`volume-${profile.name}`" v-model="densityVolumeByProfile[profile.name]" :min="0" :max="100" />
+        </section>
       </div>
     </Variant>
 
