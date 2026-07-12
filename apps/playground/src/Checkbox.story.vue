@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { Checkbox } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const basicChecked = ref(false);
 const invalidChecked = ref(false);
@@ -83,6 +83,28 @@ function toggleAll(value: boolean) {
                 </Checkbox>
               </div>
             </div>
+          </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <div class="flex flex-col gap-2">
+            <Checkbox>Unchecked</Checkbox>
+            <Checkbox model-value>Checked</Checkbox>
           </div>
         </section>
       </div>

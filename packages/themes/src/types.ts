@@ -135,6 +135,26 @@ export interface ThemeControlTokens {
   heightSm: string;
   heightMd: string;
   heightLg: string;
+  /**
+   * Overlay geometry (Phase 14/D2 — theme-axes.md §5.1: these were
+   * hardcoded literals with no density-axis behavior at all, unlike
+   * boxSize/switchWidth/height* above which at least had unwired
+   * `var(--stance-control-*, <fallback>)` escape hatches already).
+   */
+  dialogMaxWidth: string;
+  popoverMaxWidth: string;
+  tooltipMaxWidth: string;
+  toastMinWidth: string;
+  toastMaxWidth: string;
+  /** Calendar's own root width, and DatePicker's popover via composition. */
+  calendarWidth: string;
+  /** Calendar's day-cell height. */
+  calendarCellSize: string;
+  avatarSizeSm: string;
+  avatarSizeMd: string;
+  avatarSizeLg: string;
+  avatarSizeXl: string;
+  progressBarTrackHeight: string;
 }
 
 /**

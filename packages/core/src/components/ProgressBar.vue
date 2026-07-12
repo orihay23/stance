@@ -68,7 +68,7 @@ const rootClass = computed(() => cn("stance-progress", props.class));
 :where(.stance-progress__track) {
   position: relative;
   width: 100%;
-  height: 0.5rem;
+  height: var(--stance-control-progress-bar-track-height, 0.5rem);
   overflow: hidden;
   background: var(--stance-color-muted);
   border-radius: var(--stance-radius-full, 9999px);

@@ -134,7 +134,7 @@ const panelClass = computed(() => cn("stance-dialog__panel", props.class));
   flex-direction: column;
   gap: var(--stance-spacing-sm, 0.5rem);
   width: 100%;
-  max-width: 32rem;
+  max-width: var(--stance-control-dialog-max-width, 32rem);
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
   background: var(--stance-color-surface);

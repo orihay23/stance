@@ -7,7 +7,9 @@ import { crisp as crispTheme } from "../themes/crisp";
  * `compileLegacyTheme` already emits for `crisp`). Control geometry is new
  * (theme-axes.md §1): scaled between "regular" and "compact", matching
  * `crisp`'s own radius/spacing scale, which its source comment already
- * describes as "slightly denser than neutral, roomier than serious."
+ * describes as "slightly denser than neutral, roomier than serious." The
+ * Phase 14/D2 overlay-geometry fields below are scaled the same way, in
+ * between "regular" and "compact" (theme-axes.md §5.1).
  */
 export const comfortable: DensityProfile = {
   name: "comfortable",
@@ -21,6 +23,18 @@ export const comfortable: DensityProfile = {
     heightSm: "1.875rem",
     heightMd: "2.25rem",
     heightLg: "2.75rem",
+    dialogMaxWidth: "30rem",
+    popoverMaxWidth: "18rem",
+    tooltipMaxWidth: "15rem",
+    toastMinWidth: "17rem",
+    toastMaxWidth: "22rem",
+    calendarWidth: "17rem",
+    calendarCellSize: "1.875rem",
+    avatarSizeSm: "1.625rem",
+    avatarSizeMd: "2.25rem",
+    avatarSizeLg: "3.25rem",
+    avatarSizeXl: "4.5rem",
+    progressBarTrackHeight: "0.4375rem",
   },
   shadow: {
     light: crispTheme.light.shadow,

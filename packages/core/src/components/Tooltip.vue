@@ -159,7 +159,7 @@ const contentClass = computed(() => cn("stance-tooltip__content", props.class));
 }
 
 :where(.stance-tooltip__content) {
-  max-width: 16rem;
+  max-width: var(--stance-control-tooltip-max-width, 16rem);
   background: var(--stance-color-foreground);
   color: var(--stance-color-background);
   border-radius: var(--stance-radius-sm, 0.25rem);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { allThemes, compileThemes } from "@stance/themes";
+import { allDensityProfiles, allPalettes, allThemes, compileDensityProfiles, compilePalettes, compileThemes } from "@stance/themes";
 
 // Declarative <style> rendering (not document.head.appendChild) so this
 // works identically during VitePress's SSR prerender and on the client —
@@ -11,7 +11,14 @@ import { allThemes, compileThemes } from "@stance/themes";
 // theme-name picker UI exists yet, just a light/dark toggle), but this
 // keeps the compiled CSS ready for every theme in `allThemes` rather than
 // needing to remember to update this file each time a new one ships.
-const css = compileThemes(allThemes);
+//
+// Phase 14/D3 (design-docs/theme-axes.md §6): also compiles the new
+// data-theme-palette/data-theme-density stylesheets, even though no docs
+// page sets those attributes yet — same "ready before it's used" rationale
+// as the legacy compileThemes(allThemes) line above.
+const css = [compileThemes(allThemes), compilePalettes(allPalettes), compileDensityProfiles(allDensityProfiles)].join(
+  "\n\n",
+);
 </script>
 
 <template>
