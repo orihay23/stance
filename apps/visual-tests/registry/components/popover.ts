@@ -1,4 +1,5 @@
 import type { ComponentSpec } from "../types";
+import { densityInteractionCaptures } from "../types";
 
 // PopoverContent teleports to the shared overlay root, same reasoning as
 // Dialog — full-page captures, section-scoped clicks.
@@ -30,6 +31,10 @@ export const popover: ComponentSpec = {
           },
         },
       ],
+    },
+    {
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => section.getByRole("button", { name: "Show info" }).click()),
     },
   ],
 };

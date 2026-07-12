@@ -1,10 +1,18 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityInteractionCaptures, lightDarkCaptures } from "../types";
 
 export const combobox: ComponentSpec = {
   component: "Combobox",
   variants: [
     { variantTitle: "Light + Dark", captures: lightDarkCaptures() },
+    {
+      // ComboboxContent teleports to the shared overlay root once open, so
+      // (unlike the closed-state captures above, which are scoped inline
+      // sections) this has to be full-page — focusing the input is what
+      // opens it, same trigger ComboboxInput.vue itself wires to onFocus.
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => section.getByLabel("Country").focus()),
+    },
     { variantTitle: "Pre-selected value", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Disabled", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Multi-select with tags", captures: [{ name: "default", selector: "[data-theme]" }] },

@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { Button, Dialog } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const lightBasicOpen = ref(false);
 const lightAlertOpen = ref(false);
@@ -12,6 +12,10 @@ const lightNoOutsideCloseOpen = ref(false);
 const darkBasicOpen = ref(false);
 const darkAlertOpen = ref(false);
 const darkNoOutsideCloseOpen = ref(false);
+
+const densityOpenByProfile = ref<Record<string, boolean>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, false])),
+);
 </script>
 
 <template>
@@ -126,6 +130,36 @@ const darkNoOutsideCloseOpen = ref(false);
               </div>
             </Dialog>
           </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="mb-3 text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Button @click="densityOpenByProfile[profile.name] = true">Open dialog</Button>
+          <Dialog
+            v-model="densityOpenByProfile[profile.name]"
+            title="Edit profile"
+            description="Update your account details below."
+          >
+            <p class="mb-4">Dialog body content goes here.</p>
+            <div class="flex justify-end gap-2">
+              <Button variant="secondary" @click="densityOpenByProfile[profile.name] = false">Cancel</Button>
+              <Button @click="densityOpenByProfile[profile.name] = false">Save</Button>
+            </div>
+          </Dialog>
         </section>
       </div>
     </Variant>

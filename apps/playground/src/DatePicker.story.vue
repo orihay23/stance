@@ -3,7 +3,11 @@ import { ref } from "vue";
 import { DatePicker, type DatePickerRangeValue } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
+
+const densityDateByProfile = ref<Record<string, Date | undefined>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, undefined])),
+);
 
 const singleDate = ref<Date | undefined>(undefined);
 const singleDateDark = ref<Date | undefined>(undefined);
@@ -50,6 +54,26 @@ const narrowDate = ref<Date | undefined>(undefined);
           <label class="block text-sm font-medium" for="date-single-dark">Appointment date</label>
           <DatePicker id="date-single-dark" v-model="singleDateDark" />
           <p class="text-sm opacity-70">Selected: {{ singleDateDark?.toDateString() ?? "none" }}</p>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-2 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <label class="block text-sm font-medium" :for="`date-density-${profile.name}`">Appointment date</label>
+          <DatePicker :id="`date-density-${profile.name}`" v-model="densityDateByProfile[profile.name]" />
         </section>
       </div>
     </Variant>

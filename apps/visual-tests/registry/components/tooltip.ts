@@ -1,4 +1,5 @@
 import type { ComponentSpec } from "../types";
+import { densityInteractionCaptures } from "../types";
 
 // Tooltip content teleports to the shared overlay root, and is shown on
 // hover/focus rather than click — full-page captures, section-scoped hover.
@@ -23,6 +24,10 @@ export const tooltip: ComponentSpec = {
           },
         },
       ],
+    },
+    {
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => section.getByRole("button", { name: "Save" }).hover()),
     },
   ],
 };

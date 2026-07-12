@@ -1,4 +1,5 @@
 import type { ComponentSpec } from "../types";
+import { densityInteractionCaptures } from "../types";
 
 // Dialog teleports its panel to the shared overlay root (outside the
 // themed section's own DOM subtree), so every capture here is full-page
@@ -33,6 +34,10 @@ export const dialog: ComponentSpec = {
           },
         },
       ],
+    },
+    {
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => section.getByRole("button", { name: "Open dialog" }).click()),
     },
   ],
 };

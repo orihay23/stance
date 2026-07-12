@@ -42,5 +42,25 @@ export const toast: ComponentSpec = {
         },
       ],
     },
+    {
+      // Unlike dark mode (which the comment above says this story can't
+      // demonstrate at all), density CAN be shown per-section here: this
+      // variant mounts one ToastRegion per density section instead of one
+      // shared region, so each independently reads its own density from its
+      // own mount point. useToast()'s store is a global singleton though
+      // (see useToast.ts), so the single click below fans out to all 4
+      // mounted regions at once — one full-page capture already shows every
+      // density simultaneously, there's nothing a second or third capture
+      // would add.
+      variantTitle: "Density",
+      captures: [
+        {
+          name: "default",
+          beforeCapture: async (scope) => {
+            await scope.getByRole("button", { name: "Show toast (appears in every density above)" }).click();
+          },
+        },
+      ],
+    },
   ],
 };

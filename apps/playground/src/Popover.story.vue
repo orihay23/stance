@@ -3,7 +3,11 @@ import { ref } from "vue";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
+
+const densityOpenByProfile = ref<Record<string, boolean>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, false])),
+);
 
 // Independent refs per section (not shared across a v-for loop) — sharing a
 // single ref across the Light/Dark sections was the exact bug that made
@@ -111,6 +115,30 @@ const darkTopOpen = ref(false);
               </PopoverContent>
             </Popover>
           </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="mb-3 text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Popover v-model="densityOpenByProfile[profile.name]">
+            <PopoverTrigger>Show info</PopoverTrigger>
+            <PopoverContent>
+              <p>Non-modal content.</p>
+            </PopoverContent>
+          </Popover>
         </section>
       </div>
     </Variant>

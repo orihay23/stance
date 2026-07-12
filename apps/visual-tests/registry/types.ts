@@ -80,6 +80,24 @@ export function densityCaptures(): CaptureSpec[] {
 }
 
 /**
+ * `densityCaptures()`'s counterpart for components that teleport their open
+ * content to the shared overlay root (Combobox/CommandPalette/Dialog/
+ * DropdownMenu/Popover/Sheet/Tooltip/DatePicker) — the screenshot itself has
+ * to be full-page (unscoped), same reasoning as `lightDarkCaptures()`'s
+ * teleporting siblings, so only the interaction that opens/reveals the
+ * content is scoped to the right density section via `interactionSelector`.
+ * `open` runs against that section's Locator, matching `beforeCapture`'s own
+ * contract (see CaptureSpec) since `interactionSelector` is always set here.
+ */
+export function densityInteractionCaptures(open: (section: Locator) => Promise<void>): CaptureSpec[] {
+  return allDensityProfiles.map((profile) => ({
+    name: profile.name,
+    interactionSelector: `[data-theme-density="${profile.name}"]`,
+    beforeCapture: (scope) => open(scope as Locator),
+  }));
+}
+
+/**
  * The common shape shared by most primitives: a "Light + Dark" variant (the
  * two standard section captures) and, for anything with responsive/collapse
  * behavior, a "Narrow container" variant (one capture, scoped to its single

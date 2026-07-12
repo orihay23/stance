@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { Button, CommandPalette, CommandPaletteItem } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
 
 const COMMANDS = [
   "New File",
@@ -26,6 +26,12 @@ const lightLastCommand = ref("");
 const darkOpen = ref(false);
 const darkQuery = ref("");
 const darkOptions = computed(() => filterCommands(darkQuery.value));
+
+const densityOpenByProfile = ref<Record<string, boolean>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, false])),
+);
+const densityQuery = ref("");
+const densityOptions = computed(() => filterCommands(densityQuery.value));
 const darkLastCommand = ref("");
 </script>
 
@@ -91,6 +97,35 @@ const darkLastCommand = ref("");
             </CommandPaletteItem>
           </CommandPalette>
           <p class="text-sm opacity-70">Last command: {{ darkLastCommand || "(none)" }}</p>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Button size="sm" @click="densityOpenByProfile[profile.name] = true">Open command palette</Button>
+          <CommandPalette
+            v-model="densityOpenByProfile[profile.name]"
+            v-model:input-value="densityQuery"
+            label="Command palette"
+            placeholder="Type a command…"
+          >
+            <CommandPaletteItem v-for="command in densityOptions" :key="command" :label="command">
+              {{ command }}
+            </CommandPaletteItem>
+          </CommandPalette>
         </section>
       </div>
     </Variant>
