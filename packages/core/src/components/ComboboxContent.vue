@@ -90,6 +90,8 @@ const contentClass = computed(() => cn("stance-combobox__content", props.class))
       :class="[contentClass, { dark: themeContext.dark }]"
       :style="contentStyle"
       :data-theme="themeContext.theme ?? undefined"
+      :data-theme-palette="themeContext.palette ?? undefined"
+      :data-theme-density="themeContext.density ?? undefined"
     >
       <p v-if="error" class="stance-combobox__status stance-combobox__status--error" role="alert">
         <slot name="error" :message="error">{{ error }}</slot>

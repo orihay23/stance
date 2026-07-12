@@ -40,6 +40,8 @@ const rootClass = computed(() => cn("stance-toast-region", props.class));
       aria-label="Notifications"
       :class="[rootClass, { dark: themeContext.dark }]"
       :data-theme="themeContext.theme ?? undefined"
+      :data-theme-palette="themeContext.palette ?? undefined"
+      :data-theme-density="themeContext.density ?? undefined"
     >
       <Toast v-for="t in toasts" :key="t.id" :toast="t" @dismiss="dismiss(t.id)" />
     </div>

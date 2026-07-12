@@ -185,6 +185,8 @@ const panelClass = computed(() => cn("stance-command-palette__panel", props.clas
       v-if="open"
       class="stance-command-palette__backdrop"
       :data-theme="themeContext.theme ?? undefined"
+      :data-theme-palette="themeContext.palette ?? undefined"
+      :data-theme-density="themeContext.density ?? undefined"
       :class="{ dark: themeContext.dark }"
     >
       <div ref="panelRef" :class="panelClass" role="dialog" aria-modal="true" :aria-label="label" tabindex="-1">

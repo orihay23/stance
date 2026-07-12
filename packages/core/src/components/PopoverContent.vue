@@ -71,6 +71,8 @@ const contentClass = computed(() => cn("stance-popover__content", props.class));
       :class="[contentClass, { dark: themeContext.dark }]"
       :style="floatingStyles"
       :data-theme="themeContext.theme ?? undefined"
+      :data-theme-palette="themeContext.palette ?? undefined"
+      :data-theme-density="themeContext.density ?? undefined"
       :role="modal ? 'dialog' : undefined"
       :aria-modal="modal || undefined"
       tabindex="-1"
