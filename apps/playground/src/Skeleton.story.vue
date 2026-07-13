@@ -2,7 +2,7 @@
 import { Skeleton } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
 </script>
 
 <template>
@@ -48,6 +48,31 @@ const { storyTheme } = useStoryTheme();
               <Skeleton class="h-32 w-full" />
               <Skeleton class="h-4 w-3/4" />
               <Skeleton class="h-3 w-1/2" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <div class="flex items-center gap-3">
+            <Skeleton class="h-10 w-10 rounded-full" />
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-40" />
+              <Skeleton class="h-3 w-28" />
             </div>
           </div>
         </section>

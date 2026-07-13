@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const numberfield: ComponentSpec = {
   component: "NumberField",
@@ -11,5 +11,6 @@ export const numberfield: ComponentSpec = {
       captures: [{ name: "default", selector: "[data-theme]" }],
     },
     { variantTitle: "Invalid / error state", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

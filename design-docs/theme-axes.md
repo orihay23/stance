@@ -378,3 +378,47 @@ doc; D2 onward is comparatively mechanical once D1's shape is approved.
   CLAUDE.md conventions update recording the new `data-theme-palette`/
   `data-theme-density` attributes and `--stance-{category}-{token}` control
   additions.
+
+## D3 rollout status: complete (35/35)
+
+D3's "Density" variant (curated matrix, §4) now covers all 35 shipped
+components. The first pass shipped 26 — every component that renders
+inline. The remaining 9 — Combobox, CommandPalette, Dialog, DropdownMenu,
+Popover, Sheet, Toast, Tooltip, DatePicker — all teleport their open
+content to the shared overlay root (`getOverlayRoot()`), outside the DOM
+subtree of whatever section triggered them, which surfaced a real gap
+rather than a wiring gap:
+
+`useOverlayThemeContext.ts`'s `detectThemeContext()` (in
+`packages/core/src/utils/theme-context.ts`) is the mechanism that lets
+teleported content inherit ambient theming — it walks up from the
+triggering element via `.closest()`. It originally only checked for the
+legacy `data-theme`/`.dark`, with no equivalent path for the new
+`data-theme-palette`/`data-theme-density` attributes. A teleported panel
+given only the new attributes on its trigger's ancestry (no legacy
+`data-theme`) would have opened with **undefined color custom
+properties** — `var(--stance-color-*)` has no fallback (§1 of this doc:
+"raw color tokens don't have inline fallback"), so the panel would render
+with broken/invisible coloring, not just a stale theme.
+
+Fixed by extending `ThemeContext`/`detectThemeContext()` to detect
+`data-theme-palette`/`data-theme-density` independently (each may sit at
+a different ancestor level — see §2's two-attribute rationale), keeping
+`.dark` resolution tied to whichever color-carrying ancestor (legacy
+`data-theme`, else `data-theme-palette`) is present, since every existing
+usage co-locates them on one element. The 9 components' templates were
+updated to bind the two new attributes alongside their existing
+`:data-theme`/`.dark` bindings — purely additive, since the new bindings
+resolve to `undefined` (and Vue omits the attribute) until a
+`data-theme-density` ancestor actually exists, so every pre-existing
+single-axis capture is unaffected.
+
+Toast's shared-region-per-app constraint (see `apps/playground/src/
+Toast.story.vue`'s own comment: `ToastRegion` themes from wherever it's
+*mounted*, not from whichever section triggered a given toast) meant its
+Density variant needed a different shape than the other 8: one
+`ToastRegion` per density section (each independently reading its own
+`data-theme-density` from its own mount point) rather than one shared
+region — `useToast()`'s module-level store fans a single `show()` call out
+to all of them at once, so one capture already shows all four densities
+side by side.

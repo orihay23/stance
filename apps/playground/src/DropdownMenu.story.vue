@@ -10,7 +10,7 @@ import {
 } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const lightOpen = ref(false);
 const darkOpen = ref(false);
@@ -19,6 +19,10 @@ const lastAction = ref("");
 const lightContextOpen = ref(false);
 const darkContextOpen = ref(false);
 const lastContextAction = ref("");
+
+const densityOpenByProfile = ref<Record<string, boolean>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, false])),
+);
 </script>
 
 <template>
@@ -151,6 +155,33 @@ const lastContextAction = ref("");
           </DropdownMenu>
 
           <p class="text-sm opacity-70">Last action: {{ lastContextAction || "(none)" }}</p>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="mb-3 text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <DropdownMenu v-model="densityOpenByProfile[profile.name]">
+            <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem>Duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </section>
       </div>
     </Variant>

@@ -3,7 +3,11 @@ import { ref } from "vue";
 import { Button, Sheet } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
+
+const densityOpenByProfile = ref<Record<string, boolean>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, false])),
+);
 
 const lightRightOpen = ref(false);
 const lightLeftOpen = ref(false);
@@ -95,6 +99,37 @@ const darkBottomOpen = ref(false);
           <Sheet v-model="darkBottomOpen" side="bottom" title="Quick actions">
             <p class="mb-4">Sheet body content goes here.</p>
             <Button @click="darkBottomOpen = false">Close</Button>
+          </Sheet>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Button size="sm" @click="densityOpenByProfile[profile.name] = true">Open right</Button>
+          <Sheet
+            v-model="densityOpenByProfile[profile.name]"
+            side="right"
+            title="Filters"
+            description="Narrow down the results below."
+          >
+            <p class="mb-4">Sheet body content goes here.</p>
+            <div class="flex justify-end gap-2">
+              <Button variant="secondary" @click="densityOpenByProfile[profile.name] = false">Cancel</Button>
+              <Button @click="densityOpenByProfile[profile.name] = false">Apply</Button>
+            </div>
           </Sheet>
         </section>
       </div>

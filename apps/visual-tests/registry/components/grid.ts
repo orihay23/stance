@@ -1,4 +1,5 @@
 import type { ComponentSpec } from "../types";
+import { densityCaptures } from "../types";
 
 // Grid's story never grew a dark-mode section (a gap in the original
 // story, not something to fix here) — every variant only demonstrates the
@@ -22,5 +23,6 @@ export const grid: ComponentSpec = {
       variantTitle: "Gap scale",
       captures: [{ name: "default", selector: "[data-theme]" }],
     },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

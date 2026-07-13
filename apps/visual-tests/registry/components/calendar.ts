@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const calendar: ComponentSpec = {
   component: "Calendar",
@@ -8,5 +8,6 @@ export const calendar: ComponentSpec = {
     { variantTitle: "Range mode", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Min/max constraints", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Narrow container (responsive check)", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

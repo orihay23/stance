@@ -3,7 +3,8 @@ import { ref } from "vue";
 import { Collapsible } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
+const densityOpenByProfile = ref<Record<string, boolean>>(Object.fromEntries(densityProfiles.map((p) => [p.name, true])));
 
 const open = ref(true);
 const openDark = ref(true);
@@ -45,6 +46,28 @@ const disabledOpen = ref(false);
           <Collapsible v-model="openDark">
             <template #trigger>What's included in the Pro plan?</template>
             Unlimited projects, priority support, and advanced analytics — billed monthly or annually.
+          </Collapsible>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Collapsible v-model="densityOpenByProfile[profile.name]">
+            <template #trigger>What's included?</template>
+            Unlimited projects and priority support.
           </Collapsible>
         </section>
       </div>

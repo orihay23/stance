@@ -145,6 +145,8 @@ const contentClass = computed(() => cn("stance-tooltip__content", props.class));
       :class="[contentClass, { dark: themeContext.dark }]"
       :style="floatingStyles"
       :data-theme="themeContext.theme ?? undefined"
+      :data-theme-palette="themeContext.palette ?? undefined"
+      :data-theme-density="themeContext.density ?? undefined"
       @mouseenter="cancelHide"
       @mouseleave="hide"
     >

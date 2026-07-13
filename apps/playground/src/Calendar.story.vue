@@ -3,7 +3,9 @@ import { ref } from "vue";
 import { Calendar, type CalendarRangeValue } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
+const densityDateByProfile = ref<Record<string, Date | undefined>>(Object.fromEntries(densityProfiles.map((p) => [p.name, undefined])));
+const densityFocusedByProfile = ref<Record<string, Date>>(Object.fromEntries(densityProfiles.map((p) => [p.name, new Date()])));
 
 const singleDate = ref<Date | undefined>(undefined);
 const singleFocused = ref(new Date());
@@ -70,6 +72,25 @@ const narrowFocused = ref(new Date());
       <div class="space-y-4 p-6" :data-theme="storyTheme" :style="{ color: 'var(--stance-color-foreground)' }">
         <p class="text-sm opacity-70">5th–25th of this month only</p>
         <Calendar v-model="minMaxDate" v-model:focused-date="minMaxFocused" :min="min" :max="max" />
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Calendar v-model="densityDateByProfile[profile.name]" v-model:focused-date="densityFocusedByProfile[profile.name]" />
+        </section>
       </div>
     </Variant>
 

@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { Card, type CardVariant } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const variants: CardVariant[] = ["elevated", "outlined", "flat"];
 const clickCount = ref(0);
@@ -123,6 +123,30 @@ const clickCount = ref(0);
             <span class="text-sm opacity-70">Footer</span>
           </template>
         </Card>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Card>
+            <template #header="{ headingTag }">
+              <component :is="headingTag" class="text-base font-semibold">Invoice #1042</component>
+            </template>
+            $1,240.00 outstanding.
+          </Card>
+        </section>
       </div>
     </Variant>
 

@@ -266,6 +266,8 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
         :aria-label="`Choose date, ${monthLabel}`"
         :class="['stance-date-picker__dialog', { dark: themeContext.dark }]"
         :data-theme="themeContext.theme ?? undefined"
+        :data-theme-palette="themeContext.palette ?? undefined"
+        :data-theme-density="themeContext.density ?? undefined"
         :style="floatingStyles"
         tabindex="-1"
       >

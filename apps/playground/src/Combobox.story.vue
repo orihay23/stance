@@ -3,7 +3,7 @@ import { computed, onUnmounted, ref, watch } from "vue";
 import { Combobox, ComboboxContent, ComboboxInput, ComboboxOption } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme } = useStoryTheme();
+const { storyTheme, densityProfiles } = useStoryTheme();
 
 const COUNTRIES = [
   "Argentina",
@@ -82,6 +82,16 @@ watch(asyncQuery, (query) => {
   }, 600);
 });
 onUnmounted(() => clearTimeout(asyncTimer));
+
+const densitySelectedByProfile = ref<Record<string, string | undefined>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, undefined])),
+);
+const densityQueryByProfile = ref<Record<string, string>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, ""])),
+);
+function densityOptionsFor(name: string) {
+  return filterCountries(densityQueryByProfile.value[name] ?? "");
+}
 </script>
 
 <template>
@@ -130,6 +140,33 @@ onUnmounted(() => clearTimeout(asyncTimer));
             </ComboboxContent>
           </Combobox>
           <p class="text-sm opacity-70">Selected: {{ darkSelected || "(none)" }}</p>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-2 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <label :for="`combobox-density-${profile.name}`" class="text-sm font-medium">Country</label>
+          <Combobox v-model="densitySelectedByProfile[profile.name]" v-model:input-value="densityQueryByProfile[profile.name]">
+            <ComboboxInput :id="`combobox-density-${profile.name}`" placeholder="Search countries…" />
+            <ComboboxContent>
+              <ComboboxOption v-for="country in densityOptionsFor(profile.name)" :key="country" :value="country">
+                {{ country }}
+              </ComboboxOption>
+            </ComboboxContent>
+          </Combobox>
         </section>
       </div>
     </Variant>

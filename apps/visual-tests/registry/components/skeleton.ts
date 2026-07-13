@@ -1,3 +1,3 @@
 import { simpleComponent } from "../types";
 
-export const skeleton = simpleComponent("Skeleton");
+export const skeleton = simpleComponent("Skeleton", { density: true });

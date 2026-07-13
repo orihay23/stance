@@ -2,7 +2,7 @@
 import { Badge, type BadgeVariant } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const variants: BadgeVariant[] = ["neutral", "primary", "success", "warning", "destructive"];
 </script>
@@ -50,6 +50,27 @@ const variants: BadgeVariant[] = ["neutral", "primary", "success", "warning", "d
                 <Badge variant="success" label="Deployment succeeded">●</Badge>
               </span>
             </div>
+          </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <Badge v-for="variant in variants" :key="variant" :variant="variant">{{ variant }}</Badge>
           </div>
         </section>
       </div>

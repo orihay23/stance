@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import type { ComponentSpec } from "../types";
+import { densityInteractionCaptures } from "../types";
 
 // Sheet teleports its panel to the shared overlay root (outside the themed
 // section's own DOM subtree), so every capture here is full-page (no
@@ -56,6 +57,10 @@ export const sheet: ComponentSpec = {
           beforeCapture: openSide("Open right"),
         },
       ],
+    },
+    {
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => openSide("Open right")(section)),
     },
   ],
 };

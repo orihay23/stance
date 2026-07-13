@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const collapsible: ComponentSpec = {
   component: "Collapsible",
@@ -21,5 +21,6 @@ export const collapsible: ComponentSpec = {
       ],
     },
     { variantTitle: "Disabled", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

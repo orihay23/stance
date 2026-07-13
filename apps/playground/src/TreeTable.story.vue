@@ -3,7 +3,10 @@ import { ref } from "vue";
 import { TreeTable, type TreeTableColumn, type TreeTableSortState } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
+const densityExpandedByProfile = ref<Record<string, Array<string | number>>>(
+  Object.fromEntries(densityProfiles.map((p) => [p.name, ["packages"]])),
+);
 
 interface FileNode {
   /** Full path — used as `row-key`. Plain `name` isn't unique on its own: this tree has two "package.json" files at different levels. */
@@ -162,6 +165,30 @@ const narrowExpanded = ref<Array<string | number>>(["packages"]);
           v-model:global-filter="globalFilter"
           v-model:column-filters="columnFilters"
         />
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <!-- Single column, not the usual 4-across grid — TreeTable's own
+           container-query card-collapse (see the "Narrow container"
+           variant below) would trigger for every density in a narrow
+           column, hiding the density differences this variant exists to
+           show. -->
+      <div class="space-y-6 p-6" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <TreeTable :columns="columns" :rows="makeTree()" row-key="path" v-model:expanded="densityExpandedByProfile[profile.name]" />
+        </section>
       </div>
     </Variant>
 

@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const splitter: ComponentSpec = {
   component: "Splitter",
@@ -8,5 +8,6 @@ export const splitter: ComponentSpec = {
     { variantTitle: "Vertical orientation", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "3+ panes", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Min/max constraints", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

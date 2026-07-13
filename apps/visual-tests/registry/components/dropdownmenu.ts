@@ -1,4 +1,5 @@
 import type { ComponentSpec } from "../types";
+import { densityInteractionCaptures } from "../types";
 
 // DropdownMenuContent teleports to the shared overlay root — full-page
 // captures, section-scoped clicks (both sections' trigger is "Actions").
@@ -46,6 +47,10 @@ export const dropdownmenu: ComponentSpec = {
           },
         },
       ],
+    },
+    {
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => section.getByRole("button", { name: "Actions" }).click()),
     },
   ],
 };

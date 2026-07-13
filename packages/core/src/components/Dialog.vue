@@ -96,6 +96,8 @@ const panelClass = computed(() => cn("stance-dialog__panel", props.class));
       v-if="isOpen"
       class="stance-dialog__backdrop"
       :data-theme="themeContext.theme ?? undefined"
+      :data-theme-palette="themeContext.palette ?? undefined"
+      :data-theme-density="themeContext.density ?? undefined"
       :class="{ dark: themeContext.dark }"
     >
       <div

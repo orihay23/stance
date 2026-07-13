@@ -2,7 +2,7 @@
 import { Breadcrumb, type BreadcrumbItem } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 const items: BreadcrumbItem[] = [
   { label: "Home", href: "/" },
@@ -44,6 +44,25 @@ const items: BreadcrumbItem[] = [
             <h3 class="mb-2 text-sm font-medium opacity-70">Two items, no collapsing needed</h3>
             <Breadcrumb :items="[{ label: 'Home', href: '/' }, { label: 'Settings' }]" />
           </div>
+        </section>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-2" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Breadcrumb :items="items" />
         </section>
       </div>
     </Variant>

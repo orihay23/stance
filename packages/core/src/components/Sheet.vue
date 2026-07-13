@@ -101,6 +101,8 @@ const panelClass = computed(() => cn("stance-sheet__panel", props.class));
         v-if="isOpen"
         class="stance-sheet__backdrop"
         :data-theme="themeContext.theme ?? undefined"
+        :data-theme-palette="themeContext.palette ?? undefined"
+        :data-theme-density="themeContext.density ?? undefined"
         :class="{ dark: themeContext.dark }"
       >
         <Transition name="stance-sheet-panel">

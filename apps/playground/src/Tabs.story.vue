@@ -3,7 +3,8 @@ import { ref } from "vue";
 import { Tab, TabList, TabPanel, Tabs } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
+const densityActiveByProfile = ref<Record<string, string>>(Object.fromEntries(densityProfiles.map((p) => [p.name, "account"])));
 
 const lightActive = ref("account");
 const darkActive = ref("account");
@@ -77,6 +78,32 @@ const narrowActive = ref("account");
           <TabPanel value="billing">Billing history and payment methods.</TabPanel>
           <TabPanel value="settings">General settings.</TabPanel>
         </Tabs>
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <Tabs v-model="densityActiveByProfile[profile.name]">
+            <TabList>
+              <Tab value="account">Account</Tab>
+              <Tab value="billing">Billing</Tab>
+            </TabList>
+            <TabPanel value="account">Account details.</TabPanel>
+            <TabPanel value="billing">Billing history.</TabPanel>
+          </Tabs>
+        </section>
       </div>
     </Variant>
 

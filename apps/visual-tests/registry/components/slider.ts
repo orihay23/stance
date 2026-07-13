@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const slider: ComponentSpec = {
   component: "Slider",
@@ -12,5 +12,6 @@ export const slider: ComponentSpec = {
     },
     { variantTitle: "Min/max/step", captures: [{ name: "default", selector: "[data-theme]" }] },
     { variantTitle: "Disabled", captures: [{ name: "default", selector: "[data-theme]" }] },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

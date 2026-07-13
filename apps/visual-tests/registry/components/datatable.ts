@@ -1,5 +1,5 @@
 import type { ComponentSpec } from "../types";
-import { lightDarkCaptures } from "../types";
+import { densityCaptures, lightDarkCaptures } from "../types";
 
 export const datatable: ComponentSpec = {
   component: "DataTable",
@@ -20,5 +20,6 @@ export const datatable: ComponentSpec = {
       variantTitle: "Filtering (Filters disclosure past 4 filterable columns)",
       captures: [{ name: "default", selector: "[data-theme]" }],
     },
+    { variantTitle: "Density", captures: densityCaptures() },
   ],
 };

@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { DataTable, type DataTableColumn, type DataTableSortState } from "@stance/core";
 import { useStoryTheme } from "./useStoryTheme";
 
-const { storyTheme, themes } = useStoryTheme();
+const { storyTheme, themes, densityProfiles } = useStoryTheme();
 
 interface Person {
   name: string;
@@ -320,6 +320,30 @@ const manyFilterByColumn = ref<Record<string, string>>({});
           :rows="rows"
           row-key="email"
         />
+      </div>
+    </Variant>
+
+    <Variant title="Density">
+      <!-- Single column, not the usual 4-across grid — DataTable's own
+           container-query card-collapse kicks in below ~450px (see the
+           "Responsive" variant above), so a narrow column here would show
+           the collapsed-card view for every density instead of the table
+           itself, which is what this variant is actually meant to compare. -->
+      <div class="space-y-6 p-6" data-theme-palette="neutral">
+        <section
+          v-for="profile in densityProfiles"
+          :key="profile.name"
+          :data-theme-density="profile.name"
+          class="space-y-3 rounded-lg border p-4"
+          :style="{
+            background: 'var(--stance-color-background)',
+            color: 'var(--stance-color-foreground)',
+            borderColor: 'var(--stance-color-border)',
+          }"
+        >
+          <h2 class="text-sm font-semibold capitalize">{{ profile.name }}</h2>
+          <DataTable :columns="columns" :rows="rows.slice(0, 2)" row-key="email" />
+        </section>
       </div>
     </Variant>
 

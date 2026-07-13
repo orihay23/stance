@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import type { ComponentSpec } from "../types";
+import { densityInteractionCaptures } from "../types";
 
 // CommandPalette teleports its panel to the shared overlay root (outside
 // the themed section's own DOM subtree), same as Dialog — every capture
@@ -39,6 +40,10 @@ export const commandpalette: ComponentSpec = {
           beforeCapture: openAndClearHover,
         },
       ],
+    },
+    {
+      variantTitle: "Density",
+      captures: densityInteractionCaptures((section) => openAndClearHover(section)),
     },
   ],
 };
