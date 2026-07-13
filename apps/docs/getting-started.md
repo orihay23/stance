@@ -33,12 +33,12 @@ Tailwind is a peer dependency, not a bundled dependency, on purpose: stance's
 own components never emit Tailwind utility classes internally (see
 [Accessibility](/accessibility) and [Theming](/theming) for why), and every
 component accepts a `class` prop that merges with its internal classes via
-`tailwind-merge`, so you can pass Tailwind utilities to override styling.
-**Read [Theming § Overriding a component's styling](/theming#overriding-a-component-s-styling)
-before relying on this** — under Tailwind v4's default setup there's a
-known, currently-unresolved gap where a Tailwind utility class doesn't
-reliably win over a component's internal default; a plain CSS rule or
-inline style in your own stylesheet does work today.
+`tailwind-merge`, so you can pass Tailwind utilities to override styling — a
+plain utility class on your side wins over the internal default, with no
+`!important` or specificity fight, **as long as you include the one-line
+cascade-layer setup below**. See
+[Theming § Overriding a component's styling](/theming#overriding-a-component-s-styling)
+for why that line is necessary under Tailwind v4.
 
 ## Tailwind setup
 
@@ -46,9 +46,22 @@ stance targets **Tailwind CSS v4**, which is configured entirely in CSS. In
 your project's main stylesheet:
 
 ```css
+@layer theme, base, stance, components, utilities;
 @import "tailwindcss";
 @import "@stance/core/style.css";
 ```
+
+The `@layer` line matters, not just the two imports: `@stance/core/style.css`
+ships its CSS pre-wrapped in `@layer stance`, and that bare statement is what
+tells the browser where `stance` sits relative to Tailwind's own layers —
+*after* `base` (Tailwind's preflight reset, which zeroes out things like
+borders, shouldn't beat an actual stance default) but *before* `utilities`
+(so a Tailwind utility class still overrides a stance default). Get this
+order wrong — e.g. put `stance` before `base` — and you'll see real visual
+breakage (this exact mistake removed Accordion's divider borders during
+development), not just a silent no-op like skipping the line entirely (see
+[Theming](/theming#overriding-a-component-s-styling) for the full
+cascade-layers explanation).
 
 `@stance/core/style.css` is the bundled structural CSS for every component —
 layout, spacing, focus rings, all of it written against `--stance-*` CSS

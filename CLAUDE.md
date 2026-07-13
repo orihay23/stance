@@ -12,17 +12,28 @@ Tailwind without specificity fights.
 - **No `!important` anywhere.** Base styles must have low, predictable specificity
   so a single Tailwind utility class on the consumer's side wins by default.
   Prefer `:where()` wrapping for structural/default styles to keep specificity at 0.
-  **Known gap, not yet resolved**: under Tailwind v4's default setup, this doesn't
-  currently work end-to-end — Tailwind wraps its utilities in `@layer utilities`,
-  and per the CSS cascade-layers spec an unlayered rule (stance's `:where()` CSS)
-  always beats a layered one regardless of specificity, so a Tailwind utility
-  class doesn't currently override a component default. `:where()` wrapping
-  itself is still the correct, non-negotiable authoring rule (it's a prerequisite
-  for the fix, and a plain non-Tailwind CSS override already works); the
-  cross-cutting fix (shipping stance's CSS in a named layer + a one-line consumer
-  setup) is tracked in `design-docs/theme-axes.md` but not yet implemented. See
-  `apps/docs/theming.md`'s "Overriding a component's styling" section for the
-  full explanation consumers see.
+  Under Tailwind v4, `:where()` alone isn't sufficient on its own: Tailwind wraps
+  its utilities in `@layer utilities`, and per the CSS cascade-layers spec an
+  unlayered rule always beats a layered one regardless of specificity — so
+  `@stance/core`'s build wraps its own compiled CSS in `@layer stance`
+  (`packages/core/vite.config.ts`'s `wrapStylesheetInLayer` plugin) to fix the
+  *shape* of the problem, but layer *priority* is order-of-first-appearance
+  across the whole page, which only the consumer can pin: they must declare
+  `@layer theme, base, stance, components, utilities;` (or their own Tailwind
+  layer names, with `stance` in the equivalent middle position — see below)
+  before importing Tailwind and stance's CSS, once, in their own global
+  stylesheet. **`stance` must sit after `base`, not before it** — `base` is
+  where Tailwind's preflight reset lives (it zeroes out things like borders),
+  and putting `stance` first was tried and reverted after it broke real
+  components (Accordion's divider borders silently disappeared, since the
+  reset then outranked stance's own styling) — this is a two-sided mistake,
+  not just an ordering nicety: `stance` before `base` breaks defaults,
+  `stance` after `utilities` (or omitting the `@layer` line) breaks
+  overrides. `apps/docs/theming.md`'s "Overriding a component's styling"
+  section is what consumers see; `apps/playground/src/style.css` demonstrates
+  the setup this repo's own dev playground uses. Never remove the
+  `wrapStylesheetInLayer` plugin or the `:where()` convention without reading
+  that doc section first — they're two halves of the same fix.
 - **Theming via CSS custom properties**, split into two independently-selectable
   axes — **palette** (color, `data-theme-palette="..."`) and **density**
   (radius/spacing/typography/shadow-shape/control-geometry personality,

@@ -261,39 +261,60 @@ on each component's `class` prop, the intent is that a single Tailwind
 utility class you pass always wins over the internal default, with no
 `!important` and no specificity fight on your end.
 
-**As of this writing, that intent isn't fully realized for Tailwind v4's
-default setup**, and it's worth being upfront about rather than repeating
-the aspirational claim as if it were verified: Tailwind v4 compiles its own
-utility classes into a named CSS cascade layer (`@layer utilities`), while
-stance's `:where()` rules are plain, unlayered CSS. Per the CSS
-[cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer)
+**This requires one line of setup in your own global CSS**, and it's worth
+explaining why rather than presenting it as a no-configuration guarantee:
+Tailwind v4 compiles its own utility classes into a named CSS cascade layer
+(`@layer utilities`), and its preflight reset into `@layer base`. Per the
+CSS [cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer)
 specification, **an unlayered rule always wins over a layered one,
-regardless of specificity** — so a Tailwind utility class, even though it's
-a real (non-zero) specificity selector against stance's zero-specificity
-`:where()`, currently loses to it. This was verified directly: adding `p-8`
-to a stance `<Button>`'s `class` prop does not currently change its
-padding.
+regardless of specificity** — so if stance shipped its `:where()` CSS
+unlayered (as it did before this was fixed), a Tailwind utility class would
+always lose to it despite having real, non-zero specificity against
+stance's zero-specificity selectors. `@stance/core/style.css` now ships its
+own CSS pre-wrapped in `@layer stance`, which fixes the *shape* of the
+problem, but cascade-layer **priority is order-of-first-appearance across
+the whole page**, not something a library can pin from inside its own
+stylesheet alone — so you need to declare where `stance` sits relative to
+Tailwind's own layers, once, in your global CSS, before either import:
 
-What this means in practice today:
+```css
+@layer theme, base, stance, components, utilities;
+@import "tailwindcss";
+@import "@stance/core/style.css";
+```
 
+`stance` has to sit in the *middle* of Tailwind's own layers, not at either
+end: *after* `base` — Tailwind's preflight reset lives there, zeroing out
+things like borders, and stance's real component styles need to win against
+that raw reset, not lose to it — but *before* `utilities`, so a Tailwind
+utility class still overrides a stance default. Get the order wrong in
+either direction and something breaks, differently:
+
+- **Skip the `@layer` line entirely** and you're back to the original bug —
+  `stance` stays unlayered, so it beats `utilities` regardless, and a
+  Tailwind utility class does nothing (verified: `p-8` on a stance
+  `<Button>`'s `class` prop leaves its padding unchanged).
+- **Put `stance` before `base`** (e.g. `@layer stance, base, ...`) and you
+  get a different, worse bug: Tailwind's preflight reset now outranks
+  stance's own styling, silently stripping things like Accordion's divider
+  borders — a real regression hit during development, not a hypothetical.
+  This is the mistake to actively avoid, not just an alternative ordering.
+- **The order above** (`theme, base, stance, components, utilities`) is the
+  one that's actually correct, and the one to copy.
+
+What this means in practice, once the setup is correct:
+
+- A Tailwind utility class passed via a component's `class` prop reliably
+  overrides a conflicting internal default — the design's original intent,
+  now actually realized.
 - A plain CSS rule you write yourself (not a Tailwind utility — e.g. a class
-  in your own stylesheet, or an inline `style` attribute) **does** override
-  a component default, since your own unlayered CSS and stance's unlayered
-  CSS are compared by ordinary specificity/order, same as always. Inline
-  styles in particular always win, layers notwithstanding.
-- A Tailwind utility class passed via a component's `class` prop currently
-  does **not** reliably override a conflicting internal default, because of
-  the unlayered-vs-layered gap above — this is a real, tracked gap
-  (`design-docs/theme-axes.md`'s Phase 14 notes), not an intentional
-  design choice.
-- The fix under consideration — not yet implemented — is for stance to ship
-  its own CSS pre-wrapped in a named layer (e.g. `@layer stance`), paired
-  with consumers declaring their desired layer order once
-  (`@layer stance, base, components, utilities;` before their Tailwind
-  import), which would restore "utilities win" without any `!important` or
-  specificity workaround. Until that ships, if you need to override a
-  component default today, a plain (non-utility) CSS rule or an inline
-  style are the reliable options.
+  in your own stylesheet, or an inline `style` attribute) **also** overrides
+  a component default regardless of the `@layer` setup, since an unlayered
+  consumer rule still beats stance's now-layered CSS the same way it always
+  would. Inline styles in particular always win.
+- If you're on Tailwind v3 (no cascade layers at all) or don't use Tailwind,
+  none of this applies — `:where()`'s zero specificity was already enough
+  on its own, and still is.
 
 This cuts the other way too: if a component's *default* rendering fails an
 accessibility check, that's a bug in the library, not something you're
