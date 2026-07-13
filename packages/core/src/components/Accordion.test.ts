@@ -13,24 +13,15 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Accordion, { type AccordionProps } from "./Accordion.vue";
 import AccordionItem from "./AccordionItem.vue";
 import AccordionHeader from "./AccordionHeader.vue";
 import AccordionContent from "./AccordionContent.vue";
 import accordionHeaderSource from "./AccordionHeader.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 function renderHarness(accordionProps: Partial<AccordionProps> = {}) {
   const Harness = defineComponent({
@@ -177,17 +168,35 @@ describe("Accordion", () => {
     expect(styleBlock).not.toMatch(/^\.stance-accordion/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = renderHarness({ modelValue: "one" });
       const root = container.querySelector(".stance-accordion")!;
-      root.setAttribute("data-theme", theme.name);
+      root.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") root.classList.add("dark");
 
       const results = await runAxe(root);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = renderHarness({ modelValue: "one" });
+    const root = container.querySelector(".stance-accordion")!;
+    root.setAttribute("data-theme-palette", "neutral");
+    root.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") root.classList.add("dark");
+
+    const results = await runAxe(root);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });

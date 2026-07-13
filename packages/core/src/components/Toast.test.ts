@@ -14,22 +14,13 @@ import { defineComponent, h, nextTick } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import ToastRegion from "./ToastRegion.vue";
 import toastSource from "./Toast.vue?raw";
 import { useToast } from "../composables/useToast";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 function renderRegion() {
   const Harness = defineComponent({
@@ -186,16 +177,16 @@ describe("Toast", () => {
     expect(styleBlock).not.toMatch(/^\.stance-toast/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { show } = useToast();
       const { container } = renderRegion();
       show({ title: "Saved", description: "Your changes were saved.", duration: null });
       await nextTick();
 
       const region = container.parentElement!.querySelector(".stance-toast-region")!;
-      region.setAttribute("data-theme", theme.name);
+      region.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") region.classList.add("dark");
 
       // axe-core's own internal async scheduling needs real timers.
@@ -204,5 +195,29 @@ describe("Toast", () => {
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { show } = useToast();
+    const { container } = renderRegion();
+    show({ title: "Saved", description: "Your changes were saved.", duration: null });
+    await nextTick();
+
+    const region = container.parentElement!.querySelector(".stance-toast-region")!;
+    region.setAttribute("data-theme-palette", "neutral");
+    region.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") region.classList.add("dark");
+
+    // axe-core's own internal async scheduling needs real timers.
+    vi.useRealTimers();
+    const results = await runAxe(region);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });

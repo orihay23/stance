@@ -422,3 +422,130 @@ Density variant needed a different shape than the other 8: one
 region — `useToast()`'s module-level store fans a single `show()` call out
 to all of them at once, so one capture already shows all four densities
 side by side.
+
+## D4 status: complete
+
+All ~37 component test files' `describe.each(themes)` axe blocks now read
+from `allPalettes` (renamed to `describe.each(palettes)`, `data-theme` →
+`data-theme-palette`), unchanged 4×2=8 combos per component — see §4's
+rationale for why the axe/visual matrix stays palette-only. Each file also
+gained one targeted cross-check per §4: neutral palette + compact density,
+both modes, aimed at catching a component that silently assumed color and
+density tokens always change together (none found). A shared
+`packages/core/tests/theme-test-utils.ts` holds the compilation helpers so
+this logic isn't duplicated 37 times.
+
+## D5 status: complete (docs only) — plus a discovered cascade-layers gap, fixed below
+
+`apps/docs/theming.md` is rewritten for the two-axis model: token table
+split by axis, `ColorPalette`/`DensityProfile` shapes, `compilePalette`/
+`compileDensity` API, the shadow neutral-color authoring rule from §5.2 (now
+a written constraint, not just an implicit fact about 4 data points), and a
+migration guide from `data-theme` (the §3 decomposition table). CLAUDE.md's
+Theme architecture and Conventions sections are updated to match — density's
+new `ThemeControlTokens` category, the two selector attributes, and the
+8-combination Definition-of-Done line clarified as palette×mode (density is
+curated per §4, not part of that count).
+
+**A real, unrelated bug was found and documented rather than fixed while
+writing the "Overriding a component's styling" section**: CLAUDE.md's
+core claim ("a single Tailwind utility class on the consumer's side wins by
+default... via `:where()` wrapping") does not currently hold under Tailwind
+v4's default setup. Tailwind v4 compiles its own utilities into
+`@layer utilities`; stance's `:where()` component CSS is plain, unlayered
+CSS. Per the CSS cascade-layers spec, an unlayered rule always wins over a
+layered one regardless of specificity — so a Tailwind utility class
+currently loses to a stance default even though `:where()` keeps the
+latter at specificity zero. **Verified directly, not just theorized**:
+adding Tailwind's `p-8` to a stance `<Button>`'s `class` prop does not
+change its rendered padding.
+
+This affects every component, not just the one story (Toast's Density
+variant, see D3's status note above) that originally surfaced it — it's a
+general property of how stance's CSS and Tailwind v4's CSS currently
+compose, not specific to `position` or any other single property.
+
+A concrete fix was identified but deliberately not implemented in this
+pass, since it's a build-pipeline change to `packages/core` plus a
+consumer-facing setup requirement — a decision that needs explicit sign-off
+before shipping, not something to fold into a "docs" sub-phase:
+
+1. `packages/core`'s build wraps its compiled CSS output in a named layer
+   (`@layer stance { ... }`) instead of shipping it unlayered.
+2. Consumers add one line to their own global CSS, before their Tailwind
+   import, establishing `stance` as lower-priority than `utilities` in the
+   overall cascade-layer order, restoring "a Tailwind utility wins" without
+   `!important` or any specificity workaround. **This sketch undersold the
+   exact ordering** — see "Cascade-layers fix: complete" below for the
+   corrected 5-layer order and the real regression that naive ordering
+   caused.
+
+Both `apps/docs/theming.md` and `CLAUDE.md` document current behavior
+honestly (a plain non-Tailwind-utility CSS override, or an inline style,
+works today; a Tailwind utility class currently doesn't) rather than
+repeating the previously-unverified "always wins" claim. Flagged here as
+the next decision point once D1–D5 review lands.
+
+## Cascade-layers fix: complete
+
+The gap documented in D5 above is fixed. Two halves, both required:
+
+1. **Library side**: `packages/core/vite.config.ts` gained a
+   `wrapStylesheetInLayer("stance")` Rollup plugin, hooked into
+   `generateBundle` with `order: "post"` (Vite's own internal CSS-emission
+   plugin adds the stylesheet asset to the bundle in its own `generateBundle`
+   hook, which otherwise runs after any normal user plugin regardless of
+   array position — `order: "post"` is what actually guarantees this hook
+   sees the finished asset rather than running before it exists, confirmed
+   by first observing the hook fire against an empty bundle without it).
+   `@stance/core/style.css` now ships as one `@layer stance { ... }` block
+   instead of unlayered CSS.
+2. **Consumer side**: a bare `@layer theme, base, stance, components,
+   utilities;` statement, before importing Tailwind and stance's CSS.
+   Cascade-layer priority is order-of-first-appearance across the *whole
+   page*, not something a library can pin from inside its own stylesheet —
+   layering stance's CSS without this consumer-side declaration doesn't fix
+   anything by itself.
+
+**`stance`'s position in that list is load-bearing in both directions, not
+just "somewhere before utilities" — this was caught by the full
+visual-regression suite, not reasoned out in advance.** The first attempt
+declared `@layer stance, base, components, utilities;` (`stance` *first*,
+lowest priority overall) on the theory that lowest-priority is simply
+"before utilities." That passed the `p-8`-on-a-Button spot-check, but the
+full 502-test visual-regression run came back with 343 failures — Accordion
+had silently lost its divider borders, and diffing the screenshots showed
+why: Tailwind's `base` layer holds its preflight reset (which zeroes out
+borders among other things), and with `stance` ordered *before* `base`,
+that reset now outranked stance's own `border-bottom` declaration in
+`AccordionItem.vue`, something no isolated Button/padding check would have
+surfaced. The fix was reordering to `theme, base, stance, components,
+utilities` — `stance` *after* `base` (so stance's real styles beat the raw
+reset) but still *before* `utilities` (so a Tailwind utility class still
+overrides a stance default) — re-verified with the full suite afterward:
+502/502 passing, zero regressions. Recorded here as the reason every doc
+below gives this specific 5-layer order rather than a shorter, more
+"obvious"-looking one — copying a shortened version is very likely to
+reintroduce the Accordion-class of bug silently, since a narrow spot-check
+(like the `p-8` repro) won't catch it.
+
+`apps/playground/src/style.css` (this repo's own dev playground, a real
+consumer of `@stance/core`) was updated to the fixed setup, so Histoire's
+own screenshots demonstrate correct override behavior rather than just the
+library's internal test suite.
+
+**Verified end-to-end, not just at the CSS-text level**: a Playwright
+repro adds Tailwind's `p-8` utility class to a live `<Button>`'s `class`
+prop and reads back `getComputedStyle(...).paddingLeft`. Without the
+consumer-side `@layer` declaration, the padding is unchanged (the original
+bug). With the corrected declaration, padding becomes `32px` (`p-8`'s
+`2rem`), matching Tailwind's utility exactly — and a second repro confirms
+`AccordionItem`'s `border-bottom-width` is back to `1px`, not the `0px` the
+first (wrong-order) attempt produced.
+
+Updated to match: `apps/docs/theming.md`'s "Overriding a component's
+styling" section (now describes the fix and the required setup line
+instead of the gap), `getting-started.md`'s Tailwind setup section (the
+`@layer` line added to the copy-pasteable snippet), `accessibility.md`'s
+"What no `!important` means for you" section, and CLAUDE.md's "No
+`!important` anywhere" constraint.

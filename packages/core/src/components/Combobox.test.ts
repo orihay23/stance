@@ -25,8 +25,6 @@ import { defineComponent, h, nextTick, reactive, ref } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Combobox, { type ComboboxProps } from "./Combobox.vue";
 import ComboboxInput from "./ComboboxInput.vue";
 import ComboboxContent from "./ComboboxContent.vue";
@@ -35,18 +33,11 @@ import comboboxContentSource from "./ComboboxContent.vue?raw";
 import comboboxOptionSource from "./ComboboxOption.vue?raw";
 import comboboxInputSource from "./ComboboxInput.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 const FRUITS = ["Apple", "Banana", "Cherry"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 function renderHarness(comboboxProps: Partial<ComboboxProps> = {}) {
   const Harness = defineComponent({
@@ -459,9 +450,9 @@ describe("Combobox", () => {
     }
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (open)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       renderHarness();
       const input = screen.getByRole("combobox");
       input.focus();
@@ -469,13 +460,36 @@ describe("Combobox", () => {
     await nextTick();
 
       const listbox = screen.getByRole("listbox");
-      listbox.setAttribute("data-theme", theme.name);
+      listbox.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") listbox.classList.add("dark");
 
       const results = await runAxe(listbox.parentElement!);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    renderHarness();
+    const input = screen.getByRole("combobox");
+    input.focus();
+    await nextTick();
+    await nextTick();
+
+    const listbox = screen.getByRole("listbox");
+    listbox.setAttribute("data-theme-palette", "neutral");
+    listbox.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") listbox.classList.add("dark");
+
+    const results = await runAxe(listbox.parentElement!);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 
   // A single targeted check, not the full 3-theme matrix above — this is

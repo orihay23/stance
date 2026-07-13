@@ -19,11 +19,15 @@ the exact checklist every component is held to.
 
 Component CSS is written entirely with [`:where()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:where)-wrapped
 selectors, which keeps every internal rule at **specificity zero**. Combined
-with `tailwind-merge` deduping on each component's `class` prop, this means:
+with `tailwind-merge` deduping on each component's `class` prop:
 
 - A single Tailwind utility class you pass always wins over the internal
   default — no `!important`, no extra-specific selector, no fighting the
-  library.
+  library. **This requires one line of cascade-layer setup in your own
+  global CSS** (`@layer theme, base, stance, components, utilities;` before your
+  Tailwind import) — see [Theming § Overriding a component's styling](/theming#overriding-a-component-s-styling)
+  for why Tailwind v4's own layering makes that line necessary, not
+  optional polish.
 - **You inherit the responsibility that comes with that power.** If you
   override a focus-ring color, contrast-checked background, or
   `prefers-reduced-motion` behavior, the library can no longer guarantee the

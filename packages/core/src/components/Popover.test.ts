@@ -20,23 +20,14 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { allThemes, neutral } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Popover, { type PopoverProps } from "./Popover.vue";
 import PopoverTrigger from "./PopoverTrigger.vue";
 import PopoverContent from "./PopoverContent.vue";
 import popoverContentSource from "./PopoverContent.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 /** A realistic harness: PopoverTrigger + PopoverContent with two focusable buttons inside. */
 function renderHarness(popoverProps: Partial<PopoverProps> = {}) {
@@ -196,9 +187,9 @@ describe("Popover", () => {
     expect(styleBlock).not.toMatch(/^\.stance-popover/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (open, non-modal)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       renderHarness();
       await fireEvent.click(screen.getByRole("button", { name: "Open popover" }));
       await nextTick();
@@ -206,7 +197,7 @@ describe("Popover", () => {
       const contentEl = document.getElementById(
         screen.getByRole("button", { name: "Open popover" }).getAttribute("aria-controls")!,
       )!;
-      contentEl.setAttribute("data-theme", theme.name);
+      contentEl.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") contentEl.classList.add("dark");
 
       const results = await runAxe(contentEl.parentElement!);
@@ -215,8 +206,31 @@ describe("Popover", () => {
     });
   });
 
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    renderHarness();
+    await fireEvent.click(screen.getByRole("button", { name: "Open popover" }));
+    await nextTick();
+
+    const contentEl = document.getElementById(
+      screen.getByRole("button", { name: "Open popover" }).getAttribute("aria-controls")!,
+    )!;
+    contentEl.setAttribute("data-theme-palette", "neutral");
+    contentEl.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") contentEl.classList.add("dark");
+
+    const results = await runAxe(contentEl.parentElement!);
+    expect(results).toHaveNoViolations();
+    cleanup();
+  });
+
   it("no axe violations while closed (aria-controls not left dangling)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     const { container } = renderHarness();
     const results = await runAxe(container);
     expect(results).toHaveNoViolations();

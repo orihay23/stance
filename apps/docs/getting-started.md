@@ -31,9 +31,14 @@ project doesn't already have them:
 
 Tailwind is a peer dependency, not a bundled dependency, on purpose: stance's
 own components never emit Tailwind utility classes internally (see
-[Accessibility](/accessibility) and [Theming](/theming) for why), but your
-Tailwind setup is how you're expected to *override* their styling — a plain
-utility class on your side always wins, with no specificity fight.
+[Accessibility](/accessibility) and [Theming](/theming) for why), and every
+component accepts a `class` prop that merges with its internal classes via
+`tailwind-merge`, so you can pass Tailwind utilities to override styling — a
+plain utility class on your side wins over the internal default, with no
+`!important` or specificity fight, **as long as you include the one-line
+cascade-layer setup below**. See
+[Theming § Overriding a component's styling](/theming#overriding-a-component-s-styling)
+for why that line is necessary under Tailwind v4.
 
 ## Tailwind setup
 
@@ -41,9 +46,22 @@ stance targets **Tailwind CSS v4**, which is configured entirely in CSS. In
 your project's main stylesheet:
 
 ```css
+@layer theme, base, stance, components, utilities;
 @import "tailwindcss";
 @import "@stance/core/style.css";
 ```
+
+The `@layer` line matters, not just the two imports: `@stance/core/style.css`
+ships its CSS pre-wrapped in `@layer stance`, and that bare statement is what
+tells the browser where `stance` sits relative to Tailwind's own layers —
+*after* `base` (Tailwind's preflight reset, which zeroes out things like
+borders, shouldn't beat an actual stance default) but *before* `utilities`
+(so a Tailwind utility class still overrides a stance default). Get this
+order wrong — e.g. put `stance` before `base` — and you'll see real visual
+breakage (this exact mistake removed Accordion's divider borders during
+development), not just a silent no-op like skipping the line entirely (see
+[Theming](/theming#overriding-a-component-s-styling) for the full
+cascade-layers explanation).
 
 `@stance/core/style.css` is the bundled structural CSS for every component —
 layout, spacing, focus rings, all of it written against `--stance-*` CSS
@@ -53,21 +71,27 @@ which you apply separately.
 
 ## Theme setup
 
-A theme is a plain TypeScript object (see [Theming](/theming) for the full
-shape) compiled to a CSS custom property stylesheet at runtime via
-`compileTheme()`. Applying one takes two steps: inject the compiled CSS once,
-and set `data-theme` on a root element so it matches the theme's `name`.
+Theming has two independently-selectable axes — **palette** (color) and
+**density** (radius/spacing/typography/shadow personality) — each a plain
+TypeScript object (see [Theming](/theming) for the full shapes) compiled to
+a CSS custom property stylesheet at runtime via `compilePalette()`/
+`compileDensity()`. Applying them takes two steps: inject the compiled CSS
+once, and set both `data-theme-palette` and `data-theme-density` on a root
+element.
 
 ```ts
-import { compileTheme, neutral } from "@stance/themes";
+import { compilePalette, compileDensity, allPalettes, allDensityProfiles } from "@stance/themes";
+
+const neutral = allPalettes.find((p) => p.name === "neutral")!;
+const regular = allDensityProfiles.find((d) => d.name === "regular")!;
 
 const style = document.createElement("style");
-style.textContent = compileTheme(neutral);
+style.textContent = [compilePalette(neutral), compileDensity(regular)].join("\n\n");
 document.head.appendChild(style);
 ```
 
 ```html
-<html data-theme="neutral">
+<html data-theme-palette="neutral" data-theme-density="regular">
   <!-- your app -->
 </html>
 ```
@@ -76,14 +100,18 @@ In a real app you'd do the injection once, near your app's entry point,
 rather than per-component — every component reads the same `--stance-*`
 properties, so one compiled stylesheet covers all of them.
 
+Already using the older single-attribute `data-theme="neutral"` form? It
+still works unmodified — see [Theming § Migrating from `data-theme`](/theming#migrating-from-data-theme)
+for the alias and why there's no urgency to switch.
+
 ### Dark mode
 
-Add a `dark` class alongside `data-theme` (on the same element or an
-ancestor) to switch to the theme's dark token set. Nothing else changes —
-same components, same `data-theme` value, just the class:
+Add a `dark` class alongside the two `data-theme-*` attributes (on the same
+element or an ancestor) to switch to dark-mode colors and shadows. Nothing
+else changes — same components, same palette/density, just the class:
 
 ```html
-<html data-theme="neutral" class="dark">
+<html data-theme-palette="neutral" data-theme-density="regular" class="dark">
   <!-- your app, now in dark mode -->
 </html>
 ```

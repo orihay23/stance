@@ -10,21 +10,12 @@
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Avatar, { type AvatarSize } from "./Avatar.vue";
 import avatarSource from "./Avatar.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 describe("Avatar", () => {
   it("renders an <img> with alt=name when src and name are both given", () => {
@@ -104,11 +95,11 @@ describe("Avatar", () => {
     expect(styleBlock).not.toMatch(/^\.stance-avatar/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (image)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Avatar, { props: { src: "/bea.jpg", name: "Bea Nakamura" } });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
@@ -117,9 +108,9 @@ describe("Avatar", () => {
     });
 
     it.each(modes)("no violations in %s mode (initials fallback)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Avatar, { props: { name: "Bea Nakamura" } });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
@@ -128,14 +119,31 @@ describe("Avatar", () => {
     });
 
     it.each(modes)("no violations in %s mode (decorative, no name)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Avatar);
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = render(Avatar, { props: { src: "/bea.jpg", name: "Bea Nakamura" } });
+    container.setAttribute("data-theme-palette", "neutral");
+    container.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") container.classList.add("dark");
+
+    const results = await runAxe(container);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });

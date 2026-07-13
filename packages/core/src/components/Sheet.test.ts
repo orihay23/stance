@@ -20,22 +20,13 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { allThemes, neutral } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Sheet, { type SheetProps } from "./Sheet.vue";
 import sheetSource from "./Sheet.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
 const sides = ["top", "right", "bottom", "left"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 /** A realistic harness: a trigger button outside the sheet, and two focusable buttons inside it. */
 function renderHarness(sheetProps: Partial<SheetProps> = {}) {
@@ -236,15 +227,15 @@ describe("Sheet", () => {
     expect(reducedMotionBlock).toContain("transition: none");
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (open sheet)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       renderHarness({ description: "Narrow down the results." });
       await fireEvent.click(screen.getByRole("button", { name: "Open sheet" }));
       await nextTick();
 
       const sheetEl = screen.getByRole("dialog");
-      sheetEl.setAttribute("data-theme", theme.name);
+      sheetEl.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") sheetEl.classList.add("dark");
 
       const results = await runAxe(sheetEl);
@@ -253,14 +244,35 @@ describe("Sheet", () => {
     });
   });
 
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (open sheet, %s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    renderHarness({ description: "Narrow down the results." });
+    await fireEvent.click(screen.getByRole("button", { name: "Open sheet" }));
+    await nextTick();
+
+    const sheetEl = screen.getByRole("dialog");
+    sheetEl.setAttribute("data-theme-palette", "neutral");
+    sheetEl.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") sheetEl.classList.add("dark");
+
+    const results = await runAxe(sheetEl);
+    expect(results).toHaveNoViolations();
+    cleanup();
+  });
+
   it("no axe violations for an alertdialog (neutral/light)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     renderHarness({ role: "alertdialog", description: "This cannot be undone." });
     await fireEvent.click(screen.getByRole("button", { name: "Open sheet" }));
     await nextTick();
 
     const sheetEl = screen.getByRole("alertdialog");
-    sheetEl.setAttribute("data-theme", "neutral");
+    sheetEl.setAttribute("data-theme-palette", "neutral");
 
     const results = await runAxe(sheetEl);
     expect(results).toHaveNoViolations();

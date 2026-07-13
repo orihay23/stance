@@ -1,2 +1,15 @@
+/*
+ * Declares the cascade-layer order before either import below: Tailwind v4
+ * compiles its own utilities into `@layer utilities`, and stance's own
+ * component CSS ships pre-wrapped in `@layer stance` (packages/core/
+ * vite.config.ts). "stance" has to sit between "base" and "components":
+ * after "base" so Tailwind's preflight reset (which zeroes out borders,
+ * among other things) doesn't beat a real stance default like Accordion's
+ * divider borders — confirmed by a real visual regression when "stance"
+ * was placed before "base" — and before "utilities" so a Tailwind utility
+ * class still wins over a stance default, matching apps/docs/theming.md's
+ * "Overriding a component's styling" setup instructions.
+ */
+@layer theme, base, stance, components, utilities;
 @import "tailwindcss";
 @import "@stance/core/style.css";

@@ -16,21 +16,12 @@ import { defineComponent, h, nextTick } from "vue";
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Tooltip, { type TooltipProps } from "./Tooltip.vue";
 import tooltipSource from "./Tooltip.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 function renderHarness(props: Partial<TooltipProps> = {}) {
   const Harness = defineComponent({
@@ -182,9 +173,9 @@ describe("Tooltip", () => {
     expect(styleBlock).not.toMatch(/^\.stance-tooltip/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (open)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       renderHarness({ openDelay: 0 });
       const trigger = getTriggerSpan();
       await fireEvent.mouseEnter(trigger);
@@ -192,7 +183,7 @@ describe("Tooltip", () => {
       await nextTick();
 
       const tooltipEl = screen.getByRole("tooltip");
-      tooltipEl.setAttribute("data-theme", theme.name);
+      tooltipEl.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") tooltipEl.classList.add("dark");
 
       // axe-core's own internal async scheduling needs real timers.
@@ -201,5 +192,30 @@ describe("Tooltip", () => {
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (open, %s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    renderHarness({ openDelay: 0 });
+    const trigger = getTriggerSpan();
+    await fireEvent.mouseEnter(trigger);
+    vi.advanceTimersByTime(0);
+    await nextTick();
+
+    const tooltipEl = screen.getByRole("tooltip");
+    tooltipEl.setAttribute("data-theme-palette", "neutral");
+    tooltipEl.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") tooltipEl.classList.add("dark");
+
+    // axe-core's own internal async scheduling needs real timers.
+    vi.useRealTimers();
+    const results = await runAxe(tooltipEl.parentElement!);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });
