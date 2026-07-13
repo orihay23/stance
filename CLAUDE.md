@@ -2,17 +2,39 @@
 
 ## Mission
 A PrimeVue-scoped alternative: opinionated, accessible, themeable Vue 3 component
-library. Ships with 3–4 first-party themes (each with light/dark variants) but is
-built so consumers can override styling via Tailwind without specificity fights.
+library. Ships with 4 first-party color palettes × 4 first-party density profiles
+(each with light/dark variants), independently selectable — see "Theme
+architecture" below — but is built so consumers can override styling via
+Tailwind without specificity fights.
 
 ## Non-negotiable constraints
 - **Vue 3 + `<script setup>` + TypeScript** for every component.
 - **No `!important` anywhere.** Base styles must have low, predictable specificity
   so a single Tailwind utility class on the consumer's side wins by default.
   Prefer `:where()` wrapping for structural/default styles to keep specificity at 0.
-- **Theming via CSS custom properties**, one token set per theme, swapped by a
-  root-level `data-theme="..."` attribute (and `class="dark"` for color mode).
-  Components consume `var(--component-token, fallback)` — never hardcoded colors.
+  **Known gap, not yet resolved**: under Tailwind v4's default setup, this doesn't
+  currently work end-to-end — Tailwind wraps its utilities in `@layer utilities`,
+  and per the CSS cascade-layers spec an unlayered rule (stance's `:where()` CSS)
+  always beats a layered one regardless of specificity, so a Tailwind utility
+  class doesn't currently override a component default. `:where()` wrapping
+  itself is still the correct, non-negotiable authoring rule (it's a prerequisite
+  for the fix, and a plain non-Tailwind CSS override already works); the
+  cross-cutting fix (shipping stance's CSS in a named layer + a one-line consumer
+  setup) is tracked in `design-docs/theme-axes.md` but not yet implemented. See
+  `apps/docs/theming.md`'s "Overriding a component's styling" section for the
+  full explanation consumers see.
+- **Theming via CSS custom properties**, split into two independently-selectable
+  axes — **palette** (color, `data-theme-palette="..."`) and **density**
+  (radius/spacing/typography/shadow-shape/control-geometry personality,
+  `data-theme-density="..."`) — plus an orthogonal `class="dark"` mode toggle
+  that applies to whichever palette/density are active. A legacy single-attribute
+  `data-theme="..."` form (one of the 4 original bundled palette+density
+  pairings) is kept as a permanent, byte-for-byte-compatible alias — see
+  `design-docs/theme-axes.md` for the full palette/density split rationale and
+  `apps/docs/theming.md` for the migration path. Components consume
+  `var(--component-token, fallback)` — never hardcoded colors, radii, spacing,
+  shadows, or control dimensions (dialog/popover/tooltip max-widths, avatar
+  sizes, etc. are all density-owned tokens now, not hardcoded literals).
 - **Tailwind-friendly**: components accept a `class` prop that merges (not
   replaces) with internal classes, using `tailwind-merge` to dedupe conflicts.
   (A per-part `ui` prop for compound components — e.g. distinctly targeting
@@ -38,12 +60,29 @@ built so consumers can override styling via Tailwind without specificity fights.
 - Monorepo tooling: pnpm workspaces (packages/core, packages/themes, apps/playground)
 
 ## Theme architecture
-- Each theme = a TS object of design tokens (color, radius, spacing scale,
-  shadow, typography) compiled to CSS custom properties at build time.
-- Default themes: pick 3–4 distinct personalities (e.g., "Neutral", "Vivid",
-  "Corporate", "Playful") — not just color swaps, vary radius/shadow/density too.
-- Every theme must define both a light and dark token set.
-- Theme switching is a runtime attribute change, not a rebuild.
+- Two independently-selectable axes, each its own TS object type, each
+  compiled to CSS custom properties at build time via its own compiler
+  function (`compilePalette`/`compileDensity` in `@stance/themes`):
+  - **`ColorPalette`**: every color role (`primary`, `destructive`, `surface`,
+    etc.), split into `light`/`dark` token sets. 4 first-party palettes:
+    `neutral`, `serious`, `fun`, `crisp`.
+  - **`DensityProfile`**: radius, spacing, typography, control geometry
+    (`ThemeControlTokens` — button/input heights, switch track size, overlay
+    max-widths, avatar sizes, calendar cell size, etc.), and shadow (also
+    split `light`/`dark`, since shadow opacity magnitude differs by mode even
+    though shadow *shape* doesn't vary by palette). 4 first-party density
+    profiles: `regular`, `compact`, `relaxed`, `comfortable`.
+  - **Authoring rule**: density-profile shadows must stay neutral-color (pure
+    black, any opacity) — shadow tracks personality (blur/spread/opacity),
+    never a palette's hue. Nothing enforces this in the type system; it's a
+    convention every first-party profile follows and any new one must too.
+- Any palette combines with any density profile — 16 valid combinations from
+  4×4, not just the 4 pairings that originally shipped bundled together as
+  single "themes."
+- Every palette and every density profile must define both a light and dark
+  token set (colors/shadow respectively).
+- Selection is a runtime attribute change (`data-theme-palette`,
+  `data-theme-density`, `class="dark"`), not a rebuild.
 
 ## Component priority order
 1. Primitives: Button, Input, Checkbox, Radio, Switch, Select, Textarea
@@ -61,15 +100,30 @@ right (theming, a11y, tests, responsive) before batch-producing the rest.
 - [ ] Keyboard nav + ARIA verified manually and via axe-core test
 - [ ] Unit tests for all interactive states
 - [ ] Responsive behavior verified at minimum 3 container widths
-- [ ] Works correctly in all 4 themes × light/dark (8 combinations)
+- [ ] Works correctly in all 4 palettes × light/dark (8 combinations) — the
+      full axe/visual-regression matrix. Density is curated, not fully
+      enumerated (see `design-docs/theme-axes.md` §4): one targeted
+      neutral-palette + compact-density axe cross-check (both modes), plus a
+      "Density" Histoire variant/visual baseline showing the default palette
+      across all 4 density profiles, light mode only.
 
 ## Conventions
 - File naming: PascalCase for component/story files (`Button.vue`, `Button.test.ts`,
   `Button.story.vue`), camelCase for composables/utilities (`useButton.ts`, `cn.ts`).
 - CSS custom properties: prefixed `--stance-{category}-{token}`, e.g.
   `--stance-color-primary`, `--stance-radius-md`, `--stance-shadow-lg`,
-  `--stance-text-sm`. Colors with interaction states follow
-  `--stance-color-{role}[-foreground|-hover|-active]`.
+  `--stance-text-sm`, `--stance-control-height-md`,
+  `--stance-control-dialog-max-width`. Colors with interaction states follow
+  `--stance-color-{role}[-foreground|-hover|-active]`. `color`/`text`/`font`
+  categories are palette-owned; `radius`/`spacing`/`shadow`/`control`
+  categories are density-owned (see "Theme architecture" above).
+- Theme selector attributes: `data-theme-palette="<name>"` and
+  `data-theme-density="<name>"`, independently settable on any ancestor
+  element; `class="dark"` toggles mode for whichever palette/density are
+  active. The legacy bundled `data-theme="<name>"` still works as a
+  byte-compatible alias for one of the 4 original {palette, density} pairings
+  — don't remove or special-case it without reading
+  `design-docs/theme-axes.md` §3 first.
 - Theme tokens: authored as plain resolved CSS values (hex/oklch/etc.), not live
   references to a consumer's Tailwind config. Pulling from `tailwindcss/colors` at
   authoring time is fine — the compiler bakes the resolved value into the token.
