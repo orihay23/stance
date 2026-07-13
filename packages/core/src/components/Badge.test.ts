@@ -9,21 +9,12 @@
  */
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { allThemes, neutral } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Badge, { type BadgeVariant } from "./Badge.vue";
 import badgeSource from "./Badge.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 describe("Badge", () => {
   it("renders slot content", () => {
@@ -73,11 +64,11 @@ describe("Badge", () => {
     expect(styleBlock).not.toMatch(/^\.stance-badge/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (decorative)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Badge, { slots: { default: "New" } });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
@@ -86,17 +77,34 @@ describe("Badge", () => {
     });
 
     it.each(modes)("no violations in %s mode (with label)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Badge, {
         props: { label: "3 unread notifications", variant: "primary" },
         slots: { default: "3" },
       });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = render(Badge, { slots: { default: "New" } });
+    container.setAttribute("data-theme-palette", "neutral");
+    container.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") container.classList.add("dark");
+
+    const results = await runAxe(container);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });

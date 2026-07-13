@@ -3,24 +3,15 @@ import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { mount } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Calendar, { type CalendarProps, type CalendarRangeValue } from "./Calendar.vue";
 import calendarSource from "./Calendar.vue?raw";
 import { announce } from "../utils/live-region";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
 vi.mock("../utils/live-region", () => ({ announce: vi.fn() }));
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 function renderHarness(props: Partial<CalendarProps> = {}) {
   const Harness = defineComponent({
@@ -182,16 +173,33 @@ describe("Calendar", () => {
     expect(styleBlock).not.toMatch(/^\.stance-calendar/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = renderHarness({ focusedDate: new Date(2026, 0, 15) });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = renderHarness({ focusedDate: new Date(2026, 0, 15) });
+    container.setAttribute("data-theme-palette", "neutral");
+    container.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") container.classList.add("dark");
+
+    const results = await runAxe(container);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });

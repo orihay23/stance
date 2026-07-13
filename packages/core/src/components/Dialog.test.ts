@@ -22,21 +22,12 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { allThemes, neutral } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Dialog, { type DialogProps } from "./Dialog.vue";
 import dialogSource from "./Dialog.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 /** A realistic harness: a trigger button outside the dialog, and two focusable buttons inside it. */
 function renderHarness(dialogProps: Partial<DialogProps> = {}) {
@@ -227,15 +218,15 @@ describe("Dialog", () => {
     expect(styleBlock).not.toMatch(/^\.stance-dialog/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (open dialog)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       renderHarness({ description: "This cannot be undone." });
       await fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
       await nextTick();
 
       const dialogEl = screen.getByRole("dialog");
-      dialogEl.setAttribute("data-theme", theme.name);
+      dialogEl.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") dialogEl.classList.add("dark");
 
       const results = await runAxe(dialogEl);
@@ -244,14 +235,35 @@ describe("Dialog", () => {
     });
   });
 
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    renderHarness({ description: "This cannot be undone." });
+    await fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
+    await nextTick();
+
+    const dialogEl = screen.getByRole("dialog");
+    dialogEl.setAttribute("data-theme-palette", "neutral");
+    dialogEl.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") dialogEl.classList.add("dark");
+
+    const results = await runAxe(dialogEl);
+    expect(results).toHaveNoViolations();
+    cleanup();
+  });
+
   it("no axe violations for an alertdialog (neutral/light)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     renderHarness({ role: "alertdialog", description: "This cannot be undone." });
     await fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
     await nextTick();
 
     const dialogEl = screen.getByRole("alertdialog");
-    dialogEl.setAttribute("data-theme", "neutral");
+    dialogEl.setAttribute("data-theme-palette", "neutral");
 
     const results = await runAxe(dialogEl);
     expect(results).toHaveNoViolations();

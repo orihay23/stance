@@ -14,24 +14,15 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import TreeTable, { type TreeTableColumn, type TreeTableProps, type TreeTableSortState } from "./TreeTable.vue";
 import treeTableSource from "./TreeTable.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
 import { announce } from "../utils/live-region";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
 vi.mock("../utils/live-region", () => ({ announce: vi.fn() }));
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 interface FileNode extends Record<string, unknown> {
   name: string;
@@ -311,17 +302,35 @@ describe("TreeTable", () => {
     expect(styleBlock).not.toMatch(/^\.stance-treetable/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = renderHarness({ expanded: ["src"], selectionMode: "multiple" });
       const root = container.querySelector(".stance-treetable")!;
-      root.setAttribute("data-theme", theme.name);
+      root.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") root.classList.add("dark");
 
       const results = await runAxe(root);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = renderHarness({ expanded: ["src"], selectionMode: "multiple" });
+    const root = container.querySelector(".stance-treetable")!;
+    root.setAttribute("data-theme-palette", "neutral");
+    root.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") root.classList.add("dark");
+
+    const results = await runAxe(root);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });

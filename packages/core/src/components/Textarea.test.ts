@@ -21,21 +21,12 @@ import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { nextTick } from "vue";
 import { describe, expect, it } from "vitest";
-import { allThemes, neutral } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Textarea from "./Textarea.vue";
 import textareaSource from "./Textarea.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 /** jsdom never computes real layout, so scrollHeight is always 0 — stub it. */
 function stubScrollHeight(el: HTMLTextAreaElement, value: number) {
@@ -166,11 +157,11 @@ describe("Textarea", () => {
     expect(styleBlock).not.toMatch(/^\.stance-textarea/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (default textarea)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Textarea, { attrs: { "aria-label": "Bio" } });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
@@ -179,14 +170,31 @@ describe("Textarea", () => {
     });
   });
 
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (default textarea, %s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = render(Textarea, { attrs: { "aria-label": "Bio" } });
+    container.setAttribute("data-theme-palette", "neutral");
+    container.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") container.classList.add("dark");
+
+    const results = await runAxe(container);
+    expect(results).toHaveNoViolations();
+    cleanup();
+  });
+
   it("no axe violations for an invalid textarea with an error message (neutral/light)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     const { container } = render(Textarea, {
       props: { invalid: true },
       attrs: { "aria-label": "Bio" },
       slots: { error: "Bio is required" },
     });
-    container.setAttribute("data-theme", "neutral");
+    container.setAttribute("data-theme-palette", "neutral");
 
     const results = await runAxe(container);
     expect(results).toHaveNoViolations();
@@ -194,12 +202,12 @@ describe("Textarea", () => {
   });
 
   it("no axe violations in auto-grow mode (neutral/light)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     const { container } = render(Textarea, {
       props: { autoGrow: true, maxRows: 5 },
       attrs: { "aria-label": "Bio" },
     });
-    container.setAttribute("data-theme", "neutral");
+    container.setAttribute("data-theme-palette", "neutral");
 
     const results = await runAxe(container);
     expect(results).toHaveNoViolations();

@@ -21,21 +21,12 @@
 import { render, screen } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { allThemes, neutral } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import Input, { type InputType } from "./Input.vue";
 import inputSource from "./Input.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 describe("Input", () => {
   it("defaults to type=text", () => {
@@ -156,11 +147,11 @@ describe("Input", () => {
     expect(styleBlock).not.toMatch(/^\.stance-input/m);
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (default input)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       const { container } = render(Input, { attrs: { "aria-label": "Name" } });
-      container.setAttribute("data-theme", theme.name);
+      container.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") container.classList.add("dark");
 
       const results = await runAxe(container);
@@ -169,14 +160,31 @@ describe("Input", () => {
     });
   });
 
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    const { container } = render(Input, { attrs: { "aria-label": "Name" } });
+    container.setAttribute("data-theme-palette", "neutral");
+    container.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") container.classList.add("dark");
+
+    const results = await runAxe(container);
+    expect(results).toHaveNoViolations();
+    cleanup();
+  });
+
   it("no axe violations for an invalid input with an error message (neutral/light)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     const { container } = render(Input, {
       props: { invalid: true },
       attrs: { "aria-label": "Name" },
       slots: { error: "Name is required" },
     });
-    container.setAttribute("data-theme", "neutral");
+    container.setAttribute("data-theme-palette", "neutral");
 
     const results = await runAxe(container);
     expect(results).toHaveNoViolations();
@@ -184,12 +192,12 @@ describe("Input", () => {
   });
 
   it("no axe violations for an input with prefix/suffix icons (neutral/light)", async () => {
-    const cleanup = withThemeStyle(neutral);
+    const cleanup = withPaletteStyle(neutralPalette);
     const { container } = render(Input, {
       attrs: { "aria-label": "Amount" },
       slots: { prefix: '<span aria-hidden="true">$</span>', suffix: '<span aria-hidden="true">USD</span>' },
     });
-    container.setAttribute("data-theme", "neutral");
+    container.setAttribute("data-theme-palette", "neutral");
 
     const results = await runAxe(container);
     expect(results).toHaveNoViolations();

@@ -20,25 +20,16 @@ import { defineComponent, h, nextTick, reactive } from "vue";
 import { render, screen, within } from "@testing-library/vue";
 import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { allThemes } from "@stance/themes";
-import { compileTheme } from "@stance/themes";
 import CommandPalette, { type CommandPaletteProps } from "./CommandPalette.vue";
 import CommandPaletteItem from "./CommandPaletteItem.vue";
 import commandPaletteSource from "./CommandPalette.vue?raw";
 import commandPaletteItemSource from "./CommandPaletteItem.vue?raw";
 import { runAxe } from "../../tests/axe-matcher";
+import { compactDensity, neutralPalette, palettes, withPaletteAndDensityStyle, withPaletteStyle } from "../../tests/theme-test-utils";
 
-const themes = allThemes;
 const modes = ["light", "dark"] as const;
 
 const COMMANDS = ["New File", "Open Settings", "Toggle Sidebar"] as const;
-
-function withThemeStyle(theme: (typeof themes)[number]) {
-  const style = document.createElement("style");
-  style.textContent = compileTheme(theme);
-  document.head.appendChild(style);
-  return () => style.remove();
-}
 
 /** A realistic harness: a trigger button outside the palette, and a filterable command list inside it. */
 function renderHarness(
@@ -272,20 +263,41 @@ describe("CommandPalette", () => {
     }
   });
 
-  describe.each(themes)("axe: $name theme", (theme) => {
+  describe.each(palettes)("axe: $name palette", (palette) => {
     it.each(modes)("no violations in %s mode (open)", async (mode) => {
-      const cleanup = withThemeStyle(theme);
+      const cleanup = withPaletteStyle(palette);
       renderHarness();
       await fireEvent.click(screen.getByRole("button", { name: "Open palette" }));
       await nextTick();
 
       const dialog = screen.getByRole("dialog");
-      dialog.setAttribute("data-theme", theme.name);
+      dialog.setAttribute("data-theme-palette", palette.name);
       if (mode === "dark") dialog.classList.add("dark");
 
       const results = await runAxe(dialog.parentElement!);
       expect(results).toHaveNoViolations();
       cleanup();
     });
+  });
+
+  // Targeted palette×density cross-check (design-docs/theme-axes.md §4/D4):
+  // color contrast/ARIA don't vary by density, so this isn't a full matrix —
+  // just one non-default density paired with the default palette, aimed at
+  // catching a component that silently assumed color and density tokens
+  // always change together.
+  it.each(modes)("no axe violations: neutral palette + compact density (%s mode)", async (mode) => {
+    const cleanup = withPaletteAndDensityStyle(neutralPalette, compactDensity);
+    renderHarness();
+    await fireEvent.click(screen.getByRole("button", { name: "Open palette" }));
+    await nextTick();
+
+    const dialog = screen.getByRole("dialog");
+    dialog.setAttribute("data-theme-palette", "neutral");
+    dialog.setAttribute("data-theme-density", "compact");
+    if (mode === "dark") dialog.classList.add("dark");
+
+    const results = await runAxe(dialog.parentElement!);
+    expect(results).toHaveNoViolations();
+    cleanup();
   });
 });
