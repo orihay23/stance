@@ -24,13 +24,25 @@ export default defineConfig({
   head: [
     ["link", { rel: "icon", type: "image/png", href: `${base}logo-icon.png` }],
     [
-      // Sets data-theme before first paint, the same anti-FOUC technique
-      // VitePress itself uses for its own dark-mode class — lets our
-      // [data-theme="neutral"].dark selector "just work" against
-      // VitePress's existing .dark toggle with no changes to that toggle.
+      // Sets data-theme-palette/data-theme-density before first paint, the
+      // same anti-FOUC technique VitePress itself uses for its own
+      // dark-mode class (which this doesn't touch at all — VitePress's own
+      // built-in appearance toggle already applies .dark to <html> before
+      // hydration, and that's the same orthogonal mode toggle stance's CSS
+      // already expects; nothing to duplicate here). Plain vanilla JS by
+      // necessity: this runs before Vue exists, so no composables/
+      // localStorage-reading composable can be reused — see
+      // ThemePicker.vue for the reactive, post-hydration counterpart that
+      // reads these same two keys back out of the DOM once mounted.
       "script",
       {},
-      `(function(){document.documentElement.setAttribute("data-theme","neutral");})();`,
+      `(function(){
+        var root = document.documentElement;
+        var palette = localStorage.getItem("stance-docs-palette") || "neutral";
+        var density = localStorage.getItem("stance-docs-density") || "regular";
+        root.setAttribute("data-theme-palette", palette);
+        root.setAttribute("data-theme-density", density);
+      })();`,
     ],
   ],
   // Left off deliberately: extension-less URLs need the host to serve
