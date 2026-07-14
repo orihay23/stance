@@ -23,14 +23,25 @@ export interface ThemeContext {
   dark: boolean;
 }
 
+// `x instanceof HTMLElement` still evaluates the bare `HTMLElement`
+// identifier even when `x` is null/undefined — and `HTMLElement` isn't a
+// global at all under Node SSR (no jsdom), so it throws a ReferenceError
+// there instead of safely returning false the way `typeof` would. This
+// wrapper is what makes detectThemeContext callable during SSR (every
+// overlay component calls it eagerly at setup time via
+// useOverlayThemeContext, whether or not it ever opens — see that file).
+function isHtmlElement(value: unknown): value is HTMLElement {
+  return typeof HTMLElement !== "undefined" && value instanceof HTMLElement;
+}
+
 export function detectThemeContext(from: Element | null | undefined): ThemeContext {
   const legacyThemed = from?.closest("[data-theme]");
   const paletteThemed = from?.closest("[data-theme-palette]");
   const densityThemed = from?.closest("[data-theme-density]");
 
-  const theme = legacyThemed instanceof HTMLElement ? legacyThemed.getAttribute("data-theme") : null;
-  const palette = paletteThemed instanceof HTMLElement ? paletteThemed.getAttribute("data-theme-palette") : null;
-  const density = densityThemed instanceof HTMLElement ? densityThemed.getAttribute("data-theme-density") : null;
+  const theme = isHtmlElement(legacyThemed) ? legacyThemed.getAttribute("data-theme") : null;
+  const palette = isHtmlElement(paletteThemed) ? paletteThemed.getAttribute("data-theme-palette") : null;
+  const density = isHtmlElement(densityThemed) ? densityThemed.getAttribute("data-theme-density") : null;
 
   // Dark mode is a color-axis concern (theme-axes.md §1) — every existing
   // usage co-locates the `.dark` class on the same element as whichever
@@ -41,7 +52,7 @@ export function detectThemeContext(from: Element | null | undefined): ThemeConte
   // prioritization is only a tiebreak for the theoretical case where both
   // are present on different ancestors.
   const darkSource = legacyThemed ?? paletteThemed;
-  const dark = darkSource instanceof HTMLElement && darkSource.classList.contains("dark");
+  const dark = isHtmlElement(darkSource) && darkSource.classList.contains("dark");
 
   return { theme, palette, density, dark };
 }

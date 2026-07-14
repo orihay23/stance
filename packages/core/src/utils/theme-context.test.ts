@@ -59,4 +59,32 @@ describe("detectThemeContext", () => {
     expect(detectThemeContext(null)).toEqual({ theme: null, palette: null, density: null, dark: false });
     expect(detectThemeContext(undefined)).toEqual({ theme: null, palette: null, density: null, dark: false });
   });
+
+  // Regression test: Node SSR (no jsdom) has no `HTMLElement` global at
+  // all — `x instanceof HTMLElement` throws a bare ReferenceError there
+  // (unlike `typeof HTMLElement`, which safely resolves to "undefined"),
+  // and every overlay component calls this eagerly at setup time via
+  // useOverlayThemeContext regardless of whether it ever opens. Found by
+  // hand: adding a <Popover> to the docs site's SSR-rendered nav bar threw
+  // this exact error on every page. Deleting the global here is the
+  // closest a jsdom-based test can get to reproducing a real Node SSR
+  // environment without spinning up an actual server-render pass.
+  it("does not throw when HTMLElement is not a global (Node SSR)", () => {
+    const original = globalThis.HTMLElement;
+    // @ts-expect-error -- deliberately simulating an environment without HTMLElement
+    delete globalThis.HTMLElement;
+    try {
+      expect(detectThemeContext(null)).toEqual({ theme: null, palette: null, density: null, dark: false });
+
+      const trigger = el(`<div data-theme="neutral" class="dark"><button id="t">Open</button></div>`);
+      expect(detectThemeContext(trigger.querySelector("#t"))).toEqual({
+        theme: null,
+        palette: null,
+        density: null,
+        dark: false,
+      });
+    } finally {
+      globalThis.HTMLElement = original;
+    }
+  });
 });
