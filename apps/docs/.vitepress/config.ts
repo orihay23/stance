@@ -78,6 +78,14 @@ export default defineConfig({
           { text: "Components", link: "/components" },
         ],
       },
+      {
+        text: "Showcases",
+        items: [
+          { text: "Form", link: "/showcase-form" },
+          { text: "Data", link: "/showcase-data" },
+          { text: "Overlays", link: "/showcase-overlays" },
+        ],
+      },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/orihay23/stance" }],
     search: {
