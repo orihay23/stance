@@ -49,6 +49,27 @@ This 6-minor floor is a starting number, not a law of nature — it can be
 revisited if real adoption data suggests otherwise, but the point is that
 some stated floor exists rather than "whenever it's convenient."
 
+## Changesets: never select "major" pre-1.0
+
+This part of the policy is stricter than it might first read, and it's
+stricter *because we checked, not because we assumed*: Changesets does
+**not** have a "0.x-aware" mode that keeps a `major`-flagged changeset
+inside the `0.x` line. Verified directly (`changeset status` against a
+scratch `major` changeset on a `0.0.0` package): it proposes `0.0.0` →
+`1.0.0`, a real major release, exactly per strict semver — under strict
+semver, going from `0.x` to `1.0.0` *is* the major bump. There is no config
+flag to change this.
+
+Given that, and given the "1.0.0 is a separate decision" stance below, the
+practical rule is: **while pre-1.0, no changeset in this repo ever selects
+`major`.** A breaking change pre-1.0 (per the section above) still uses
+`minor` — it's the largest bump pre-1.0 permits, it stays called-out via its
+own dedicated changeset and migration note, and it does not accidentally
+graduate the package to `1.0.0` as a side effect of someone picking the
+intuitive-sounding bump level. `major` is reserved for the actual, deliberate
+1.0.0 graduation itself, decided the way the next section describes — never
+picked casually for an in-0.x breaking change.
+
 ## 1.0.0 is a separate decision
 
 Reaching `1.0.0` is tied to **API stability** — the theme axes, component
