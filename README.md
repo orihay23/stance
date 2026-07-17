@@ -6,5 +6,6 @@ Vue component library, balancing sturdy, opinionated design with flexible custom
 
 - **Docs**: https://orihay23.github.io/stance/
 - **Live component stories**: https://orihay23.github.io/stance/components/
+- **Versioning policy**: [VERSIONING.md](./VERSIONING.md)
 
 See the [Getting Started guide](https://orihay23.github.io/stance/getting-started.html) for installation and setup.
