@@ -3,7 +3,13 @@ import { defineConfig } from "vitepress";
 // GitHub Pages serves this project site at /stance/ (the repo name), with
 // the Histoire story build living alongside it under /stance/components/ —
 // see .github/workflows/deploy.yml. Locally, both stay at the site root.
-const isCI = Boolean(process.env.GITHUB_ACTIONS);
+// Keyed off a deploy-specific flag (deploy.yml sets it), not the ambient
+// GITHUB_ACTIONS var, which is true for every workflow run including
+// ci.yml's docs-build job — see histoire.config.ts's matching note for why
+// that distinction is load-bearing, not just tidiness (it broke
+// visual-regression's Playwright webServer for the equivalent Histoire
+// check).
+const isCI = Boolean(process.env.STANCE_DEPLOY_BASE);
 const base = isCI ? "/stance/" : "/";
 
 // Used directly in hand-authored markdown/Vue content (e.g. components.md's

@@ -32,6 +32,14 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    # Read by histoire.config.ts and apps/docs/.vitepress/config.ts to
+    # switch both builds onto their GitHub Pages subpaths (/stance/ and
+    # /stance/components/) instead of root — deliberately a job-scoped
+    # custom flag, not the ambient GITHUB_ACTIONS var those configs used
+    # to key off, since that's true for every workflow run, not just this
+    # deploy one (see histoire.config.ts's comment on the CI job it broke).
+    env:
+      STANCE_DEPLOY_BASE: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
