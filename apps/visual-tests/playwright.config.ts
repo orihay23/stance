@@ -35,5 +35,13 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     cwd: "../..",
+    // Without these, a webServer startup failure surfaces only as a
+    // generic "Timed out waiting Nms from config.webServer" — the actual
+    // error from the underlying command is swallowed. Cost real
+    // debugging time tracking down a base-path mismatch that looked like
+    // a dependency resolution error from the timeout message alone; piped
+    // to inherit so it lands in the same CI log instead of a separate file.
+    stdout: "pipe",
+    stderr: "pipe",
   },
 });
