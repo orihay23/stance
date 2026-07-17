@@ -49,10 +49,18 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Histoire imports @stance/core through its published entry point
-      # (dist/), not straight from source, so it has to be built first.
+      # Histoire imports @stance/core AND @stance/themes through their
+      # published entry points (dist/), not straight from source — since
+      # Phase 16 gave @stance/themes a real dist build for publishing,
+      # anything resolving it by package specifier (including Histoire's
+      # own stories) now goes through dist/index.js, not raw src/. Both
+      # have to be built before "Build Histoire stories" (mirrors ci.yml's
+      # visual-regression/docs-build jobs, which needed the identical fix).
       - name: Build @stance/core
         run: pnpm --filter @stance/core build
+
+      - name: Build @stance/themes
+        run: pnpm --filter @stance/themes build
 
       - name: Build Histoire stories
         run: pnpm --filter @stance/playground story:build
