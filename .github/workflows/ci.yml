@@ -159,13 +159,21 @@ jobs:
           publish: pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Required — see .npmrc's registry auth line, which reads this
-          # same variable. Provision as a repo secret (npmjs.com ->
-          # Access Tokens -> Generate New Token -> Automation) before this
-          # job's publish path can ever succeed; until then, the
-          # version-PR path above still works fine without it (no
-          # registry auth needed to just open a PR).
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # setup-node's `registry-url` above already wrote a global
+          # (user-level, not repo) .npmrc auth line keyed off this exact
+          # variable name — deliberately NOT a repo .npmrc edit: an
+          # unconditional `${NPM_TOKEN}` line in the committed .npmrc
+          # gets read by every pnpm invocation, including the other three
+          # jobs and any local dev shell, and pnpm's env-interpolation
+          # failure when the var is unset there was corrupting its config
+          # parse badly enough to desync from the lockfile's recorded
+          # settings — broke `pnpm install --frozen-lockfile` repo-wide
+          # (verified by hand, then reverted). Provision NPM_TOKEN as a
+          # repo secret (npmjs.com -> Access Tokens -> Generate New Token
+          # -> Automation) before this job's publish path can succeed;
+          # until then, the version-PR path above still works fine
+          # without it (no registry auth needed to just open a PR).
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # changeset publish already creates and pushes a `<name>@<version>`
       # git tag per published package; this turns each into an actual
