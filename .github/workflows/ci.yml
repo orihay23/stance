@@ -4,6 +4,13 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Manual escape hatch for when a push to main doesn't trigger this
+  # workflow on its own — notably, commits pushed using the default
+  # GITHUB_TOKEN (e.g. update-baselines.yml's baseline commits) don't fire
+  # `push` events on other workflows, by GitHub's own deliberate
+  # anti-recursion design. Without this, those commits would silently never
+  # get CI coverage.
+  workflow_dispatch:
 
 jobs:
   test:
