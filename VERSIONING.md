@@ -1,11 +1,27 @@
 # Versioning policy
 
-`@stance/core` (and `@stance/themes`, if published — see the Phase 16
-package-scope decision) follow [semver](https://semver.org/), but 0.x semver
+`@stance/core` and `@stance/themes` (both published — see "What gets
+published" below) follow [semver](https://semver.org/), but 0.x semver
 technically permits a breaking change in any minor bump. This doc states a
 stricter policy we hold ourselves to voluntarily, because that's already how
 every feature in this codebase has actually shipped — this is a write-down
 of existing practice, not a new constraint.
+
+## What gets published
+
+Both `@stance/core` and `@stance/themes` are published, independently
+versioned (not `fixed`/`linked` in Changesets — they change for different
+reasons on different cadences: a new component doesn't need a themes
+release, a new palette doesn't need a core release). This isn't a style
+choice: `@stance/core`'s own compiled CSS is 100% `var(--stance-*,
+fallback)` references — it contains zero `data-theme*` selectors and zero
+actual token *values*. Real palette/density CSS only exists once a
+consumer calls `compilePalettes`/`compileDensityProfiles` (or the legacy
+`compileThemes`) from `@stance/themes` and includes the result. Without
+`@stance/themes`, `@stance/core`'s components render structurally but
+carry no theme at all. `apps/docs` (the theme picker), `apps/playground`,
+and `apps/visual-tests` stay private/unpublished — they're consumers and
+tooling, not library surface.
 
 ## What "additive by default" has meant in practice
 
