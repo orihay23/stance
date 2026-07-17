@@ -17,16 +17,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # @stance/core's own tests import @stance/themes by its package
-      # specifier (tests/theme-test-utils.ts), which — since Phase 16 gave
-      # @stance/themes a real dist build for publishing — now resolves
-      # through its exports map (dist/index.js), not raw src/. Skipping
-      # this step fails 37 of @stance/core's test files on a fresh
-      # checkout with "Failed to resolve entry for package @stance/themes"
-      # (verified by hand: `rm -rf packages/*/dist && pnpm test`).
-      - name: Build @stance/themes
-        run: pnpm --filter @stance/themes build
-
+      # No explicit "build @stance/themes" step here: @stance/core's own
+      # `pretest` script (package.json) builds it automatically — pnpm
+      # runs pre<script> hooks before the matching script by default, so
+      # this is covered for local `pnpm test` too, not just CI. See that
+      # script's neighboring comment for why it's needed at all (Phase 16
+      # gave @stance/themes a real dist build for publishing, so anything
+      # resolving it by package specifier — including @stance/core's own
+      # tests/theme-test-utils.ts — now goes through dist/, not raw src/).
       - run: pnpm test
 
   visual-regression:

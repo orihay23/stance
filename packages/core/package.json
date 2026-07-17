@@ -29,7 +29,9 @@
   ],
   "scripts": {
     "build": "vite build && vue-tsc -p tsconfig.build.json",
+    "pretest": "pnpm --filter @stance/themes build",
     "test": "vitest run",
+    "pretest:watch": "pnpm --filter @stance/themes build",
     "test:watch": "vitest",
     "typecheck": "vue-tsc --noEmit"
   },
