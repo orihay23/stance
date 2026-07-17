@@ -1,0 +1,64 @@
+name: Update visual regression baselines
+
+# Manual-trigger only — this writes to the checked-in baseline PNGs
+# (apps/visual-tests/tests/visual.spec.ts-snapshots/), so it should never
+# run automatically. Use this when visual-regression fails with dimension
+# or pixel-ratio mismatches that are genuinely just rendering-environment
+# drift (a font package version bump, a Chromium point release changing
+# sub-pixel text metrics, etc.) — not as a way to wave through a real
+# regression. The commit this produces is a normal, reviewable diff:
+# check the changed PNGs actually look right before merging.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to update baselines on and push the commit to"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  update-baselines:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Same build order as ci.yml's visual-regression job — see that
+      # job's comments for why each step is needed.
+      - name: Build @stance/core
+        run: pnpm --filter @stance/core build
+
+      - name: Build @stance/themes
+        run: pnpm --filter @stance/themes build
+
+      - name: Build Histoire stories
+        run: pnpm --filter @stance/playground story:build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @stance/visual-tests exec playwright install --with-deps chromium
+
+      - name: Update snapshots
+        run: pnpm --filter @stance/visual-tests test:update
+
+      - name: Commit updated baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/visual-tests/tests/visual.spec.ts-snapshots/
+          if git diff --cached --quiet; then
+            echo "No baseline changes — nothing to commit."
+            exit 0
+          fi
+          git commit -m "Update visual regression baselines (rendering-environment drift)"
+          git push origin HEAD:${{ inputs.branch }}
