@@ -16,6 +16,17 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      # @stance/core's own tests import @stance/themes by its package
+      # specifier (tests/theme-test-utils.ts), which — since Phase 16 gave
+      # @stance/themes a real dist build for publishing — now resolves
+      # through its exports map (dist/index.js), not raw src/. Skipping
+      # this step fails 37 of @stance/core's test files on a fresh
+      # checkout with "Failed to resolve entry for package @stance/themes"
+      # (verified by hand: `rm -rf packages/*/dist && pnpm test`).
+      - name: Build @stance/themes
+        run: pnpm --filter @stance/themes build
+
       - run: pnpm test
 
   visual-regression:
@@ -30,10 +41,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Visual tests hit the built Histoire output, not the dev server, so
-      # both @stance/core (which Histoire imports through dist/) and the
-      # Histoire build itself have to exist before Playwright runs.
+      # @stance/core, @stance/themes (playground stories import both
+      # through dist/ — see the `test` job's comment on why themes needs a
+      # build since Phase 16), and the Histoire build itself all have to
+      # exist before Playwright runs.
       - name: Build @stance/core
         run: pnpm --filter @stance/core build
+
+      - name: Build @stance/themes
+        run: pnpm --filter @stance/themes build
 
       - name: Build Histoire stories
         run: pnpm --filter @stance/playground story:build
@@ -73,15 +89,100 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # apps/docs depends on @stance/core through its published entry
-      # point (dist/), same as Histoire — has to be built first. This also
-      # catches the class of bug the docs site exists to dogfood: any
-      # component that isn't actually safe to prerender under Vue SSR (the
-      # entire portal-based set — Dialog, Popover, Tooltip, Dropdown Menu,
-      # DatePicker, Toast — is exercised here) fails this build, not just a
-      # runtime error some consumer discovers later.
+      # apps/docs depends on @stance/core and @stance/themes (the theme
+      # picker/ThemeStyles import it directly) through their published
+      # entry points (dist/), same as Histoire — both have to be built
+      # first. This also catches the class of bug the docs site exists to
+      # dogfood: any component that isn't actually safe to prerender under
+      # Vue SSR (the entire portal-based set — Dialog, Popover, Tooltip,
+      # Dropdown Menu, DatePicker, Toast — is exercised here) fails this
+      # build, not just a runtime error some consumer discovers later.
       - name: Build @stance/core
         run: pnpm --filter @stance/core build
 
+      - name: Build @stance/themes
+        run: pnpm --filter @stance/themes build
+
       - name: Build VitePress site
         run: pnpm --filter @stance/docs docs:build
+
+  # Runs only on push to main (not on PRs — publishing per-PR would be
+  # meaningless), and only after test/visual-regression/docs-build have
+  # all passed: `needs:` gates this on the real, existing required checks
+  # rather than re-running a parallel/weaker check of its own, per
+  # VERSIONING.md's stance that nothing ships without the full suite green.
+  #
+  # Runs on every push to main regardless of whether there's anything to
+  # release — changesets/action decides internally what to do: if pending
+  # changesets exist, it opens/updates a "Version Packages" PR (consuming
+  # them into bumped package.json versions + CHANGELOG.md, not publishing
+  # anything); once that PR is merged (no pending changesets left, but
+  # versions are ahead of what's on npm), this same job publishes and tags.
+  release:
+    name: Release
+    needs: [test, visual-regression, docs-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'orihay23/stance'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # changesets/action needs the full history to diff which
+          # packages changed since each package's last release tag.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - run: pnpm install --frozen-lockfile
+
+      # `changeset publish` packs whatever's already on disk — it doesn't
+      # invoke either package's own `build` script — so both need to be
+      # built here regardless of whether this run ends up publishing or
+      # just opening a version PR (cheap either way, and simpler than
+      # conditioning the build on which path changesets/action will take).
+      - name: Build publishable packages
+        run: |
+          pnpm --filter @stance/themes build
+          pnpm --filter @stance/core build
+
+      - name: Create Release Pull Request or publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm changeset publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required — see .npmrc's registry auth line, which reads this
+          # same variable. Provision as a repo secret (npmjs.com ->
+          # Access Tokens -> Generate New Token -> Automation) before this
+          # job's publish path can ever succeed; until then, the
+          # version-PR path above still works fine without it (no
+          # registry auth needed to just open a PR).
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # changeset publish already creates and pushes a `<name>@<version>`
+      # git tag per published package; this turns each into an actual
+      # GitHub Release with that package's just-generated changelog
+      # section as the release notes, per the phase prompt's "create a
+      # GitHub Release with the generated changelog" requirement.
+      - name: Create GitHub Releases for published packages
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          echo "$PUBLISHED_PACKAGES" | jq -c '.[]' | while read -r pkg; do
+            name=$(echo "$pkg" | jq -r '.name')
+            version=$(echo "$pkg" | jq -r '.version')
+            tag="${name}@${version}"
+            dir="packages/${name#@stance/}"
+            notes=$(awk -v ver="## $version" 'index($0, ver) == 1 {flag=1; next} /^## /{flag=0} flag' "${dir}/CHANGELOG.md")
+            gh release create "$tag" --title "$tag" --notes "$notes"
+          done
