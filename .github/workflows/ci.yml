@@ -24,13 +24,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # No explicit "build @stance/themes" step here: @stance/core's own
+      # No explicit "build @stance-dev/themes" step here: @stance-dev/core's own
       # `pretest` script (package.json) builds it automatically — pnpm
       # runs pre<script> hooks before the matching script by default, so
       # this is covered for local `pnpm test` too, not just CI. See that
       # script's neighboring comment for why it's needed at all (Phase 16
-      # gave @stance/themes a real dist build for publishing, so anything
-      # resolving it by package specifier — including @stance/core's own
+      # gave @stance-dev/themes a real dist build for publishing, so anything
+      # resolving it by package specifier — including @stance-dev/core's own
       # tests/theme-test-utils.ts — now goes through dist/, not raw src/).
       - run: pnpm test
 
@@ -46,24 +46,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Visual tests hit the built Histoire output, not the dev server, so
-      # @stance/core, @stance/themes (playground stories import both
+      # @stance-dev/core, @stance-dev/themes (playground stories import both
       # through dist/ — see the `test` job's comment on why themes needs a
       # build since Phase 16), and the Histoire build itself all have to
       # exist before Playwright runs.
-      - name: Build @stance/core
-        run: pnpm --filter @stance/core build
+      - name: Build @stance-dev/core
+        run: pnpm --filter @stance-dev/core build
 
-      - name: Build @stance/themes
-        run: pnpm --filter @stance/themes build
+      - name: Build @stance-dev/themes
+        run: pnpm --filter @stance-dev/themes build
 
       - name: Build Histoire stories
-        run: pnpm --filter @stance/playground story:build
+        run: pnpm --filter @stance-dev/playground story:build
 
       - name: Install Playwright browsers
-        run: pnpm --filter @stance/visual-tests exec playwright install --with-deps chromium
+        run: pnpm --filter @stance-dev/visual-tests exec playwright install --with-deps chromium
 
       - name: Run visual regression tests
-        run: pnpm --filter @stance/visual-tests test
+        run: pnpm --filter @stance-dev/visual-tests test
 
       # Diff/actual/expected images and the trace viewer report, so a failing
       # PR can be diagnosed without re-running locally.
@@ -94,7 +94,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # apps/docs depends on @stance/core and @stance/themes (the theme
+      # apps/docs depends on @stance-dev/core and @stance-dev/themes (the theme
       # picker/ThemeStyles import it directly) through their published
       # entry points (dist/), same as Histoire — both have to be built
       # first. This also catches the class of bug the docs site exists to
@@ -102,14 +102,14 @@ jobs:
       # Vue SSR (the entire portal-based set — Dialog, Popover, Tooltip,
       # Dropdown Menu, DatePicker, Toast — is exercised here) fails this
       # build, not just a runtime error some consumer discovers later.
-      - name: Build @stance/core
-        run: pnpm --filter @stance/core build
+      - name: Build @stance-dev/core
+        run: pnpm --filter @stance-dev/core build
 
-      - name: Build @stance/themes
-        run: pnpm --filter @stance/themes build
+      - name: Build @stance-dev/themes
+        run: pnpm --filter @stance-dev/themes build
 
       - name: Build VitePress site
-        run: pnpm --filter @stance/docs docs:build
+        run: pnpm --filter @stance-dev/docs docs:build
 
   # Runs only on push to main (not on PRs — publishing per-PR would be
   # meaningless), and only after test/visual-regression/docs-build have
@@ -154,8 +154,8 @@ jobs:
       # conditioning the build on which path changesets/action will take).
       - name: Build publishable packages
         run: |
-          pnpm --filter @stance/themes build
-          pnpm --filter @stance/core build
+          pnpm --filter @stance-dev/themes build
+          pnpm --filter @stance-dev/core build
 
       - name: Create Release Pull Request or publish to npm
         id: changesets
@@ -195,7 +195,7 @@ jobs:
             name=$(echo "$pkg" | jq -r '.name')
             version=$(echo "$pkg" | jq -r '.version')
             tag="${name}@${version}"
-            dir="packages/${name#@stance/}"
+            dir="packages/${name#@stance-dev/}"
             notes=$(awk -v ver="## $version" 'index($0, ver) == 1 {flag=1; next} /^## /{flag=0} flag' "${dir}/CHANGELOG.md")
             gh release create "$tag" --title "$tag" --notes "$notes"
           done

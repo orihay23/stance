@@ -15,7 +15,7 @@ Tailwind without specificity fights.
   Under Tailwind v4, `:where()` alone isn't sufficient on its own: Tailwind wraps
   its utilities in `@layer utilities`, and per the CSS cascade-layers spec an
   unlayered rule always beats a layered one regardless of specificity — so
-  `@stance/core`'s build wraps its own compiled CSS in `@layer stance`
+  `@stance-dev/core`'s build wraps its own compiled CSS in `@layer stance`
   (`packages/core/vite.config.ts`'s `wrapStylesheetInLayer` plugin) to fix the
   *shape* of the problem, but layer *priority* is order-of-first-appearance
   across the whole page, which only the consumer can pin: they must declare
@@ -73,7 +73,7 @@ Tailwind without specificity fights.
 ## Theme architecture
 - Two independently-selectable axes, each its own TS object type, each
   compiled to CSS custom properties at build time via its own compiler
-  function (`compilePalette`/`compileDensity` in `@stance/themes`):
+  function (`compilePalette`/`compileDensity` in `@stance-dev/themes`):
   - **`ColorPalette`**: every color role (`primary`, `destructive`, `surface`,
     etc.), split into `light`/`dark` token sets. 4 first-party palettes:
     `neutral`, `serious`, `fun`, `crisp`.

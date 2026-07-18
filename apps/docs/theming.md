@@ -117,7 +117,7 @@ interface DensityProfile {
 
 `stance` ships four first-party palettes — `neutral`, `serious`, `fun`, and
 `crisp` — and four first-party density profiles — `regular`, `compact`,
-`relaxed`, and `comfortable` — all exported from `@stance/themes` via
+`relaxed`, and `comfortable` — all exported from `@stance-dev/themes` via
 `allPalettes` and `allDensityProfiles`. Pick one of each independently; there
 are 16 valid combinations, not just the 4 pairings that originally shipped
 bundled together (see "Migrating from `data-theme`" below for what those 4
@@ -143,7 +143,7 @@ attributes on whatever element should be scoped to them — typically
 `<html>` or your app's root:
 
 ```ts
-import { compilePalette, compileDensity, allPalettes, allDensityProfiles } from "@stance/themes";
+import { compilePalette, compileDensity, allPalettes, allDensityProfiles } from "@stance-dev/themes";
 
 // Note: the top-level `neutral` export is the *legacy* bundled Theme
 // (palette + density combined) — for the new two-axis API, look up the
@@ -206,12 +206,12 @@ any particular schedule and there's no urgency to migrate today.
 
 Author a `ColorPalette` and/or `DensityProfile` object matching the shapes
 above and run them through `compilePalette()`/`compileDensity()` — nothing
-about a "built-in" palette or profile is special beyond `@stance/themes`
+about a "built-in" palette or profile is special beyond `@stance-dev/themes`
 exporting some for you already. You can mix a custom palette with a
 first-party density profile (or vice versa) freely.
 
 ```ts
-import { compilePalette, type ColorPalette } from "@stance/themes";
+import { compilePalette, type ColorPalette } from "@stance-dev/themes";
 
 const brand: ColorPalette = {
   name: "brand",
@@ -270,7 +270,7 @@ specification, **an unlayered rule always wins over a layered one,
 regardless of specificity** — so if stance shipped its `:where()` CSS
 unlayered (as it did before this was fixed), a Tailwind utility class would
 always lose to it despite having real, non-zero specificity against
-stance's zero-specificity selectors. `@stance/core/style.css` now ships its
+stance's zero-specificity selectors. `@stance-dev/core/style.css` now ships its
 own CSS pre-wrapped in `@layer stance`, which fixes the *shape* of the
 problem, but cascade-layer **priority is order-of-first-appearance across
 the whole page**, not something a library can pin from inside its own
@@ -280,7 +280,7 @@ Tailwind's own layers, once, in your global CSS, before either import:
 ```css
 @layer theme, base, stance, components, utilities;
 @import "tailwindcss";
-@import "@stance/core/style.css";
+@import "@stance-dev/core/style.css";
 ```
 
 `stance` has to sit in the *middle* of Tailwind's own layers, not at either

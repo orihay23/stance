@@ -8,22 +8,22 @@ token system they consume.
 ::: code-group
 
 ```sh [pnpm]
-pnpm add @stance/core @stance/themes
+pnpm add @stance-dev/core @stance-dev/themes
 ```
 
 ```sh [npm]
-npm install @stance/core @stance/themes
+npm install @stance-dev/core @stance-dev/themes
 ```
 
 ```sh [yarn]
-yarn add @stance/core @stance/themes
+yarn add @stance-dev/core @stance-dev/themes
 ```
 
 :::
 
 ## Peer dependencies
 
-`@stance/core` declares two peer dependencies — install them yourself if your
+`@stance-dev/core` declares two peer dependencies — install them yourself if your
 project doesn't already have them:
 
 - `vue` `^3.4.0`
@@ -48,10 +48,10 @@ your project's main stylesheet:
 ```css
 @layer theme, base, stance, components, utilities;
 @import "tailwindcss";
-@import "@stance/core/style.css";
+@import "@stance-dev/core/style.css";
 ```
 
-The `@layer` line matters, not just the two imports: `@stance/core/style.css`
+The `@layer` line matters, not just the two imports: `@stance-dev/core/style.css`
 ships its CSS pre-wrapped in `@layer stance`, and that bare statement is what
 tells the browser where `stance` sits relative to Tailwind's own layers —
 *after* `base` (Tailwind's preflight reset, which zeroes out things like
@@ -63,7 +63,7 @@ development), not just a silent no-op like skipping the line entirely (see
 [Theming](/theming#overriding-a-component-s-styling) for the full
 cascade-layers explanation).
 
-`@stance/core/style.css` is the bundled structural CSS for every component —
+`@stance-dev/core/style.css` is the bundled structural CSS for every component —
 layout, spacing, focus rings, all of it written against `--stance-*` CSS
 custom properties rather than hardcoded values. On its own it has no colors,
 because color (and every other themeable value) comes from a **theme**,
@@ -80,7 +80,7 @@ once, and set both `data-theme-palette` and `data-theme-density` on a root
 element.
 
 ```ts
-import { compilePalette, compileDensity, allPalettes, allDensityProfiles } from "@stance/themes";
+import { compilePalette, compileDensity, allPalettes, allDensityProfiles } from "@stance-dev/themes";
 
 const neutral = allPalettes.find((p) => p.name === "neutral")!;
 const regular = allDensityProfiles.find((d) => d.name === "regular")!;
@@ -125,7 +125,7 @@ the browser.
 
 ```vue
 <script setup lang="ts">
-import { Button } from "@stance/core";
+import { Button } from "@stance-dev/core";
 </script>
 
 <template>
@@ -133,7 +133,7 @@ import { Button } from "@stance/core";
 </template>
 ```
 
-Every component is a named export from `@stance/core`; prop/slot/emit types
-ship alongside it (e.g. `import { Button, type ButtonProps } from "@stance/core"`).
+Every component is a named export from `@stance-dev/core`; prop/slot/emit types
+ship alongside it (e.g. `import { Button, type ButtonProps } from "@stance-dev/core"`).
 See the [component list](/components) for what's available and a link to
 each one's live, interactive examples.

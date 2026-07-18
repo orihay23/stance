@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { allDensityProfiles, allPalettes } from "@stance/themes";
-import { Popover, PopoverContent, PopoverTrigger, Select, ToggleGroup, ToggleGroupItem } from "@stance/core";
+import { allDensityProfiles, allPalettes } from "@stance-dev/themes";
+import { Popover, PopoverContent, PopoverTrigger, Select, ToggleGroup, ToggleGroupItem } from "@stance-dev/core";
 
 /**
  * Global palette/density picker for the docs site — re-themes the whole

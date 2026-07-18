@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Calendar, type CalendarRangeValue } from "@stance/core";
+import { Calendar, type CalendarRangeValue } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, densityProfiles } = useStoryTheme();

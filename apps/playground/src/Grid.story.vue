@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, Grid } from "@stance/core";
+import { Card, Grid } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

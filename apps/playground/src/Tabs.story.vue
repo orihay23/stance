@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Tab, TabList, TabPanel, Tabs } from "@stance/core";
+import { Tab, TabList, TabPanel, Tabs } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

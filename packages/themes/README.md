@@ -1,10 +1,10 @@
-# @stance/themes
+# @stance-dev/themes
 
-Palette and density theme compilers for [`@stance/core`](https://www.npmjs.com/package/@stance/core) —
+Palette and density theme compilers for [`@stance-dev/core`](https://www.npmjs.com/package/@stance-dev/core) —
 compiles `ColorPalette`/`DensityProfile` token objects to CSS custom
-properties. Required alongside `@stance/core`: core's own compiled CSS has
+properties. Required alongside `@stance-dev/core`: core's own compiled CSS has
 no color or density values baked in, only `var(--stance-*, fallback)`
-references — `@stance/themes` is what actually supplies them.
+references — `@stance-dev/themes` is what actually supplies them.
 
 - **Theming guide**: https://orihay23.github.io/stance/theming.html
 

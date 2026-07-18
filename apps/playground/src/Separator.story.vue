@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Separator } from "@stance/core";
+import { Separator } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, densityProfiles } = useStoryTheme();

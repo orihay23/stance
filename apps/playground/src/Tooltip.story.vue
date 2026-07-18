@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, Tooltip } from "@stance/core";
+import { Button, Tooltip } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

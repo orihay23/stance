@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Badge } from "@stance/core";
+import { Badge } from "@stance-dev/core";
 </script>
 
 # Accessibility

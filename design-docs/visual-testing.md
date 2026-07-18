@@ -102,7 +102,7 @@ only for opening it.
 
 `.github/workflows/ci.yml` runs `visual-regression` as its own job, parallel
 to (not gating on, and not gated by) the existing unit `test` job — both
-must pass for a PR to be mergeable. The job builds `@stance/core`, builds the
+must pass for a PR to be mergeable. The job builds `@stance-dev/core`, builds the
 Histoire stories, installs Playwright's Chromium build (the sandbox's
 pre-installed browser doesn't exist on fresh GitHub-hosted runners), and runs
 the suite against the committed baselines. On failure, the HTML report and
@@ -112,5 +112,5 @@ mechanism for inspecting *what* changed.
 
 Baselines are committed as PNGs directly in
 `apps/visual-tests/tests/visual.spec.ts-snapshots/`. Accepting an intentional
-visual change means running `pnpm --filter @stance/visual-tests test:update`
+visual change means running `pnpm --filter @stance-dev/visual-tests test:update`
 locally and committing the updated PNGs like any other generated-file diff.

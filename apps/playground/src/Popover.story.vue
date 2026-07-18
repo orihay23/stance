@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Button, Popover, PopoverContent, PopoverTrigger } from "@stance/core";
+import { Button, Popover, PopoverContent, PopoverTrigger } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { allDensityProfiles, allPalettes, allThemes, compileDensityProfiles, compilePalettes, compileThemes } from "@stance/themes";
+import { allDensityProfiles, allPalettes, allThemes, compileDensityProfiles, compilePalettes, compileThemes } from "@stance-dev/themes";
 
 // Declarative <style> rendering (not document.head.appendChild) so this
 // works identically during VitePress's SSR prerender and on the client —

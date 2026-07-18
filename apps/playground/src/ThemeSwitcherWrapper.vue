@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from "vue";
-import { allDensityProfiles, allPalettes, allThemes, compileDensityProfiles, compilePalettes, compileThemes } from "@stance/themes";
+import { allDensityProfiles, allPalettes, allThemes, compileDensityProfiles, compilePalettes, compileThemes } from "@stance-dev/themes";
 import { storyDensity, storyTheme } from "./useStoryTheme";
 
 /**

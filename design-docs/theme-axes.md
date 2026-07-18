@@ -498,7 +498,7 @@ The gap documented in D5 above is fixed. Two halves, both required:
    array position — `order: "post"` is what actually guarantees this hook
    sees the finished asset rather than running before it exists, confirmed
    by first observing the hook fire against an empty bundle without it).
-   `@stance/core/style.css` now ships as one `@layer stance { ... }` block
+   `@stance-dev/core/style.css` now ships as one `@layer stance { ... }` block
    instead of unlayered CSS.
 2. **Consumer side**: a bare `@layer theme, base, stance, components,
    utilities;` statement, before importing Tailwind and stance's CSS.
@@ -530,7 +530,7 @@ reintroduce the Accordion-class of bug silently, since a narrow spot-check
 (like the `p-8` repro) won't catch it.
 
 `apps/playground/src/style.css` (this repo's own dev playground, a real
-consumer of `@stance/core`) was updated to the fixed setup, so Histoire's
+consumer of `@stance-dev/core`) was updated to the fixed setup, so Histoire's
 own screenshots demonstrate correct override behavior rather than just the
 library's internal test suite.
 

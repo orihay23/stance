@@ -48,7 +48,7 @@ export function resolveVariantId(component: string, variantTitle: string): strin
   const story = manifest.stories.find((s) => s.id === storyId);
   if (!story) {
     throw new Error(
-      `[visual-tests] No Histoire story found for component "${component}" (expected id "${storyId}"). Run "pnpm --filter @stance/playground story:build" first.`,
+      `[visual-tests] No Histoire story found for component "${component}" (expected id "${storyId}"). Run "pnpm --filter @stance-dev/playground story:build" first.`,
     );
   }
   const variant = story.variants.find((v) => v.title === variantTitle);

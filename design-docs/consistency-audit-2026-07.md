@@ -216,7 +216,7 @@ visual-test registry both scale automatically when more themes land. Not
 drift — but flagging that no test would fail today if a second theme shipped
 without being added to those arrays (the wiring is per-file arrays, not a
 central "all themes" export). A shared `allThemes` export from
-`@stance/themes` would make theme #2 automatically covered.
+`@stance-dev/themes` would make theme #2 automatically covered.
 Known, documented visual gaps (visual-testing.md §5): Grid has no dark-mode
 story; Toast dark-mode can't be captured with the current story structure.
 

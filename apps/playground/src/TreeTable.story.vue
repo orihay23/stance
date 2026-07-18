@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { TreeTable, type TreeTableColumn, type TreeTableSortState } from "@stance/core";
+import { TreeTable, type TreeTableColumn, type TreeTableSortState } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

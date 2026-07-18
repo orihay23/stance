@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Skeleton } from "@stance/core";
+import { Skeleton } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, densityProfiles } = useStoryTheme();

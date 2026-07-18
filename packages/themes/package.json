@@ -1,7 +1,7 @@
 {
-  "name": "@stance/themes",
+  "name": "@stance-dev/themes",
   "version": "0.0.0",
-  "description": "Palette and density theme compilers for @stance/core — compiles ColorPalette/DensityProfile token objects to CSS custom properties.",
+  "description": "Palette and density theme compilers for @stance-dev/core — compiles ColorPalette/DensityProfile token objects to CSS custom properties.",
   "type": "module",
   "license": "MIT",
   "repository": {
