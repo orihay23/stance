@@ -1,6 +1,6 @@
 {
   "name": "@stance-dev/themes",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Palette and density theme compilers for @stance-dev/core — compiles ColorPalette/DensityProfile token objects to CSS custom properties.",
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,12 @@
   },
   "homepage": "https://orihay23.github.io/stance/",
   "bugs": "https://github.com/orihay23/stance/issues",
-  "keywords": ["theme", "design-tokens", "css-custom-properties", "stance"],
+  "keywords": [
+    "theme",
+    "design-tokens",
+    "css-custom-properties",
+    "stance"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,7 +28,9 @@
     "./package.json": "./package.json"
   },
   "sideEffects": false,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
