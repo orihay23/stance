@@ -603,8 +603,8 @@ const colCount = computed(() => props.columns.length + (props.selectionMode !== 
 }
 
 :where(.stance-treetable__disclosure svg) {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.875em;
+  height: 0.875em;
   transition: transform var(--stance-motion-duration, 0.15s) ease;
 }
 

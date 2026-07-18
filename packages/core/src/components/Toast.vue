@@ -117,8 +117,8 @@ const rootClass = computed(() => cn("stance-toast", props.class));
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--stance-control-box-size, 1.25rem);
+  height: var(--stance-control-box-size, 1.25rem);
   background: none;
   border: none;
   padding: 0;
@@ -136,7 +136,7 @@ const rootClass = computed(() => cn("stance-toast", props.class));
 }
 
 :where(.stance-toast__close svg) {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: calc(var(--stance-control-box-size, 1.25rem) * 0.7);
+  height: calc(var(--stance-control-box-size, 1.25rem) * 0.7);
 }
 </style>

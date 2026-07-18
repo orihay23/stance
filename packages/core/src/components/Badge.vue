@@ -45,7 +45,7 @@ const rootClass = computed(() => cn("stance-badge", props.class));
   display: inline-flex;
   align-items: center;
   gap: var(--stance-spacing-xs, 0.25rem);
-  padding: 0.125rem var(--stance-spacing-sm, 0.5rem);
+  padding: var(--stance-spacing-xs, 0.25rem) var(--stance-spacing-sm, 0.5rem);
   border-radius: var(--stance-radius-full, 9999px);
   font-size: var(--stance-text-xs, 0.75rem);
   font-weight: var(--stance-font-weight-medium, 500);

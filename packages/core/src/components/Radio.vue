@@ -75,6 +75,7 @@ function onChange() {
   cursor: pointer;
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   font-size: var(--stance-text-base, 1rem);
+  line-height: var(--stance-leading-normal, 1.5);
   color: var(--stance-color-foreground);
 }
 
@@ -89,7 +90,10 @@ function onChange() {
   flex-shrink: 0;
   width: var(--stance-control-box-size, 1.25rem);
   height: var(--stance-control-box-size, 1.25rem);
-  margin-top: 0.125rem;
+  /* Optically centers the box against the label's first line of text —
+     see Checkbox.vue's matching comment for why this tracks 1lh instead of
+     a fixed offset. */
+  margin-top: max(0px, calc((1lh - var(--stance-control-box-size, 1.25rem)) / 2));
 }
 
 :where(.stance-radio__input) {
@@ -133,8 +137,8 @@ function onChange() {
 }
 
 :where(.stance-radio__dot) {
-  width: 0.625rem;
-  height: 0.625rem;
+  width: calc(var(--stance-control-box-size, 1.25rem) * 0.5);
+  height: calc(var(--stance-control-box-size, 1.25rem) * 0.5);
   border-radius: var(--stance-radius-full, 9999px);
   background: var(--stance-color-primary);
   opacity: 0;

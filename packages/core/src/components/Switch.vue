@@ -92,6 +92,7 @@ function onChange(event: Event) {
   cursor: pointer;
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   font-size: var(--stance-text-base, 1rem);
+  line-height: var(--stance-leading-normal, 1.5);
   color: var(--stance-color-foreground);
 }
 
@@ -106,7 +107,10 @@ function onChange(event: Event) {
   flex-shrink: 0;
   width: var(--stance-control-switch-width, 2.5rem);
   height: var(--stance-control-box-size, 1.25rem);
-  margin-top: 0.125rem;
+  /* Optically centers the track against the label's first line of text —
+     see Checkbox.vue's matching comment for why this tracks 1lh instead of
+     a fixed offset. */
+  margin-top: max(0px, calc((1lh - var(--stance-control-box-size, 1.25rem)) / 2));
 }
 
 :where(.stance-switch__input) {
@@ -154,8 +158,8 @@ function onChange(event: Event) {
   position: absolute;
   top: 0.0625rem;
   left: 0.0625rem;
-  width: 1rem;
-  height: 1rem;
+  width: calc(var(--stance-control-box-size, 1.25rem) - 0.25rem);
+  height: calc(var(--stance-control-box-size, 1.25rem) - 0.25rem);
   border-radius: var(--stance-radius-full, 9999px);
   background: var(--stance-color-background);
   box-shadow: var(--stance-shadow-md);

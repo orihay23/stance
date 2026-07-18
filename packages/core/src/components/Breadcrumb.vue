@@ -145,8 +145,8 @@ const rootClass = computed(() => cn("stance-breadcrumb-container", props.class))
 }
 
 :where(.stance-breadcrumb__separator) {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
   flex-shrink: 0;
   color: var(--stance-color-muted-foreground);
 }
