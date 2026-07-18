@@ -1,6 +1,6 @@
 {
   "name": "@stance-dev/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "An opinionated, accessible, themeable Vue 3 component library, built for Tailwind consumers without specificity fights.",
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,16 @@
   },
   "homepage": "https://orihay23.github.io/stance/",
   "bugs": "https://github.com/orihay23/stance/issues",
-  "keywords": ["vue", "vue3", "component-library", "tailwind", "tailwindcss", "accessibility", "a11y", "design-system"],
+  "keywords": [
+    "vue",
+    "vue3",
+    "component-library",
+    "tailwind",
+    "tailwindcss",
+    "accessibility",
+    "a11y",
+    "design-system"
+  ],
   "main": "./dist/stance-core.js",
   "module": "./dist/stance-core.js",
   "types": "./dist/index.d.ts",
@@ -23,7 +32,9 @@
     "./style.css": "./dist/style.css",
     "./package.json": "./package.json"
   },
-  "sideEffects": ["dist/style.css"],
+  "sideEffects": [
+    "dist/style.css"
+  ],
   "files": [
     "dist"
   ],
