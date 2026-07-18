@@ -210,8 +210,8 @@ const wrapperClass = computed(() => cn("stance-combobox__input-wrapper", props.c
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
   border: none;
   border-radius: 50%;
   background: transparent;

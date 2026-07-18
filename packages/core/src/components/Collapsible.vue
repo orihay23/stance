@@ -99,8 +99,8 @@ const rootClass = computed(() => cn("stance-collapsible", props.class));
 }
 
 :where(.stance-collapsible-trigger__icon) {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
   flex-shrink: 0;
   transition: transform var(--stance-motion-duration, 0.15s) ease;
 }

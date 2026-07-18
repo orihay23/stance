@@ -105,6 +105,11 @@ function onInput(event: Event) {
   align-items: center;
   gap: var(--stance-spacing-xs, 0.25rem);
   width: 100%;
+  /* Matches Button's own min-height token so a common Input+Button row
+     (e.g. "email + Save") stays height-matched across densities — without
+     this, Input's height was purely padding+line-height-derived while
+     Button's was token-derived, so the two computed differently. */
+  min-height: var(--stance-control-height-md, 2.5rem);
   background: var(--stance-color-background);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-md, 0.5rem);

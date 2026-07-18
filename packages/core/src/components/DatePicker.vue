@@ -363,8 +363,8 @@ const rootClass = computed(() => cn("stance-date-picker", props.class));
 }
 
 :where(.stance-date-picker__trigger svg) {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
 }
 
 :where(.stance-date-picker__trigger:hover) {

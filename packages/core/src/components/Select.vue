@@ -138,8 +138,8 @@ function onChange(event: Event) {
   top: 50%;
   right: var(--stance-spacing-sm, 0.5rem);
   transform: translateY(-50%);
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
   color: var(--stance-color-muted-foreground);
   pointer-events: none;
 }

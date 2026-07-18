@@ -117,6 +117,7 @@ function onChange(event: Event) {
   cursor: pointer;
   font-family: var(--stance-font-sans, ui-sans-serif, system-ui, sans-serif);
   font-size: var(--stance-text-base, 1rem);
+  line-height: var(--stance-leading-normal, 1.5);
   color: var(--stance-color-foreground);
 }
 
@@ -131,9 +132,11 @@ function onChange(event: Event) {
   flex-shrink: 0;
   width: var(--stance-control-box-size, 1.25rem);
   height: var(--stance-control-box-size, 1.25rem);
-  /* Optically centers the box against the label's first line of text at
-     typical font-size/line-height combinations. */
-  margin-top: 0.125rem;
+  /* Optically centers the box against the label's first line of text: half
+     the first line's leading (line-height minus font's content area), so
+     this tracks density instead of assuming one fixed font-size/line-height
+     combination. */
+  margin-top: max(0px, calc((1lh - var(--stance-control-box-size, 1.25rem)) / 2));
 }
 
 :where(.stance-checkbox__input) {
@@ -184,8 +187,8 @@ function onChange(event: Event) {
 :where(.stance-checkbox__check-icon),
 :where(.stance-checkbox__dash-icon) {
   position: absolute;
-  width: 0.875rem;
-  height: 0.875rem;
+  width: calc(var(--stance-control-box-size, 1.25rem) * 0.7);
+  height: calc(var(--stance-control-box-size, 1.25rem) * 0.7);
   opacity: 0;
   transition: opacity 0.1s ease;
 }

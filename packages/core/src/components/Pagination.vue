@@ -154,8 +154,8 @@ const pageNumbers = computed<Array<number | "ellipsis">>(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
+  min-width: max(var(--stance-control-height-sm, 2rem), 2rem);
+  height: max(var(--stance-control-height-sm, 2rem), 2rem);
   padding: 0 var(--stance-spacing-sm, 0.5rem);
   border: 1px solid var(--stance-color-border);
   border-radius: var(--stance-radius-sm, 0.25rem);
@@ -190,8 +190,8 @@ const pageNumbers = computed<Array<number | "ellipsis">>(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
+  min-width: max(var(--stance-control-height-sm, 2rem), 2rem);
+  height: max(var(--stance-control-height-sm, 2rem), 2rem);
   color: var(--stance-color-muted-foreground);
 }
 

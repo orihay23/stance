@@ -308,8 +308,8 @@ const rootClass = computed(() => cn("stance-number-field", props.class));
 }
 
 :where(.stance-number-field__button svg) {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
 }
 
 :where(.stance-number-field__button:hover:not(:disabled)) {

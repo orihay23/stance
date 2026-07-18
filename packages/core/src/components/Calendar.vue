@@ -344,8 +344,8 @@ const rootClass = computed(() => cn("stance-calendar", props.class));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--stance-control-height-sm, 2rem);
+  height: var(--stance-control-height-sm, 2rem);
   border: none;
   border-radius: var(--stance-radius-sm, 0.25rem);
   background: none;
@@ -375,20 +375,20 @@ const rootClass = computed(() => cn("stance-calendar", props.class));
 :where(.stance-calendar__grid) {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--stance-spacing-xs, 0.25rem);
 }
 
 :where(.stance-calendar__row) {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: var(--stance-spacing-xs, 0.25rem);
 }
 
 :where(.stance-calendar__weekday) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 1.75rem;
+  height: var(--stance-control-calendar-cell-size, 2rem);
   font-size: var(--stance-text-xs, 0.75rem);
   color: var(--stance-color-muted-foreground);
 }
