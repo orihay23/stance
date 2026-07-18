@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { allThemes } from "@stance/themes";
+import { allThemes } from "@stance-dev/themes";
 import { components } from "../registry/components";
 import { resolveVariantId, storyIdFor } from "../registry/manifest";
 

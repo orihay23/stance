@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Card, Grid, Badge } from "@stance/core";
+import { Card, Grid, Badge } from "@stance-dev/core";
 
 // Defined in .vitepress/config.ts (vite.define) — the single source of
 // truth for where the Histoire build lives, so this doesn't re-derive it

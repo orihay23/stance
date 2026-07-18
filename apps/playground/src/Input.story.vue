@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Input, type InputType } from "@stance/core";
+import { Input, type InputType } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

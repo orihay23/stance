@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
-import { Combobox, ComboboxContent, ComboboxInput, ComboboxOption } from "@stance/core";
+import { Combobox, ComboboxContent, ComboboxInput, ComboboxOption } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, densityProfiles } = useStoryTheme();

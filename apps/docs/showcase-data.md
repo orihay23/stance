@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Card, Grid, DataTable, type DataTableColumn, Badge, Avatar, Skeleton, Switch } from "@stance/core";
+import { Card, Grid, DataTable, type DataTableColumn, Badge, Avatar, Skeleton, Switch } from "@stance-dev/core";
 
 interface Member {
   name: string;

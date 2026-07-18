@@ -12,4 +12,4 @@
  */
 @layer theme, base, stance, components, utilities;
 @import "tailwindcss";
-@import "@stance/core/style.css";
+@import "@stance-dev/core/style.css";

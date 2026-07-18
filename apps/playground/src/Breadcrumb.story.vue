@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Breadcrumb, type BreadcrumbItem } from "@stance/core";
+import { Breadcrumb, type BreadcrumbItem } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

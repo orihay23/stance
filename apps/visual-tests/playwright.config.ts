@@ -27,11 +27,11 @@ export default defineConfig({
   },
 
   // Serves the *built* Histoire output — must already exist
-  // (`pnpm --filter @stance/playground story:build`). Deliberately not
+  // (`pnpm --filter @stance-dev/playground story:build`). Deliberately not
   // building here: keeps "build once" separate from "run tests many
   // times" while iterating locally, and CI runs the build as its own step.
   webServer: {
-    command: "pnpm --filter @stance/playground story:preview",
+    command: "pnpm --filter @stance-dev/playground story:preview",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     cwd: "../..",

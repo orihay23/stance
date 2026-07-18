@@ -36,20 +36,20 @@ jobs:
 
       # Same build order as ci.yml's visual-regression job — see that
       # job's comments for why each step is needed.
-      - name: Build @stance/core
-        run: pnpm --filter @stance/core build
+      - name: Build @stance-dev/core
+        run: pnpm --filter @stance-dev/core build
 
-      - name: Build @stance/themes
-        run: pnpm --filter @stance/themes build
+      - name: Build @stance-dev/themes
+        run: pnpm --filter @stance-dev/themes build
 
       - name: Build Histoire stories
-        run: pnpm --filter @stance/playground story:build
+        run: pnpm --filter @stance-dev/playground story:build
 
       - name: Install Playwright browsers
-        run: pnpm --filter @stance/visual-tests exec playwright install --with-deps chromium
+        run: pnpm --filter @stance-dev/visual-tests exec playwright install --with-deps chromium
 
       - name: Update snapshots
-        run: pnpm --filter @stance/visual-tests test:update
+        run: pnpm --filter @stance-dev/visual-tests test:update
 
       - name: Commit updated baselines
         run: |

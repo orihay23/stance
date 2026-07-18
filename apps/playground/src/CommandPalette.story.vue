@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Button, CommandPalette, CommandPaletteItem } from "@stance/core";
+import { Button, CommandPalette, CommandPaletteItem } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, densityProfiles } = useStoryTheme();

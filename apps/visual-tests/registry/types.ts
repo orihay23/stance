@@ -1,5 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
-import { allDensityProfiles } from "@stance/themes";
+import { allDensityProfiles } from "@stance-dev/themes";
 
 export interface CaptureSpec {
   /** Suffix appended to the snapshot filename, e.g. "light", "dark", "narrow-400". */

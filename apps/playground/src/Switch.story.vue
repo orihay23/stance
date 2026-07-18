@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Switch } from "@stance/core";
+import { Switch } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

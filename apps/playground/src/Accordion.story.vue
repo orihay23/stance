@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@stance/core";
+import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

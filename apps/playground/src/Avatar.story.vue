@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Avatar, type AvatarSize } from "@stance/core";
+import { Avatar, type AvatarSize } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

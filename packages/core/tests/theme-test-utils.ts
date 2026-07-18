@@ -1,4 +1,4 @@
-import { allDensityProfiles, allPalettes, compileDensity, compilePalette, type ColorPalette, type DensityProfile } from "@stance/themes";
+import { allDensityProfiles, allPalettes, compileDensity, compilePalette, type ColorPalette, type DensityProfile } from "@stance-dev/themes";
 
 /**
  * The palette-axis counterpart of the old `allThemes` used by every

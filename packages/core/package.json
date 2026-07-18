@@ -1,5 +1,5 @@
 {
-  "name": "@stance/core",
+  "name": "@stance-dev/core",
   "version": "0.0.0",
   "description": "An opinionated, accessible, themeable Vue 3 component library, built for Tailwind consumers without specificity fights.",
   "type": "module",
@@ -29,9 +29,9 @@
   ],
   "scripts": {
     "build": "vite build && vue-tsc -p tsconfig.build.json",
-    "pretest": "pnpm --filter @stance/themes build",
+    "pretest": "pnpm --filter @stance-dev/themes build",
     "test": "vitest run",
-    "pretest:watch": "pnpm --filter @stance/themes build",
+    "pretest:watch": "pnpm --filter @stance-dev/themes build",
     "test:watch": "vitest",
     "typecheck": "vue-tsc --noEmit"
   },
@@ -47,7 +47,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@stance/themes": "workspace:*",
+    "@stance-dev/themes": "workspace:*",
     "@tailwindcss/vite": "^4.3.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/vue": "^8.1.0",

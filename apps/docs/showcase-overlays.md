@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuContextTrigger,
-} from "@stance/core";
+} from "@stance-dev/core";
 
 const { show } = useToast();
 

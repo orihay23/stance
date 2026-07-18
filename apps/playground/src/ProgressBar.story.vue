@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { ProgressBar } from "@stance/core";
+import { ProgressBar } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

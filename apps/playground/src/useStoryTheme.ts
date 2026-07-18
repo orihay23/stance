@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { allDensityProfiles, allThemes } from "@stance/themes";
+import { allDensityProfiles, allThemes } from "@stance-dev/themes";
 
 /**
  * Module-level (not per-story) so picking a theme in the global switcher

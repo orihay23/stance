@@ -14,7 +14,7 @@ import {
   NumberField,
   Slider,
   Button,
-} from "@stance/core";
+} from "@stance-dev/core";
 
 // One plausible "event registration" form composing every primitive the
 // Phase 15 showcase spec calls for. Validation follows the same

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Badge, type BadgeVariant } from "@stance/core";
+import { Badge, type BadgeVariant } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

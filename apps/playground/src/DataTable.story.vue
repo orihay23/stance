@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { DataTable, type DataTableColumn, type DataTableSortState } from "@stance/core";
+import { DataTable, type DataTableColumn, type DataTableSortState } from "@stance-dev/core";
 import { useStoryTheme } from "./useStoryTheme";
 
 const { storyTheme, themes, densityProfiles } = useStoryTheme();

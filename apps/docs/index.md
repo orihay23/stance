@@ -31,7 +31,7 @@ features:
 ---
 
 <script setup lang="ts">
-import { Card, Grid, Badge } from "@stance/core";
+import { Card, Grid, Badge } from "@stance-dev/core";
 </script>
 
 <div class="stance-showcase">
@@ -39,7 +39,7 @@ import { Card, Grid, Badge } from "@stance/core";
 ## Live, in this very page
 
 These aren't screenshots — this `Card`, `Grid`, and `Badge` are the real
-`@stance/core` components, themed by the `data-theme` attribute this site
+`@stance-dev/core` components, themed by the `data-theme` attribute this site
 sets on `<html>`. Toggle dark mode (top right) to see them re-theme with
 zero rebuild.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@stance/visual-tests",
+  "name": "@stance-dev/visual-tests",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "test:update": "playwright test --update-snapshots"
   },
   "dependencies": {
-    "@stance/themes": "workspace:*"
+    "@stance-dev/themes": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@stance/docs", "@stance/playground", "@stance/visual-tests"]
+  "ignore": ["@stance-dev/docs", "@stance-dev/playground", "@stance-dev/visual-tests"]
 }
