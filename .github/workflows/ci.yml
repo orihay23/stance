@@ -162,6 +162,19 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm changeset publish
+          # Defaults to true, which makes this action create its own
+          # GitHub Release per published package as part of the publish
+          # step above — colliding with the "Create GitHub Releases for
+          # published packages" step below (which runs second and always
+          # loses: `gh release create` 422s with "Release.tag_name already
+          # exists"). Confirmed on the first real publish
+          # (@stance-dev/core@0.1.0 / @stance-dev/themes@0.1.0): npm
+          # publish and the git tag push both succeeded, but the
+          # dedicated release-creation step failed on that collision even
+          # though both releases already existed correctly. Disabled here
+          # so the step below stays the single source of truth for
+          # release notes formatting.
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # setup-node's `registry-url` above already wrote a global
